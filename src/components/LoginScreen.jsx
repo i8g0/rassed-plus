@@ -86,7 +86,7 @@ export default function LoginScreen({ onLogin }) {
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder={role === 'advisor' ? 'khaled.advisor@university.edu أو AD-1001' : 'sara.k@university.edu أو 44210988'}
+                placeholder={role === 'advisor' ? 'khaled.advisor@university.edu أو AD-1001' : 'ahmad.ammar@university.edu أو 44210988'}
               />
             </div>
           </label>

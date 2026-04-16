@@ -21,6 +21,7 @@ import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
 import FeaturesHub from './components/FeaturesHub';
 import { getNotifications } from './services/api';
+import { byGender } from './utils/localization';
 import './App.css';
 
 // ─── Toast Component ──────────────────────────────────────────────────────────
@@ -82,7 +83,8 @@ export default function App() {
   const [toast, setToast]                       = useState(null);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
-  const name = authUser?.name || (role === 'advisor' ? 'د. خالد' : 'سارة');
+  const studentGender = authUser?.gender || 'male';
+  const name = authUser?.name || (role === 'advisor' ? 'د. خالد' : 'محمد');
   const headerTitle = `مرحباً، ${name} 👋`;
   const subtitle = role === 'advisor'
     ? 'إليك نظرة عامة على حالة الطلاب اليوم'
@@ -127,8 +129,8 @@ export default function App() {
       features: 'يمكنك تفعيل/تعطيل 100 ميزة وربطها فوراً بقاعدة البيانات.',
     },
     student: {
-      overview: 'لديكِ تسليم غداً ولم تبدئي! اضغطي على "مهامي" وقسّمي المهمة.',
-      tasks: 'ابدئي بالمهمة الأسهل أولاً — ذلك يبني الزخم.',
+      overview: `${byGender(studentGender, 'لديك', 'لديكِ')} تسليم غداً ولم ${byGender(studentGender, 'تبدأ', 'تبدئي')}! ${byGender(studentGender, 'اضغط', 'اضغطي')} على "مهامي" و${byGender(studentGender, 'قسّم', 'قسّمي')} المهمة.`,
+      tasks: `${byGender(studentGender, 'ابدأ', 'ابدئي')} بالمهمة الأسهل أولاً — ذلك يبني الزخم.`,
       skills: 'كورس Data Analysis هو الأعلى طلباً هذا الفصل!',
       peers: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً.',
       features: 'مركز الميزات الأسطورية يمنحك تجربة Super App متكاملة.',
@@ -203,7 +205,7 @@ export default function App() {
                 onIntervention={(s) => setIntervention(s)}
                 onToast={showToast}
               />
-            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} />
+            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
         }
       </main>
 

@@ -123,6 +123,7 @@ class StudentIn(BaseModel):
     id: str
     advisor_id: Optional[str] = None
     name: str
+    gender: Literal["male", "female"] = "male"
     email: str
     password: str
     major: str
@@ -268,15 +269,16 @@ def create_student(payload: StudentIn):
         conn.execute(
             """
             INSERT INTO students (
-                id, advisor_id, name, email, password, major, year, gpa, attendance,
+                id, advisor_id, name, gender, email, password, major, year, gpa, attendance,
                 task_time_ratio, task_completion, late_logins, incomplete_lectures,
                 strong_skills, weak_skills, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 payload.id,
                 payload.advisor_id,
                 payload.name,
+                payload.gender,
                 payload.email,
                 payload.password,
                 payload.major,
@@ -307,7 +309,7 @@ def update_student(student_id: str, payload: StudentIn):
         conn.execute(
             """
             UPDATE students
-            SET id=?, advisor_id=?, name=?, email=?, password=?, major=?, year=?, gpa=?, attendance=?,
+            SET id=?, advisor_id=?, name=?, gender=?, email=?, password=?, major=?, year=?, gpa=?, attendance=?,
                 task_time_ratio=?, task_completion=?, late_logins=?, incomplete_lectures=?, strong_skills=?, weak_skills=?, updated_at=?
             WHERE id=?
             """,
@@ -315,6 +317,7 @@ def update_student(student_id: str, payload: StudentIn):
                 payload.id,
                 payload.advisor_id,
                 payload.name,
+                payload.gender,
                 payload.email,
                 payload.password,
                 payload.major,
@@ -829,6 +832,7 @@ def student_dashboard(student_id: str):
     profile = {
         "id": student["id"],
         "name": student["name"],
+        "gender": row["gender"],
         "major": student["major"],
         "year": f"السنة {student['year']}",
         "gpa": student["gpa"],

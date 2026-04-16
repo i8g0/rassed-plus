@@ -59,9 +59,9 @@ npm run dev -- --host 127.0.0.1 --port 5173
 - كلمة المرور: `Advisor@2026`
 
 ### طالب
-- البريد: `sara.k@university.edu`
+- البريد: `ahmad.ammar@university.edu`
 - الرقم الجامعي: `44210988`
-- كلمة المرور: `Sara@2026`
+- كلمة المرور: `Ahmad@2026`
 
 ## ملفات أساسية
 

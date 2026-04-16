@@ -27,6 +27,13 @@ def _table_has_rows(conn: sqlite3.Connection, table_name: str) -> bool:
     return bool(row and row["count"] > 0)
 
 
+def _ensure_column(conn: sqlite3.Connection, table_name: str, column_name: str, definition: str) -> None:
+    columns = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    names = {col["name"] for col in columns}
+    if column_name not in names:
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
+
+
 def init_db() -> None:
     with get_db() as conn:
         conn.executescript(
@@ -48,6 +55,7 @@ def init_db() -> None:
                 id TEXT PRIMARY KEY,
                 advisor_id TEXT,
                 name TEXT NOT NULL,
+                gender TEXT NOT NULL DEFAULT 'male',
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 major TEXT NOT NULL,
@@ -114,6 +122,7 @@ def init_db() -> None:
             );
             """
         )
+        _ensure_column(conn, "students", "gender", "TEXT NOT NULL DEFAULT 'male'")
         seed_data(conn)
 
 
@@ -184,25 +193,25 @@ def seed_data(conn: sqlite3.Connection) -> None:
 
     if not _table_has_rows(conn, "students"):
         students = [
-            ("44120345", "AD-1001", "أحمد محمود", "ahmed.m@university.edu", "Ahmed@2026", "علوم الحاسب", 3, 1.3, 40, 3.0, 25, 6, 75, ["خوارزميات", "رياضيات"], ["قواعد بيانات", "شبكات"]),
-            ("44210988", "AD-1001", "سارة خالد", "sara.k@university.edu", "Sara@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
-            ("43990122", "AD-1001", "فهد عبدالله", "fahad.a@university.edu", "Fahad@2026", "هندسة البرمجيات", 4, 4.8, 97, 0.9, 98, 0, 2, ["برمجة متقدمة", "هياكل بيانات", "خوارزميات"], []),
-            ("44112340", "AD-1002", "نورة سعد", "noura.s@university.edu", "Noura@2026", "علوم الحاسب", 2, 1.6, 42, 2.5, 30, 7, 70, ["تصميم واجهات"], ["خوارزميات", "شبكات"]),
-            ("44315200", "AD-1002", "عمر الشمري", "omar.sh@university.edu", "Omar@2026", "نظم المعلومات", 3, 3.8, 90, 1.1, 91, 1, 10, ["قواعد بيانات", "شبكات", "إحصاء"], ["رياضيات"]),
-            ("44520101", "AD-1002", "لين الحربي", "leen.h@university.edu", "Leen@2026", "الذكاء الاصطناعي", 1, 4.2, 93, 1.3, 85, 2, 15, ["رياضيات", "برمجة متقدمة"], ["إحصاء"]),
+            ("44120345", "AD-1001", "أحمد محمود", "male", "ahmed.m@university.edu", "Ahmed@2026", "علوم الحاسب", 3, 1.3, 40, 3.0, 25, 6, 75, ["خوارزميات", "رياضيات"], ["قواعد بيانات", "شبكات"]),
+            ("44210988", "AD-1001", "أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
+            ("43990122", "AD-1001", "فهد عبدالله", "male", "fahad.a@university.edu", "Fahad@2026", "هندسة البرمجيات", 4, 4.8, 97, 0.9, 98, 0, 2, ["برمجة متقدمة", "هياكل بيانات", "خوارزميات"], []),
+            ("44112340", "AD-1002", "نورة سعد", "female", "noura.s@university.edu", "Noura@2026", "علوم الحاسب", 2, 1.6, 42, 2.5, 30, 7, 70, ["تصميم واجهات"], ["خوارزميات", "شبكات"]),
+            ("44315200", "AD-1002", "عمر الشمري", "male", "omar.sh@university.edu", "Omar@2026", "نظم المعلومات", 3, 3.8, 90, 1.1, 91, 1, 10, ["قواعد بيانات", "شبكات", "إحصاء"], ["رياضيات"]),
+            ("44520101", "AD-1002", "لين الحربي", "female", "leen.h@university.edu", "Leen@2026", "الذكاء الاصطناعي", 1, 4.2, 93, 1.3, 85, 2, 15, ["رياضيات", "برمجة متقدمة"], ["إحصاء"]),
         ]
 
         conn.executemany(
             """
             INSERT INTO students (
-                id, advisor_id, name, email, password, major, year, gpa, attendance, task_time_ratio,
+                id, advisor_id, name, gender, email, password, major, year, gpa, attendance, task_time_ratio,
                 task_completion, late_logins, incomplete_lectures, strong_skills, weak_skills, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
-                    sid, advisor_id, name, email, password, major, year, gpa, attendance, task_time_ratio,
+                    sid, advisor_id, name, gender, email, password, major, year, gpa, attendance, task_time_ratio,
                     task_completion, late_logins, incomplete_lectures,
                     json.dumps(strong_skills, ensure_ascii=False),
                     json.dumps(weak_skills, ensure_ascii=False),
@@ -210,11 +219,21 @@ def seed_data(conn: sqlite3.Connection) -> None:
                     now,
                 )
                 for (
-                    sid, advisor_id, name, email, password, major, year, gpa, attendance, task_time_ratio,
+                    sid, advisor_id, name, gender, email, password, major, year, gpa, attendance, task_time_ratio,
                     task_completion, late_logins, incomplete_lectures, strong_skills, weak_skills
                 ) in students
             ],
         )
+
+    # توحيد ملف المستخدم الأساسي حتى لو كانت القاعدة موجودة من تشغيل سابق.
+    conn.execute(
+        """
+        UPDATE students
+        SET name=?, gender=?, email=?, password=?, updated_at=?
+        WHERE id=?
+        """,
+        ("أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", now, "44210988"),
+    )
 
     if not _table_has_rows(conn, "courses"):
         conn.executemany(

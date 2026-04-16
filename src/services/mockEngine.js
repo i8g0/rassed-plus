@@ -18,10 +18,11 @@ export const STUDENTS_DB = [
     email: 'ahmed.m@university.edu',
   },
   {
-    id: '44210988', name: 'سارة خالد', major: 'علوم الحاسب', year: 2, gpa: 3.4,
+    id: '44210988', name: 'أحمد عمار', major: 'علوم الحاسب', year: 2, gpa: 3.4,
     attendance: 82, taskTimeRatio: 2.1, taskCompletion: 72, lateLogins: 3, incompleteLectures: 40,
     strongSkills: ['رياضيات', 'إحصاء'], weakSkills: ['برمجة متقدمة', 'هياكل بيانات'],
-    email: 'sara.k@university.edu',
+    gender: 'male',
+    email: 'ahmad.ammar@university.edu',
   },
   {
     id: '43990122', name: 'فهد عبدالله', major: 'هندسة البرمجيات', year: 4, gpa: 4.8,
@@ -66,15 +67,16 @@ export const AUTH_ACCOUNTS = [
   },
   {
     role: 'student',
-    login: 'sara.k@university.edu',
+    login: 'ahmad.ammar@university.edu',
     altLogin: '44210988',
-    password: 'Sara@2026',
+    password: 'Ahmad@2026',
     profile: {
       id: '44210988',
-      name: 'سارة خالد',
-      email: 'sara.k@university.edu',
+      name: 'أحمد عمار',
+      email: 'ahmad.ammar@university.edu',
       major: 'علوم الحاسب',
       year: 2,
+      gender: 'male',
     },
   },
   {
@@ -306,13 +308,13 @@ export function generateNotifications(role) {
       { id: 2, type: 'warning', time: 'منذ 30 دقيقة', text: 'نورة سعد: تسجيل دخول في 3:00 فجراً',          read: false },
       { id: 3, type: 'success', time: 'منذ ساعة',     text: 'عمر الشمري: رفع معدله من 3.5 إلى 3.8',       read: true },
       { id: 4, type: 'info',    time: 'منذ 2 ساعة',    text: 'CS301: 60% فشل في الاختبار النصفي (رادار)',   read: false },
-      { id: 5, type: 'success', time: 'أمس',           text: 'خطة تدخل سارة خالد: بدأت تظهر تحسناً',       read: true },
+      { id: 5, type: 'success', time: 'أمس',           text: 'خطة تدخل أحمد عمار: بدأت تظهر تحسناً',       read: true },
     ];
   }
   return [
     { id: 1, type: 'danger',  time: 'منذ 10 دقائق', text: 'تذكير: تسليم تقرير هياكل البيانات غداً!',     read: false },
     { id: 2, type: 'info',    time: 'منذ ساعة',     text: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً',  read: false },
-    { id: 3, type: 'success', time: 'منذ 3 ساعات',  text: 'أكملتِ اختبار الإحصاء التطبيقي بنجاح!',      read: true },
+    { id: 3, type: 'success', time: 'منذ 3 ساعات',  text: 'أكمل اختبار الإحصاء التطبيقي بنجاح!',        read: true },
     { id: 4, type: 'info',    time: 'أمس',           text: 'كورس Data Analysis متاح الآن على Coursera',  read: false },
   ];
 }

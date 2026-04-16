@@ -13,6 +13,7 @@ import {
   requestPeerMatch,
   updateStudentTaskProgress,
 } from '../services/api';
+import { verbByGender } from '../utils/localization';
 import './StudentDashboard.css';
 
 const SPLIT_ICON_MAP = {
@@ -247,7 +248,7 @@ function SkillsSection({ skills, onToast }) {
   );
 }
 
-function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [] }) {
+function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], gender = 'male' }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [expandedId, setExpandedId] = useState(null);
   const [completedSteps, setCompletedSteps] = useState({});
@@ -263,6 +264,8 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [] }
   };
 
   const activeCount = tasks.filter((t) => t.urgency !== 'success').length;
+  const splitTaskLabel = `${verbByGender(gender, 'قسّم', 'قسّمي')} المهمة`;
+  const startNowLabel = `${verbByGender(gender, 'ابدأ', 'ابدئي')} الآن — الخطوة الأولى`;
 
   const persistProgress = async (progress) => {
     try {
@@ -329,7 +332,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [] }
                 </div>
                 {t.canSplit && (
                   <button className="btn btn-danger" style={{ fontSize: '0.78rem', flexShrink: 0 }} onClick={() => setExpandedId(open ? null : t.id)}>
-                    <Zap size={13} /> قسّمي المهمة
+                    <Zap size={13} /> {splitTaskLabel}
                     <ChevronDown size={13} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />
                   </button>
                 )}
@@ -350,7 +353,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [] }
                     );
                   })}
                   <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.75rem' }} onClick={() => handleStartTask(t.id)}>
-                    <Zap size={14} /> ابدئي الآن — الخطوة الأولى
+                    <Zap size={14} /> {startNowLabel}
                   </button>
                 </div>
               )}
@@ -362,7 +365,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [] }
   );
 }
 
-export default function StudentDashboard({ activeTab, onToast, currentUser }) {
+export default function StudentDashboard({ activeTab, onToast, currentUser, gender = 'male' }) {
   const toast = onToast || (() => {});
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ student: null, adaptive: [], peers: [], skills: [], tasks: [], splitSteps: [] });
@@ -397,7 +400,7 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
       return (
         <div className="student-dash">
           <HeroSection student={data.student} />
-          <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} />
+          <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
         </div>
       );
     case 'skills':
@@ -424,7 +427,7 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
           </div>
           <div className="dashboard-grid-even">
             <SkillsSection skills={data.skills} onToast={toast} />
-            <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} />
+            <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
           </div>
         </div>
       );
