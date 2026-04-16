@@ -1,26 +1,26 @@
 /**
- * StudentDashboard.jsx — لوحة الطالب بتصميم خرافي
+ * StudentDashboard.jsx — لوحة الطالب
  * 
- * 5 أقسام:
- *   1. Hero — بانر ترحيبي مع إحصاءات دائرية متحركة
- *   2. Adaptive Routing — اقتراحات المحتوى الذكية
- *   3. Peer Matchmaking — التوأمة الأكاديمية
- *   4. Skill Compass — بوصلة المهارات وسوق العمل
- *   5. Smart Tasks — المهام الاستباقية مع تقسيم AI
+ * الآن مع:
+ *   ✅ كل الأزرار مفعّلة (جدولة جلسة، تقسيم المهمة، ابدئي الآن، الكورسات)
+ *   ✅ Toast notifications عند كل إجراء
+ *   ✅ حالة المهام تتغير ديناميكياً (إكمال خطوات، بدء مهمة)
+ *   ✅ بيانات الطالب مركزية من mockEngine
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Video, Headphones, MapPin, Users, Calendar,
   Zap, TrendingUp, AlertTriangle, CheckCircle2,
   Clock, Star, Target, Briefcase, Bell,
   BrainCircuit, BookOpen, Sparkles, ArrowUpRight,
   ChevronDown, Play, ClipboardList, Timer,
+  ExternalLink, Check,
 } from 'lucide-react';
 import './StudentDashboard.css';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  MOCK DATA
+//  MOCK DATA (ستُنقل لاحقاً بالكامل إلى mockEngine عند الربط بالباك إند)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const STUDENT = {
@@ -32,7 +32,7 @@ const STUDENT = {
   completionRate: 72,
   status: 'warning',
   statusMessage: 'تحتاجين لبعض التركيز هذا الأسبوع 💪',
-  streak: 5, // عدد أيام متتالية أكملت فيها مهام
+  streak: 5,
 };
 
 const ADAPTIVE = [
@@ -81,7 +81,8 @@ const SKILLS = [
     id: 1, skill: 'الرياضيات والتحليل', level: 92,
     color: '#10B981',
     course: 'Data Analysis with Python', platform: 'Coursera',
-    boost: 40, 
+    link: 'https://www.coursera.org/learn/data-analysis-with-python',
+    boost: 40,
     reason: 'مهاراتك في الرياضيات استثنائية. تحليل البيانات هو الأعلى طلباً في سوق العمل حالياً.',
     hot: true,
   },
@@ -89,13 +90,14 @@ const SKILLS = [
     id: 2, skill: 'قواعد البيانات', level: 74,
     color: '#818CF8',
     course: 'SQL & Database Design', platform: 'Udemy',
+    link: 'https://www.udemy.com/course/the-complete-sql-bootcamp/',
     boost: 25,
     reason: 'إتقان SQL يرفع الراتب التقديري بنسبة 25% في شركات التقنية الكبرى.',
     hot: false,
   },
 ];
 
-const TASKS = [
+const INITIAL_TASKS = [
   {
     id: 1,
     title: 'تسليم تقرير هياكل البيانات',
@@ -139,25 +141,22 @@ const SPLIT_STEPS = [
 /* ─── SVG Circular Progress ──────────────────────────────────────────────────── */
 
 function CircleProgress({ value, max, label, color, size = 110 }) {
-  const pct   = (value / max) * 100;
-  const r     = (size - 16) / 2;
-  const circ  = 2 * Math.PI * r;
-  const dash  = (pct / 100) * circ;
+  const pct  = (value / max) * 100;
+  const r    = (size - 16) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
 
   return (
     <div className="circle-progress">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* المسار الخلفي */}
         <circle cx={size/2} cy={size/2} r={r}
           fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
-        {/* المسار الملون */}
         <circle cx={size/2} cy={size/2} r={r}
           fill="none" stroke={color} strokeWidth="7"
           strokeDasharray={`${dash} ${circ - dash}`}
           strokeLinecap="round"
           transform={`rotate(-90 ${size/2} ${size/2})`}
           style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(0.22,1,0.36,1)', filter: `drop-shadow(0 0 6px ${color}55)` }} />
-        {/* القيمة */}
         <text x={size/2} y={size/2 + 1} textAnchor="middle" dominantBaseline="central"
           fill="white" fontFamily="Tajawal" fontSize={size * 0.2} fontWeight="800">
           {value}{max === 100 ? '%' : ''}
@@ -180,7 +179,6 @@ function HeroSection({ student }) {
 
   return (
     <div className="hero-banner animate-fade-up">
-      {/* الطبقة الزخرفية */}
       <div className="hero-mesh" />
       <div className="hero-orb hero-orb-1" />
       <div className="hero-orb hero-orb-2" />
@@ -217,10 +215,20 @@ function HeroSection({ student }) {
   );
 }
 
-/* ─── 2. Adaptive Routing ────────────────────────────────────────────────────── */
+/* ─── 2. Adaptive Routing ───────────────────────────────────────────────────── */
 
-function AdaptiveSection({ items }) {
+function AdaptiveSection({ items, onToast }) {
   const [selected, setSelected] = useState(null);
+
+  const handleSelect = (itemId, altKey, altLabel) => {
+    const key = `${itemId}-${altKey}`;
+    if (selected === key) {
+      setSelected(null);
+    } else {
+      setSelected(key);
+      onToast(`تم اختيار: ${altLabel}`, 'info');
+    }
+  };
 
   return (
     <div className="glass panel-card animate-fade-up delay-2">
@@ -251,11 +259,8 @@ function AdaptiveSection({ items }) {
                   <button
                     key={alt.key}
                     className={`alt-btn ${isActive ? 'active' : ''}`}
-                    style={{
-                      '--alt-color': alt.color,
-                      '--alt-bg': alt.bg,
-                    }}
-                    onClick={() => setSelected(isActive ? null : `${item.id}-${alt.key}`)}
+                    style={{ '--alt-color': alt.color, '--alt-bg': alt.bg }}
+                    onClick={() => handleSelect(item.id, alt.key, alt.label)}
                   >
                     <AltIcon size={14} /> {alt.label}
                   </button>
@@ -269,10 +274,21 @@ function AdaptiveSection({ items }) {
   );
 }
 
-/* ─── 3. Peer Matchmaking ────────────────────────────────────────────────────── */
+/* ─── 3. Peer Matchmaking ───────────────────────────────────────────────────── */
 
-function PeersSection({ peers }) {
+function PeersSection({ peers, onToast }) {
   const [requested, setRequested] = useState({});
+
+  const handleRequest = (peer) => {
+    const wasRequested = requested[peer.id];
+    setRequested(prev => ({ ...prev, [peer.id]: !prev[peer.id] }));
+
+    if (!wasRequested) {
+      onToast(`تم إرسال طلب جلسة دراسية لـ ${peer.name} 📩`, 'success');
+    } else {
+      onToast(`تم إلغاء الطلب لـ ${peer.name}`, 'warning');
+    }
+  };
 
   return (
     <div className="glass panel-card animate-fade-up delay-3">
@@ -311,7 +327,7 @@ function PeersSection({ peers }) {
             <button
               className={`btn ${requested[p.id] ? 'btn-ghost' : 'btn-success'}`}
               style={{ width: '100%', justifyContent: 'center' }}
-              onClick={() => setRequested(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+              onClick={() => handleRequest(p)}
             >
               {requested[p.id]
                 ? <><CheckCircle2 size={14} /> تم الطلب — في انتظار الرد</>
@@ -324,9 +340,14 @@ function PeersSection({ peers }) {
   );
 }
 
-/* ─── 4. Skill Compass ───────────────────────────────────────────────────────── */
+/* ─── 4. Skill Compass ──────────────────────────────────────────────────────── */
 
-function SkillsSection({ skills }) {
+function SkillsSection({ skills, onToast }) {
+  const handleCourseClick = (skill) => {
+    window.open(skill.link, '_blank');
+    onToast(`تم فتح ${skill.course} على ${skill.platform}`, 'info');
+  };
+
   return (
     <div className="glass panel-card animate-fade-up delay-4">
       <div className="panel-header">
@@ -353,7 +374,6 @@ function SkillsSection({ skills }) {
               )}
             </div>
 
-            {/* شريط المستوى */}
             <div className="progress-track" style={{ marginBottom: '0.3rem' }}>
               <div className="progress-fill" style={{ width: `${s.level}%`, background: `linear-gradient(90deg, ${s.color}, ${s.color}88)` }} />
             </div>
@@ -365,8 +385,9 @@ function SkillsSection({ skills }) {
               <span className="skill-boost" style={{ color: '#10B981' }}>
                 <ArrowUpRight size={14} /> +{s.boost}% فرص التوظيف
               </span>
-              <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}>
-                <BookOpen size={13} /> {s.course}
+              <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}
+                onClick={() => handleCourseClick(s)}>
+                <ExternalLink size={13} /> {s.course}
               </button>
             </div>
           </div>
@@ -376,10 +397,12 @@ function SkillsSection({ skills }) {
   );
 }
 
-/* ─── 5. Smart Tasks ─────────────────────────────────────────────────────────── */
+/* ─── 5. Smart Tasks ────────────────────────────────────────────────────────── */
 
-function TasksSection({ tasks }) {
+function TasksSection({ onToast }) {
+  const [tasks, setTasks]       = useState(INITIAL_TASKS);
   const [expandedId, setExpandedId] = useState(null);
+  const [completedSteps, setCompletedSteps] = useState({});
 
   const urgencyMap = {
     danger:  { color: '#F43F5E', bg: 'rgba(244,63,94,0.06)',  border: 'rgba(244,63,94,0.18)',  Icon: AlertTriangle },
@@ -388,6 +411,44 @@ function TasksSection({ tasks }) {
   };
 
   const activeCount = tasks.filter(t => t.urgency !== 'success').length;
+
+  const handleStartTask = (taskId) => {
+    setTasks(prev => prev.map(t =>
+      t.id === taskId
+        ? { ...t, progress: 15, urgency: 'warning', aiNote: 'بدأتِ! استمري على هذا النمط 🚀' }
+        : t
+    ));
+    onToast('تم بدء المهمة! الخطوة الأولى أمامك الآن 🚀', 'success');
+  };
+
+  const handleToggleStep = (taskId, stepIndex) => {
+    const key = `${taskId}-${stepIndex}`;
+    setCompletedSteps(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+
+      // حساب التقدم بناءً على الخطوات المكتملة
+      const totalSteps = SPLIT_STEPS.length;
+      const doneCount = SPLIT_STEPS.filter((_, i) => updated[`${taskId}-${i}`]).length;
+      const newProgress = Math.round((doneCount / totalSteps) * 100);
+
+      setTasks(prevTasks => prevTasks.map(t => {
+        if (t.id !== taskId) return t;
+        const newUrgency = newProgress === 100 ? 'success' : newProgress > 0 ? 'warning' : 'danger';
+        const newNote = newProgress === 100
+          ? 'أحسنتِ! مكتمل 🎉'
+          : newProgress > 50
+            ? `ممتاز! أكملتِ ${doneCount} من ${totalSteps} خطوات`
+            : t.aiNote;
+        return { ...t, progress: newProgress, urgency: newUrgency, aiNote: newNote };
+      }));
+
+      if (!prev[key]) {
+        onToast(`تم إكمال الخطوة ${stepIndex + 1} ✅`, 'success');
+      }
+
+      return updated;
+    });
+  };
 
   return (
     <div className="glass panel-card animate-fade-up delay-5">
@@ -405,8 +466,8 @@ function TasksSection({ tasks }) {
 
       <div className="tasks-list">
         {tasks.map((t) => {
-          const u       = urgencyMap[t.urgency];
-          const open    = expandedId === t.id;
+          const u    = urgencyMap[t.urgency];
+          const open = expandedId === t.id;
           return (
             <div key={t.id} className="task-card" style={{ background: u.bg, borderColor: u.border }}>
               <div className="task-row">
@@ -442,21 +503,37 @@ function TasksSection({ tasks }) {
                 )}
               </div>
 
-              {/* الخطوات المنسدلة */}
+              {/* الخطوات المنسدلة — الآن تفاعلية! */}
               {open && (
                 <div className="split-panel">
                   <p className="split-title">
                     📋 الخطة المقترحة — إجمالي: ~2.7 ساعة
                   </p>
-                  {SPLIT_STEPS.map((step, i) => (
-                    <div key={i} className="split-step">
-                      <span className="split-num">{i + 1}</span>
-                      <span className="split-icon">{step.icon}</span>
-                      <span className="split-text">{step.text}</span>
-                      <span className="split-time"><Timer size={11} /> {step.time}</span>
-                    </div>
-                  ))}
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.75rem' }}>
+                  {SPLIT_STEPS.map((step, i) => {
+                    const isDone = completedSteps[`${t.id}-${i}`];
+                    return (
+                      <div
+                        key={i}
+                        className={`split-step ${isDone ? 'split-step-done' : ''}`}
+                        onClick={() => handleToggleStep(t.id, i)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <span className={`split-check ${isDone ? 'checked' : ''}`}>
+                          {isDone ? <Check size={12} /> : <span className="split-num-inner">{i + 1}</span>}
+                        </span>
+                        <span className="split-icon">{step.icon}</span>
+                        <span className="split-text" style={{ textDecoration: isDone ? 'line-through' : 'none', opacity: isDone ? 0.5 : 1 }}>
+                          {step.text}
+                        </span>
+                        <span className="split-time"><Timer size={11} /> {step.time}</span>
+                      </div>
+                    );
+                  })}
+                  <button
+                    className="btn btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', marginTop: '0.75rem' }}
+                    onClick={() => handleStartTask(t.id)}
+                  >
                     <Zap size={14} /> ابدئي الآن — الخطوة الأولى
                   </button>
                 </div>
@@ -473,19 +550,22 @@ function TasksSection({ tasks }) {
 //  MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function StudentDashboard() {
+export default function StudentDashboard({ onToast }) {
+  // fallback لو لم يتم تمرير onToast (يمنع crash)
+  const toast = onToast || (() => {});
+
   return (
     <div className="student-dash">
       <HeroSection student={STUDENT} />
 
       <div className="dashboard-grid-even">
-        <AdaptiveSection items={ADAPTIVE} />
-        <PeersSection    peers={PEERS} />
+        <AdaptiveSection items={ADAPTIVE} onToast={toast} />
+        <PeersSection    peers={PEERS}    onToast={toast} />
       </div>
 
       <div className="dashboard-grid-even">
-        <SkillsSection skills={SKILLS} />
-        <TasksSection  tasks={TASKS} />
+        <SkillsSection skills={SKILLS}  onToast={toast} />
+        <TasksSection                   onToast={toast} />
       </div>
     </div>
   );

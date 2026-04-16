@@ -1,54 +1,93 @@
 /**
  * App.jsx — المدخل الرئيسي لنظام "راصد بلس"
  * 
- * يدير التنقل بين:
- *   - لوحة المرشد الأكاديمي (AdvisorDashboard)
- *   - لوحة الطالب (StudentDashboard)
+ * الآن مع:
+ *   ✅ بيانات ديناميكية من mockEngine
+ *   ✅ أزرار "خطة تدخل" و "توأمة" مفعّلة
+ *   ✅ InterventionModal يظهر عند الضغط
+ *   ✅ NotificationsPanel يظهر عند ضغط الجرس
+ *   ✅ Toast notifications عند إجراء أي عملية
+ *   ✅ التنقل بين التابات يعمل
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
   Search, Bell, Zap, GraduationCap, BrainCircuit,
-  Mail, UserCircle2, Sparkles, ArrowUpRight,
+  Mail, UserCircle2, Sparkles, ArrowUpRight, X,
+  CheckCircle2,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
+import InterventionModal from './components/InterventionModal';
+import NotificationsPanel from './components/NotificationsPanel';
+import { analyzeAllStudents, getAdvisorStats, generateNotifications } from './services/mockEngine';
 import './App.css';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Toast Component ──────────────────────────────────────────────────────────
 
-const ADVISOR_STUDENTS = [
-  { id: 1, name: 'أحمد محمود',  num: '44120345', risk: 'red',    issue: 'انخفاض مفاجئ في الحضور وفشل في تسليم واجبين',          gpa: 2.1 },
-  { id: 2, name: 'سارة خالد',   num: '44210988', risk: 'yellow', issue: 'تستغرق 3 أضعاف الوقت المتوقع في مهام البرمجة',           gpa: 3.4 },
-  { id: 3, name: 'فهد عبدالله',  num: '43990122', risk: 'green',  issue: 'مسار سليم — أداء ممتاز في جميع المقررات',                gpa: 4.8 },
-  { id: 4, name: 'نورة سعد',    num: '44112340', risk: 'red',    issue: 'نمط دخول متأخر متكرر يشير لاضطراب في إدارة الوقت',       gpa: 2.5 },
-  { id: 5, name: 'عمر الشمري',  num: '44315200', risk: 'yellow', issue: 'عدم إكمال 40% من المحاضرات المسجلة',                      gpa: 3.8 },
-];
+function Toast({ message, type = 'success', onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-// ─── لوحة المرشد ──────────────────────────────────────────────────────────────
+  const colors = {
+    success: { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: '#10B981' },
+    info:    { bg: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.3)', color: '#818CF8' },
+    warning: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', color: '#F59E0B' },
+  };
+  const c = colors[type] || colors.success;
 
-function AdvisorDashboard() {
+  return (
+    <div className="toast-container animate-fade-up" style={{
+      position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+      zIndex: 1000, padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-md)',
+      background: c.bg, border: `1px solid ${c.border}`, color: c.color,
+      backdropFilter: 'blur(20px)', fontWeight: '600', fontSize: '0.88rem',
+      display: 'flex', alignItems: 'center', gap: '0.5rem',
+      boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+    }}>
+      <CheckCircle2 size={16} /> {message}
+    </div>
+  );
+}
+
+// ─── لوحة المرشد الأكاديمي ───────────────────────────────────────────────────
+
+function AdvisorDashboard({ onIntervention, onToast }) {
+  // جلب البيانات ديناميكياً من محرك البيانات بدلاً من hardcoding
+  const students = analyzeAllStudents();
+  const stats    = getAdvisorStats();
+
+  const handlePeerMatch = (student) => {
+    // في الإنتاج: fetch('/api/v1/students/match', ...)
+    onToast(`تم إرسال طلب توأمة أكاديمية لـ ${student.name}`, 'info');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-      {/* بطاقات الإحصاء */}
+      {/* الإحصاءات — مأخوذة من المحرك الذكي */}
       <div className="stats-row animate-fade-up">
-        <StatCard icon={<Users size={24} />} label="إجمالي الطلاب" value="1,248"
+        <StatCard icon={<Users size={24} />} label="إجمالي الطلاب" value={stats.totalStudents.toLocaleString()}
           trend="+12 هذا الفصل" trendColor="var(--brand-emerald)"
           iconBg="rgba(16,185,129,0.12)" iconColor="var(--brand-emerald)" />
-        <StatCard icon={<ShieldAlert size={24} />} label="تدخلات مطلوبة اليوم" value="8"
-          trend="4 أكاديمي • 2 سلوكي" trendColor="var(--brand-rose)"
+        <StatCard icon={<ShieldAlert size={24} />} label="تدخلات مطلوبة اليوم"
+          value={stats.interventionsToday.toString()}
+          trend={`${stats.redCount} عاجل • ${stats.yellowCount} مراقبة`}
+          trendColor="var(--brand-rose)"
           iconBg="rgba(244,63,94,0.12)" iconColor="var(--brand-rose)" valueColor="var(--brand-rose)" />
-        <StatCard icon={<GraduationCap size={24} />} label="تدخلات ناجحة" value="34"
-          trend="نسبة النجاح 88%" trendColor="var(--brand-emerald)"
+        <StatCard icon={<GraduationCap size={24} />} label="تدخلات ناجحة"
+          value={stats.successfulInterventions.toString()}
+          trend={`نسبة النجاح ${stats.successRate}%`} trendColor="var(--brand-emerald)"
           iconBg="rgba(34,211,238,0.12)" iconColor="var(--brand-cyan)" />
       </div>
 
       {/* الفرز الذكي + التوصيات */}
       <div className="dashboard-grid animate-fade-up delay-2">
 
-        {/* جدول الفرز */}
+        {/* قائمة الطلاب — ديناميكية من خوارزمية التحليل */}
         <div className="glass panel-card">
           <div className="panel-header">
             <div className="panel-title">
@@ -57,28 +96,42 @@ function AdvisorDashboard() {
               </div>
               الفرز الذكي (Smart Triage)
             </div>
-            <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }}>عرض الكل</button>
+            <span className="badge" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>
+              مرتب حسب الخطورة
+            </span>
           </div>
 
           <div className="student-list">
-            {ADVISOR_STUDENTS.map((s) => (
+            {students.map((s) => (
               <div key={s.id} className="student-item">
-                <div className={`risk-dot ${s.risk}`} />
-                <div>
+                <div className={`risk-dot ${s.riskLevel}`} />
+                <div style={{ minWidth: '100px' }}>
                   <div className="student-name">{s.name}</div>
-                  <div className="student-meta">{s.num} | المعدل: {s.gpa}</div>
+                  <div className="student-meta">{s.id} | المعدل: {s.gpa} | الخطورة: {s.riskScore}%</div>
                 </div>
-                <div className="student-issue">{s.issue}</div>
+                <div className="student-issue">
+                  {s.primaryReason}
+                </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                  {s.risk === 'red' && <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}><Mail size={14} /> خطة تدخل</button>}
-                  {s.risk === 'yellow' && <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}><Users size={14} /> توأمة</button>}
+                  {s.riskLevel === 'red' && (
+                    <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}
+                      onClick={() => onIntervention(s)}>
+                      <Mail size={14} /> خطة تدخل
+                    </button>
+                  )}
+                  {s.riskLevel === 'yellow' && (
+                    <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}
+                      onClick={() => handlePeerMatch(s)}>
+                      <Users size={14} /> توأمة
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* توصيات Copilot */}
+        {/* توصيات Copilot — ديناميكية */}
         <div className="glass panel-card">
           <div className="panel-header">
             <div className="panel-title">
@@ -88,17 +141,16 @@ function AdvisorDashboard() {
               توصيات Copilot
             </div>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <AiInsightCard color="var(--brand-indigo)" icon={<BrainCircuit size={16} />}
               title="توجيه تكيفي"
-              body="تم تحويل 45 طالب إلى بودكاست ملخص بسبب بطء الاستيعاب الملحوظ في القراءة هذا الأسبوع." />
+              body={`تم تحويل ${Math.floor(students.length * 7.5)} طالب إلى بودكاست بسبب بطء الاستيعاب. ${students.filter(s => s.taskTimeRatio > 2).length} طلاب يستغرقون وقتاً مضاعفاً.`} />
             <AiInsightCard color="var(--brand-amber)" icon={<TrendingUp size={16} />}
               title="رادار المناهج"
-              body="CS301: نسبة فشل فوق 60% في مهام الفرز. المشكلة قد تكون في أسلوب التدريس." />
+              body={`CS301: ${students.filter(s => s.incompleteLectures > 40).length} طلاب لم يكملوا محاضراتها. نسبة فشل تتجاوز 60% — المشكلة قد تكون في أسلوب التدريس.`} />
             <AiInsightCard color="var(--brand-emerald)" icon={<Zap size={16} />}
               title="بوصلة سوق العمل"
-              body="اقترحنا دورة Node.js لـ 12 طالب متميز في برمجة الويب لتعزيز الجاهزية الوظيفية." />
+              body={`${students.filter(s => s.gpa >= 3.5).length} طلاب مؤهلين لتوصيات كورسات متقدمة. اقترحنا دورة AI لطلاب الذكاء الاصطناعي.`} />
           </div>
         </div>
       </div>
@@ -106,7 +158,7 @@ function AdvisorDashboard() {
   );
 }
 
-// ─── مكونات مساعدة صغيرة ──────────────────────────────────────────────────────
+// ─── مكونات مساعدة ─────────────────────────────────────────────────────────────
 
 function StatCard({ icon, label, value, trend, trendColor, iconBg, iconColor, valueColor }) {
   return (
@@ -134,7 +186,7 @@ function AiInsightCard({ color, icon, title, body }) {
   );
 }
 
-// ─── التنقل ──────────────────────────────────────────────────────────────────
+// ─── التنقل ───────────────────────────────────────────────────────────────────
 
 const NAV_ADVISOR = [
   { id: 'dashboard',     icon: LayoutDashboard, label: 'لوحة القيادة' },
@@ -150,11 +202,14 @@ const NAV_STUDENT = [
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
 ];
 
-// ─── App ──────────────────────────────────────────────────────────────────────
+// ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
 
 export default function App() {
-  const [role, setRole]       = useState('student');
-  const [activeTab, setTab]   = useState('overview');
+  const [role, setRole]                   = useState('student');
+  const [activeTab, setTab]               = useState('overview');
+  const [interventionStudent, setIntervention] = useState(null);
+  const [showNotifs, setShowNotifs]       = useState(false);
+  const [toast, setToast]                 = useState(null);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
   const name = role === 'advisor' ? 'د. خالد' : 'سارة';
@@ -167,36 +222,42 @@ export default function App() {
     setTab(r === 'advisor' ? 'dashboard' : 'overview');
   };
 
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+  };
+
+  // عدد الإشعارات غير المقروءة
+  const unreadCount = generateNotifications(role).filter(n => !n.read).length;
+
+  // الـ Copilot tip يتغير ديناميكياً حسب الدور والتبويب
+  const copilotTip = role === 'advisor'
+    ? 'انخفاض 15% في درجات الفيزياء النصفي. اضغط على "رادار المناهج" للتفاصيل.'
+    : 'لديكِ تسليم غداً ولم تبدئي! اضغطي على "مهامي" وقسّمي المهمة.';
+
   return (
     <div className="app-shell">
 
       {/* ═══ الشريط الجانبي ═══ */}
       <aside className="sidebar glass animate-fade-right">
-
-        {/* الشعار */}
         <div className="sidebar-brand">
           <div className="brand-logo-wrap">
             <img src={logo} alt="راصد بلس" />
           </div>
         </div>
 
-        {/* مبدّل الدور */}
         <div className="role-switcher">
           {[
             { key: 'advisor', label: 'مرشد', Icon: GraduationCap },
             { key: 'student', label: 'طالب', Icon: UserCircle2 },
           ].map(({ key, label, Icon }) => (
-            <button
-              key={key}
+            <button key={key}
               className={`role-btn ${role === key ? 'active' : 'inactive'}`}
-              onClick={() => switchRole(key)}
-            >
+              onClick={() => switchRole(key)}>
               <Icon size={15} /> {label}
             </button>
           ))}
         </div>
 
-        {/* القائمة */}
         <nav className="nav-list">
           {nav.map(({ id, icon: Icon, label }) => (
             <a key={id}
@@ -207,21 +268,14 @@ export default function App() {
           ))}
         </nav>
 
-        {/* بطاقة Copilot */}
         <div className="copilot-card">
           <div className="copilot-card-title"><Sparkles size={15} /> توصية Copilot</div>
-          <p className="copilot-card-body">
-            {role === 'advisor'
-              ? 'انخفاض 15% في درجات الفيزياء النصفي. جدولة مراجعة عامة قبل النهائي.'
-              : 'لديكِ تسليم غداً ولم تبدئي! الآن أفضل وقت للبدء.'}
-          </p>
+          <p className="copilot-card-body">{copilotTip}</p>
         </div>
       </aside>
 
       {/* ═══ المحتوى الرئيسي ═══ */}
       <main className="main-content">
-
-        {/* الرأس */}
         <header className="main-header animate-fade-up">
           <div className="header-greeting">
             <h1>مرحباً، {name} 👋</h1>
@@ -229,15 +283,46 @@ export default function App() {
           </div>
           <div className="header-actions">
             <button className="icon-btn"><Search size={18} /></button>
-            <button className="icon-btn" data-notif="true"><Bell size={18} /></button>
+            <button className="icon-btn" data-notif={unreadCount > 0 ? 'true' : undefined}
+              onClick={() => setShowNotifs(!showNotifs)}>
+              <Bell size={18} />
+            </button>
             <div className="avatar">{name.charAt(0)}</div>
           </div>
         </header>
 
-        {/* اللوحة */}
-        {role === 'advisor' ? <AdvisorDashboard /> : <StudentDashboard />}
-
+        {/* اللوحة حسب الدور */}
+        {role === 'advisor'
+          ? <AdvisorDashboard
+              onIntervention={(s) => setIntervention(s)}
+              onToast={showToast}
+            />
+          : <StudentDashboard onToast={showToast} />
+        }
       </main>
+
+      {/* ═══ Modals / Overlays ═══ */}
+
+      {interventionStudent && (
+        <InterventionModal
+          student={interventionStudent}
+          onClose={() => {
+            setIntervention(null);
+            showToast('تم توليد خطة التدخل بنجاح');
+          }}
+        />
+      )}
+
+      {showNotifs && (
+        <NotificationsPanel
+          role={role}
+          onClose={() => setShowNotifs(false)}
+        />
+      )}
+
+      {toast && (
+        <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </div>
   );
 }

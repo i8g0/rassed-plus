@@ -415,22 +415,49 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.55rem 0;
+  padding: 0.6rem 0.5rem;
   border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+.split-step:hover {
+  background: rgba(255,255,255,0.03);
 }
 .split-step:last-of-type {
   border-bottom: none;
 }
 
-.split-num {
-  width: 24px; height: 24px;
+.split-step-done {
+  opacity: 0.6;
+}
+
+/* دائرة الخطوة القابلة للنقر (checkbox) */
+.split-check {
+  width: 26px; height: 26px;
   border-radius: 50%;
-  background: rgba(244,63,94,0.15);
+  background: rgba(244,63,94,0.12);
   color: #F43F5E;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.72rem;
   font-weight: 800;
   flex-shrink: 0;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+}
+
+.split-check:hover {
+  border-color: rgba(244,63,94,0.4);
+  transform: scale(1.1);
+}
+
+.split-check.checked {
+  background: rgba(16,185,129,0.2);
+  color: #10B981;
+  border-color: rgba(16,185,129,0.4);
+}
+
+.split-num-inner {
+  font-size: 0.72rem;
 }
 
 .split-icon {
@@ -441,6 +468,7 @@
   flex: 1;
   color: var(--text-secondary);
   font-size: 0.82rem;
+  transition: opacity 0.3s, text-decoration 0.3s;
 }
 
 .split-time {
