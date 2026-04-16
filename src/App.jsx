@@ -1,204 +1,243 @@
+/**
+ * App.jsx — المدخل الرئيسي لنظام "راصد بلس"
+ * 
+ * يدير التنقل بين:
+ *   - لوحة المرشد الأكاديمي (AdvisorDashboard)
+ *   - لوحة الطالب (StudentDashboard)
+ */
+
 import { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  ShieldAlert, 
-  BrainCircuit, 
-  TrendingUp, 
-  Search,
-  Bell,
-  Mail,
-  Zap,
-  GraduationCap
+import {
+  LayoutDashboard, Users, ShieldAlert, TrendingUp,
+  Search, Bell, Zap, GraduationCap, BrainCircuit,
+  Mail, UserCircle2, Sparkles, ArrowUpRight,
 } from 'lucide-react';
+import logo from './assets/logo.png';
+import StudentDashboard from './components/StudentDashboard';
 import './App.css';
 
-function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 
-  const students = [
-    { id: 1, name: 'أحمد محمود', idNumber: '44120345', risk: 'danger', issue: 'انخفاض مفاجئ في الحضور وفشل في تسليم واجبين', gpa: 2.1 },
-    { id: 2, name: 'سارة خالد', idNumber: '44210988', risk: 'warning', issue: 'تستغرق 3 أضعاف الوقت المتوقع في مهام البرمجة', gpa: 3.4 },
-    { id: 3, name: 'فهد عبدالله', idNumber: '43990122', risk: 'success', issue: 'مسار سليم', gpa: 4.8 },
-    { id: 4, name: 'نورة سعد', idNumber: '44112340', risk: 'danger', issue: 'سلوك رقمي مقلق (تسجيل دخول متأخر بشكل يومي)', gpa: 2.5 },
-  ];
+const ADVISOR_STUDENTS = [
+  { id: 1, name: 'أحمد محمود',  num: '44120345', risk: 'red',    issue: 'انخفاض مفاجئ في الحضور وفشل في تسليم واجبين',          gpa: 2.1 },
+  { id: 2, name: 'سارة خالد',   num: '44210988', risk: 'yellow', issue: 'تستغرق 3 أضعاف الوقت المتوقع في مهام البرمجة',           gpa: 3.4 },
+  { id: 3, name: 'فهد عبدالله',  num: '43990122', risk: 'green',  issue: 'مسار سليم — أداء ممتاز في جميع المقررات',                gpa: 4.8 },
+  { id: 4, name: 'نورة سعد',    num: '44112340', risk: 'red',    issue: 'نمط دخول متأخر متكرر يشير لاضطراب في إدارة الوقت',       gpa: 2.5 },
+  { id: 5, name: 'عمر الشمري',  num: '44315200', risk: 'yellow', issue: 'عدم إكمال 40% من المحاضرات المسجلة',                      gpa: 3.8 },
+];
 
+// ─── لوحة المرشد ──────────────────────────────────────────────────────────────
+
+function AdvisorDashboard() {
   return (
-    <div className="app-container">
-      {/* Sidebar */}
-      <aside className="sidebar glass-panel fade-in">
-        <div className="brand">
-          <div className="brand-icon">
-            <BrainCircuit size={28} color="white" />
-          </div>
-          <span className="text-gradient">راصد بلس</span>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-        <nav className="nav-menu">
-          <a className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-            <LayoutDashboard size={20} />
-            لوحة القيادة
-          </a>
-          <a className={`nav-item ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>
-            <Users size={20} />
-            الطلاب
-          </a>
-          <a className={`nav-item ${activeTab === 'interventions' ? 'active' : ''}`} onClick={() => setActiveTab('interventions')}>
-            <ShieldAlert size={20} />
-            التدخلات العلاجية
-          </a>
-          <a className={`nav-item ${activeTab === 'radar' ? 'active' : ''}`} onClick={() => setActiveTab('radar')}>
-            <TrendingUp size={20} />
-            رادار المناهج
-          </a>
-        </nav>
+      {/* بطاقات الإحصاء */}
+      <div className="stats-row animate-fade-up">
+        <StatCard icon={<Users size={24} />} label="إجمالي الطلاب" value="1,248"
+          trend="+12 هذا الفصل" trendColor="var(--brand-emerald)"
+          iconBg="rgba(16,185,129,0.12)" iconColor="var(--brand-emerald)" />
+        <StatCard icon={<ShieldAlert size={24} />} label="تدخلات مطلوبة اليوم" value="8"
+          trend="4 أكاديمي • 2 سلوكي" trendColor="var(--brand-rose)"
+          iconBg="rgba(244,63,94,0.12)" iconColor="var(--brand-rose)" valueColor="var(--brand-rose)" />
+        <StatCard icon={<GraduationCap size={24} />} label="تدخلات ناجحة" value="34"
+          trend="نسبة النجاح 88%" trendColor="var(--brand-emerald)"
+          iconBg="rgba(34,211,238,0.12)" iconColor="var(--brand-cyan)" />
+      </div>
 
-        <div className="ai-recommendation mt-auto">
-          <div className="ai-title">
-            <Zap size={18} />
-            <span>توصية Copilot</span>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: '#CBD5E1', lineHeight: '1.5' }}>
-            لاحظنا انخفاض بنسبة 15% في درجات اختبار الفيزياء النصفي. اقترحنا جدولة مراجعة عامة قبل الاختبار النهائي.
-          </p>
-        </div>
-      </aside>
+      {/* الفرز الذكي + التوصيات */}
+      <div className="dashboard-grid animate-fade-up delay-2">
 
-      {/* Main Content */}
-      <main className="main-content">
-        <header className="header fade-in delay-100">
-          <div>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>مرحباً بك، د. خالد 👋</h1>
-            <p style={{ color: '#94A3B8', marginTop: '0.5rem' }}>إليك نظرة عامة على حالة الطلاب اليوم</p>
-          </div>
-          <div className="user-profile">
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <Search size={20} color="#94A3B8" />
-              <Bell size={20} color="#94A3B8" />
-            </div>
-            <div className="avatar">خ</div>
-          </div>
-        </header>
-
-        {/* Stats Grid */}
-        <div className="stats-grid fade-in delay-200">
-          <div className="stat-card glass-panel">
-            <div className="stat-header">
-              <span>إجمالي الطلاب</span>
-              <div className="stat-icon success"><Users size={24} /></div>
-            </div>
-            <div className="stat-value">1,248</div>
-            <div style={{ color: '#10B981', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <TrendingUp size={16} /> +12 هذا الفصل
-            </div>
-          </div>
-
-          <div className="stat-card glass-panel">
-            <div className="stat-header">
-              <span>حالات تستدعي التدخل اليوم</span>
-              <div className="stat-icon danger"><ShieldAlert size={24} /></div>
-            </div>
-            <div className="stat-value" style={{ color: '#EF4444' }}>8</div>
-            <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
-              4 أكاديمي • 2 سلوكي • 2 قلق امتحان
-            </div>
-          </div>
-
-          <div className="stat-card glass-panel">
-            <div className="stat-header">
-              <span>تدخلات ناجحة (هذا الشهر)</span>
-              <div className="stat-icon success"><GraduationCap size={24} /></div>
-            </div>
-            <div className="stat-value">34</div>
-            <div style={{ color: '#10B981', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <TrendingUp size={16} /> نسبة النجاح 88%
-            </div>
-          </div>
-        </div>
-
-        {/* Features / Main Dashboard */}
-        <div className="dashboard-features fade-in delay-300">
-          <div className="glass-panel" style={{ padding: '1.5rem' }}>
-            <div className="panel-header">
-              <span>الفرز الذكي (Smart Triage)</span>
-              <button className="action-btn secondary" style={{ fontSize: '0.9rem' }}>عرض الكل</button>
-            </div>
-            <div className="students-list">
-              {students.map((student) => (
-                <div key={student.id} className="student-row">
-                  <div className="student-info">
-                    <div className={`indicator ${student.risk}`}></div>
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{student.name}</div>
-                      <div style={{ color: '#94A3B8', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                        {student.idNumber} | المعدل: {student.gpa}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div style={{ flex: 1, margin: '0 2rem', color: '#CBD5E1', fontSize: '0.9rem' }}>
-                    {student.issue}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {student.risk === 'danger' && (
-                      <button className="action-btn">
-                        <Mail size={16} /> خطة تدخل جاهزة
-                      </button>
-                    )}
-                    {student.risk === 'warning' && (
-                      <button className="action-btn secondary">
-                        <Users size={16} /> توأمة أكاديمية
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-panel" style={{ padding: '1.5rem' }}>
-            <div className="panel-header">
-              <span>مؤشرات Copilot الذكية</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              
-              <div className="ai-recommendation" style={{ margin: 0 }}>
-                <div className="ai-title">
-                  <BrainCircuit size={18} />
-                  <span>توجيه تكيفي (Adaptive Routing)</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: '#CBD5E1' }}>
-                  تم تحويل 45 طالب من قراءة المرجع النصي إلى بودكاست ملخص بسبب بطء الاستيعاب الملحوظ هذا الأسبوع.
-                </p>
+        {/* جدول الفرز */}
+        <div className="glass panel-card">
+          <div className="panel-header">
+            <div className="panel-title">
+              <div className="panel-title-icon" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>
+                <ShieldAlert size={18} />
               </div>
-
-              <div className="ai-recommendation" style={{ margin: 0, background: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
-                <div className="ai-title" style={{ color: '#F59E0B' }}>
-                  <TrendingUp size={18} />
-                  <span>رادار عنق الزجاجة (Curriculum Radar)</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: '#CBD5E1' }}>
-                  تنبيه: مادة الخوارزميات (CS301) تشهد نسبة فشل تزيد عن 60% في مهام الفرز المتوقع. المشكلة قد تكون في طريقة التدريس.
-                </p>
-              </div>
-
-              <div className="ai-recommendation" style={{ margin: 0, background: 'rgba(16, 185, 129, 0.05)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>
-                <div className="ai-title" style={{ color: '#10B981' }}>
-                  <Zap size={18} />
-                  <span>التنبؤ بسوق العمل (Skill-to-Market)</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: '#CBD5E1' }}>
-                  تم اقتراح دورة Node.js متقدمة لـ 12 طالب ذوي أداء ممتاز في برمجة الويب لزيادة فرص الجاهزية الوظيفية.
-                </p>
-              </div>
-
+              الفرز الذكي (Smart Triage)
             </div>
+            <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }}>عرض الكل</button>
+          </div>
+
+          <div className="student-list">
+            {ADVISOR_STUDENTS.map((s) => (
+              <div key={s.id} className="student-item">
+                <div className={`risk-dot ${s.risk}`} />
+                <div>
+                  <div className="student-name">{s.name}</div>
+                  <div className="student-meta">{s.num} | المعدل: {s.gpa}</div>
+                </div>
+                <div className="student-issue">{s.issue}</div>
+                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                  {s.risk === 'red' && <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}><Mail size={14} /> خطة تدخل</button>}
+                  {s.risk === 'yellow' && <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}><Users size={14} /> توأمة</button>}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </main>
+
+        {/* توصيات Copilot */}
+        <div className="glass panel-card">
+          <div className="panel-header">
+            <div className="panel-title">
+              <div className="panel-title-icon" style={{ background: 'rgba(34,211,238,0.12)', color: 'var(--brand-cyan)' }}>
+                <Sparkles size={18} />
+              </div>
+              توصيات Copilot
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <AiInsightCard color="var(--brand-indigo)" icon={<BrainCircuit size={16} />}
+              title="توجيه تكيفي"
+              body="تم تحويل 45 طالب إلى بودكاست ملخص بسبب بطء الاستيعاب الملحوظ في القراءة هذا الأسبوع." />
+            <AiInsightCard color="var(--brand-amber)" icon={<TrendingUp size={16} />}
+              title="رادار المناهج"
+              body="CS301: نسبة فشل فوق 60% في مهام الفرز. المشكلة قد تكون في أسلوب التدريس." />
+            <AiInsightCard color="var(--brand-emerald)" icon={<Zap size={16} />}
+              title="بوصلة سوق العمل"
+              body="اقترحنا دورة Node.js لـ 12 طالب متميز في برمجة الويب لتعزيز الجاهزية الوظيفية." />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-export default App;
+// ─── مكونات مساعدة صغيرة ──────────────────────────────────────────────────────
+
+function StatCard({ icon, label, value, trend, trendColor, iconBg, iconColor, valueColor }) {
+  return (
+    <div className="glass stat-card">
+      <div className="stat-icon-wrap" style={{ background: iconBg, color: iconColor }}>{icon}</div>
+      <div className="stat-info">
+        <span className="stat-label">{label}</span>
+        <span className="stat-value" style={{ color: valueColor || 'var(--text-primary)' }}>{value}</span>
+        {trend && (
+          <span className="stat-trend" style={{ color: trendColor }}>
+            <ArrowUpRight size={13} /> {trend}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AiInsightCard({ color, icon, title, body }) {
+  return (
+    <div className="ai-card" style={{ background: `${color}08`, borderColor: `${color}22` }}>
+      <div className="ai-card-title" style={{ color }}>{icon}<span>{title}</span></div>
+      <p className="ai-card-body">{body}</p>
+    </div>
+  );
+}
+
+// ─── التنقل ──────────────────────────────────────────────────────────────────
+
+const NAV_ADVISOR = [
+  { id: 'dashboard',     icon: LayoutDashboard, label: 'لوحة القيادة' },
+  { id: 'students',      icon: Users,           label: 'الطلاب' },
+  { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
+  { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
+];
+
+const NAV_STUDENT = [
+  { id: 'overview', icon: LayoutDashboard, label: 'نظرة عامة' },
+  { id: 'tasks',    icon: Zap,             label: 'مهامي' },
+  { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
+  { id: 'peers',    icon: Users,           label: 'التوأمة' },
+];
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [role, setRole]       = useState('student');
+  const [activeTab, setTab]   = useState('overview');
+
+  const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
+  const name = role === 'advisor' ? 'د. خالد' : 'سارة';
+  const subtitle = role === 'advisor'
+    ? 'إليك نظرة عامة على حالة الطلاب اليوم'
+    : 'إليكِ ملخص مسارك الأكاديمي';
+
+  const switchRole = (r) => {
+    setRole(r);
+    setTab(r === 'advisor' ? 'dashboard' : 'overview');
+  };
+
+  return (
+    <div className="app-shell">
+
+      {/* ═══ الشريط الجانبي ═══ */}
+      <aside className="sidebar glass animate-fade-right">
+
+        {/* الشعار */}
+        <div className="sidebar-brand">
+          <div className="brand-logo-wrap">
+            <img src={logo} alt="راصد بلس" />
+          </div>
+        </div>
+
+        {/* مبدّل الدور */}
+        <div className="role-switcher">
+          {[
+            { key: 'advisor', label: 'مرشد', Icon: GraduationCap },
+            { key: 'student', label: 'طالب', Icon: UserCircle2 },
+          ].map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              className={`role-btn ${role === key ? 'active' : 'inactive'}`}
+              onClick={() => switchRole(key)}
+            >
+              <Icon size={15} /> {label}
+            </button>
+          ))}
+        </div>
+
+        {/* القائمة */}
+        <nav className="nav-list">
+          {nav.map(({ id, icon: Icon, label }) => (
+            <a key={id}
+              className={`nav-link ${activeTab === id ? 'active' : ''}`}
+              onClick={() => setTab(id)}>
+              <Icon size={19} /> {label}
+            </a>
+          ))}
+        </nav>
+
+        {/* بطاقة Copilot */}
+        <div className="copilot-card">
+          <div className="copilot-card-title"><Sparkles size={15} /> توصية Copilot</div>
+          <p className="copilot-card-body">
+            {role === 'advisor'
+              ? 'انخفاض 15% في درجات الفيزياء النصفي. جدولة مراجعة عامة قبل النهائي.'
+              : 'لديكِ تسليم غداً ولم تبدئي! الآن أفضل وقت للبدء.'}
+          </p>
+        </div>
+      </aside>
+
+      {/* ═══ المحتوى الرئيسي ═══ */}
+      <main className="main-content">
+
+        {/* الرأس */}
+        <header className="main-header animate-fade-up">
+          <div className="header-greeting">
+            <h1>مرحباً، {name} 👋</h1>
+            <p>{subtitle}</p>
+          </div>
+          <div className="header-actions">
+            <button className="icon-btn"><Search size={18} /></button>
+            <button className="icon-btn" data-notif="true"><Bell size={18} /></button>
+            <div className="avatar">{name.charAt(0)}</div>
+          </div>
+        </header>
+
+        {/* اللوحة */}
+        {role === 'advisor' ? <AdvisorDashboard /> : <StudentDashboard />}
+
+      </main>
+    </div>
+  );
+}
