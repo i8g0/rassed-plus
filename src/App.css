@@ -457,7 +457,304 @@
   line-height: 1.6;
 }
 
+/* ─── Loading Skeleton ─────────────────────────────────────────────────────── */
+
+.loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Filter Bar (Students Tab) ────────────────────────────────────────────── */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.85rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  width: 100%;
+}
+.search-input::placeholder { color: var(--text-muted); }
+
+.filter-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 0.4rem 0.75rem;
+  border-radius: 99px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+.filter-chip:hover { background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+.filter-chip.active {
+  background: rgba(99,102,241,0.12);
+  color: var(--brand-indigo);
+  border-color: rgba(99,102,241,0.25);
+}
+
+/* ─── Students Detail List ─────────────────────────────────────────────────── */
+
+.students-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.student-detail-card {
+  padding: 1.15rem;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
+}
+.student-detail-card:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.student-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.student-detail-info { flex: 1; }
+
+.student-detail-score {
+  font-size: 1.5rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.student-detail-body {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.detail-stat-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.detail-stat-row strong { color: var(--text-primary); }
+
+.student-detail-reason {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-indigo);
+  margin-bottom: 0.5rem;
+}
+
+.detail-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-factor-tag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.student-detail-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ─── Interventions Log ────────────────────────────────────────────────────── */
+
+.interventions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.intervention-log-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.25s ease;
+}
+.intervention-log-item:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.intervention-log-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.intervention-log-info { flex: 1; min-width: 0; }
+
+.intervention-log-student {
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: block;
+}
+
+.intervention-log-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.intervention-log-status {
+  padding: 0.25rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.intervention-log-result {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  min-width: 120px;
+  text-align: left;
+}
+
+/* ─── Radar (Curriculum) ───────────────────────────────────────────────────── */
+
+.radar-courses {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.radar-course-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+.radar-course-card:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.radar-course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.radar-course-code {
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-left: 0.5rem;
+}
+
+.radar-course-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.radar-course-instructor {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.radar-metrics {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.radar-metric {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radar-metric-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.radar-metric-grade {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.radar-issue, .radar-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 0.35rem 0;
+}
+
 /* ─── Modal (خطة التدخل) ──────────────────────────────────────────────────── */
+
 
 .modal-overlay {
   position: fixed;

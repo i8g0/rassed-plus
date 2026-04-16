@@ -1,27 +1,25 @@
 /**
  * App.jsx — المدخل الرئيسي لنظام "راصد بلس"
  * 
- * الآن مع:
- *   ✅ بيانات ديناميكية من mockEngine
- *   ✅ أزرار "خطة تدخل" و "توأمة" مفعّلة
- *   ✅ InterventionModal يظهر عند الضغط
- *   ✅ NotificationsPanel يظهر عند ضغط الجرس
- *   ✅ Toast notifications عند إجراء أي عملية
- *   ✅ التنقل بين التابات يعمل
+ * ✅ تنقل التابات يعمل فعلياً (كل tab يعرض محتوى مختلف)
+ * ✅ Loading spinners عند تبديل الأدوار
+ * ✅ بيانات ديناميكية من mockEngine
+ * ✅ InterventionModal + NotificationsPanel + Toast
+ * ✅ AdvisorDashboard منفصل في ملف مستقل
  */
 
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
   Search, Bell, Zap, GraduationCap, BrainCircuit,
-  Mail, UserCircle2, Sparkles, ArrowUpRight, X,
-  CheckCircle2,
+  UserCircle2, Sparkles, X, CheckCircle2,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
+import AdvisorDashboard from './components/AdvisorDashboard';
 import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
-import { analyzeAllStudents, getAdvisorStats, generateNotifications } from './services/mockEngine';
+import { generateNotifications } from './services/mockEngine';
 import './App.css';
 
 // ─── Toast Component ──────────────────────────────────────────────────────────
@@ -53,139 +51,6 @@ function Toast({ message, type = 'success', onClose }) {
   );
 }
 
-// ─── لوحة المرشد الأكاديمي ───────────────────────────────────────────────────
-
-function AdvisorDashboard({ onIntervention, onToast }) {
-  // جلب البيانات ديناميكياً من محرك البيانات بدلاً من hardcoding
-  const students = analyzeAllStudents();
-  const stats    = getAdvisorStats();
-
-  const handlePeerMatch = (student) => {
-    // في الإنتاج: fetch('/api/v1/students/match', ...)
-    onToast(`تم إرسال طلب توأمة أكاديمية لـ ${student.name}`, 'info');
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-      {/* الإحصاءات — مأخوذة من المحرك الذكي */}
-      <div className="stats-row animate-fade-up">
-        <StatCard icon={<Users size={24} />} label="إجمالي الطلاب" value={stats.totalStudents.toLocaleString()}
-          trend="+12 هذا الفصل" trendColor="var(--brand-emerald)"
-          iconBg="rgba(16,185,129,0.12)" iconColor="var(--brand-emerald)" />
-        <StatCard icon={<ShieldAlert size={24} />} label="تدخلات مطلوبة اليوم"
-          value={stats.interventionsToday.toString()}
-          trend={`${stats.redCount} عاجل • ${stats.yellowCount} مراقبة`}
-          trendColor="var(--brand-rose)"
-          iconBg="rgba(244,63,94,0.12)" iconColor="var(--brand-rose)" valueColor="var(--brand-rose)" />
-        <StatCard icon={<GraduationCap size={24} />} label="تدخلات ناجحة"
-          value={stats.successfulInterventions.toString()}
-          trend={`نسبة النجاح ${stats.successRate}%`} trendColor="var(--brand-emerald)"
-          iconBg="rgba(34,211,238,0.12)" iconColor="var(--brand-cyan)" />
-      </div>
-
-      {/* الفرز الذكي + التوصيات */}
-      <div className="dashboard-grid animate-fade-up delay-2">
-
-        {/* قائمة الطلاب — ديناميكية من خوارزمية التحليل */}
-        <div className="glass panel-card">
-          <div className="panel-header">
-            <div className="panel-title">
-              <div className="panel-title-icon" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>
-                <ShieldAlert size={18} />
-              </div>
-              الفرز الذكي (Smart Triage)
-            </div>
-            <span className="badge" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>
-              مرتب حسب الخطورة
-            </span>
-          </div>
-
-          <div className="student-list">
-            {students.map((s) => (
-              <div key={s.id} className="student-item">
-                <div className={`risk-dot ${s.riskLevel}`} />
-                <div style={{ minWidth: '100px' }}>
-                  <div className="student-name">{s.name}</div>
-                  <div className="student-meta">{s.id} | المعدل: {s.gpa} | الخطورة: {s.riskScore}%</div>
-                </div>
-                <div className="student-issue">
-                  {s.primaryReason}
-                </div>
-                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                  {s.riskLevel === 'red' && (
-                    <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}
-                      onClick={() => onIntervention(s)}>
-                      <Mail size={14} /> خطة تدخل
-                    </button>
-                  )}
-                  {s.riskLevel === 'yellow' && (
-                    <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}
-                      onClick={() => handlePeerMatch(s)}>
-                      <Users size={14} /> توأمة
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* توصيات Copilot — ديناميكية */}
-        <div className="glass panel-card">
-          <div className="panel-header">
-            <div className="panel-title">
-              <div className="panel-title-icon" style={{ background: 'rgba(34,211,238,0.12)', color: 'var(--brand-cyan)' }}>
-                <Sparkles size={18} />
-              </div>
-              توصيات Copilot
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <AiInsightCard color="var(--brand-indigo)" icon={<BrainCircuit size={16} />}
-              title="توجيه تكيفي"
-              body={`تم تحويل ${Math.floor(students.length * 7.5)} طالب إلى بودكاست بسبب بطء الاستيعاب. ${students.filter(s => s.taskTimeRatio > 2).length} طلاب يستغرقون وقتاً مضاعفاً.`} />
-            <AiInsightCard color="var(--brand-amber)" icon={<TrendingUp size={16} />}
-              title="رادار المناهج"
-              body={`CS301: ${students.filter(s => s.incompleteLectures > 40).length} طلاب لم يكملوا محاضراتها. نسبة فشل تتجاوز 60% — المشكلة قد تكون في أسلوب التدريس.`} />
-            <AiInsightCard color="var(--brand-emerald)" icon={<Zap size={16} />}
-              title="بوصلة سوق العمل"
-              body={`${students.filter(s => s.gpa >= 3.5).length} طلاب مؤهلين لتوصيات كورسات متقدمة. اقترحنا دورة AI لطلاب الذكاء الاصطناعي.`} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── مكونات مساعدة ─────────────────────────────────────────────────────────────
-
-function StatCard({ icon, label, value, trend, trendColor, iconBg, iconColor, valueColor }) {
-  return (
-    <div className="glass stat-card">
-      <div className="stat-icon-wrap" style={{ background: iconBg, color: iconColor }}>{icon}</div>
-      <div className="stat-info">
-        <span className="stat-label">{label}</span>
-        <span className="stat-value" style={{ color: valueColor || 'var(--text-primary)' }}>{value}</span>
-        {trend && (
-          <span className="stat-trend" style={{ color: trendColor }}>
-            <ArrowUpRight size={13} /> {trend}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AiInsightCard({ color, icon, title, body }) {
-  return (
-    <div className="ai-card" style={{ background: `${color}08`, borderColor: `${color}22` }}>
-      <div className="ai-card-title" style={{ color }}>{icon}<span>{title}</span></div>
-      <p className="ai-card-body">{body}</p>
-    </div>
-  );
-}
-
 // ─── التنقل ───────────────────────────────────────────────────────────────────
 
 const NAV_ADVISOR = [
@@ -205,11 +70,11 @@ const NAV_STUDENT = [
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
 
 export default function App() {
-  const [role, setRole]                   = useState('student');
-  const [activeTab, setTab]               = useState('overview');
-  const [interventionStudent, setIntervention] = useState(null);
-  const [showNotifs, setShowNotifs]       = useState(false);
-  const [toast, setToast]                 = useState(null);
+  const [role, setRole]                         = useState('student');
+  const [activeTab, setTab]                     = useState('overview');
+  const [interventionStudent, setIntervention]  = useState(null);
+  const [showNotifs, setShowNotifs]             = useState(false);
+  const [toast, setToast]                       = useState(null);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
   const name = role === 'advisor' ? 'د. خالد' : 'سارة';
@@ -226,13 +91,24 @@ export default function App() {
     setToast({ msg, type });
   };
 
-  // عدد الإشعارات غير المقروءة
   const unreadCount = generateNotifications(role).filter(n => !n.read).length;
 
-  // الـ Copilot tip يتغير ديناميكياً حسب الدور والتبويب
-  const copilotTip = role === 'advisor'
-    ? 'انخفاض 15% في درجات الفيزياء النصفي. اضغط على "رادار المناهج" للتفاصيل.'
-    : 'لديكِ تسليم غداً ولم تبدئي! اضغطي على "مهامي" وقسّمي المهمة.';
+  // الـ Copilot tip يتغير ديناميكياً حسب الدور والتبويب النشط
+  const copilotTips = {
+    advisor: {
+      dashboard: 'تم رصد 2 طلاب بمؤشرات حمراء — اضغط "خطة تدخل" لتوليد رسالة فورية.',
+      students: 'استخدم الفلتر للتركيز على الحالات الحمراء أولاً.',
+      interventions: '3 تدخلات مكتملة هذا الشهر — نسبة نجاح 88%',
+      radar: 'CS301 يحتاج مراجعة عاجلة — نسبة رسوب 62%',
+    },
+    student: {
+      overview: 'لديكِ تسليم غداً ولم تبدئي! اضغطي على "مهامي" وقسّمي المهمة.',
+      tasks: 'ابدئي بالمهمة الأسهل أولاً — ذلك يبني الزخم.',
+      skills: 'كورس Data Analysis هو الأعلى طلباً هذا الفصل!',
+      peers: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً.',
+    },
+  };
+  const copilotTip = copilotTips[role]?.[activeTab] || copilotTips[role]?.overview || '';
 
   return (
     <div className="app-shell">
@@ -291,13 +167,14 @@ export default function App() {
           </div>
         </header>
 
-        {/* اللوحة حسب الدور */}
+        {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
         {role === 'advisor'
           ? <AdvisorDashboard
+              activeTab={activeTab}
               onIntervention={(s) => setIntervention(s)}
               onToast={showToast}
             />
-          : <StudentDashboard onToast={showToast} />
+          : <StudentDashboard activeTab={activeTab} onToast={showToast} />
         }
       </main>
 

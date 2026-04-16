@@ -550,23 +550,46 @@ function TasksSection({ onToast }) {
 //  MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function StudentDashboard({ onToast }) {
-  // fallback لو لم يتم تمرير onToast (يمنع crash)
+export default function StudentDashboard({ activeTab, onToast }) {
   const toast = onToast || (() => {});
 
-  return (
-    <div className="student-dash">
-      <HeroSection student={STUDENT} />
-
-      <div className="dashboard-grid-even">
-        <AdaptiveSection items={ADAPTIVE} onToast={toast} />
-        <PeersSection    peers={PEERS}    onToast={toast} />
-      </div>
-
-      <div className="dashboard-grid-even">
-        <SkillsSection skills={SKILLS}  onToast={toast} />
-        <TasksSection                   onToast={toast} />
-      </div>
-    </div>
-  );
+  // إذا كان التبويب محدد → نعرض القسم المطلوب فقط
+  switch (activeTab) {
+    case 'tasks':
+      return (
+        <div className="student-dash">
+          <HeroSection student={STUDENT} />
+          <TasksSection onToast={toast} />
+        </div>
+      );
+    case 'skills':
+      return (
+        <div className="student-dash">
+          <HeroSection student={STUDENT} />
+          <SkillsSection skills={SKILLS} onToast={toast} />
+        </div>
+      );
+    case 'peers':
+      return (
+        <div className="student-dash">
+          <HeroSection student={STUDENT} />
+          <PeersSection peers={PEERS} onToast={toast} />
+        </div>
+      );
+    default: // 'overview' — عرض كل شيء
+      return (
+        <div className="student-dash">
+          <HeroSection student={STUDENT} />
+          <div className="dashboard-grid-even">
+            <AdaptiveSection items={ADAPTIVE} onToast={toast} />
+            <PeersSection    peers={PEERS}    onToast={toast} />
+          </div>
+          <div className="dashboard-grid-even">
+            <SkillsSection skills={SKILLS}  onToast={toast} />
+            <TasksSection                   onToast={toast} />
+          </div>
+        </div>
+      );
+  }
 }
+
