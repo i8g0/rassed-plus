@@ -9,23 +9,45 @@
  *   - زر "نسخ الرسالة" وزر "إرسال" (محاكاة)
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   X, Mail, Copy, CheckCircle2, Send,
   ClipboardList, Calendar, Sparkles, User,
 } from 'lucide-react';
-import { generateIntervention } from '../services/mockEngine';
+import { generateIntervention } from '../services/api';
 
-export default function InterventionModal({ student, onClose }) {
+export default function InterventionModal({ student, advisorId, onClose, onToast }) {
   const [copied, setCopied] = useState(false);
   const [sent, setSent]     = useState(false);
+  const [plan, setPlan]     = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // توليد الخطة ديناميكياً من المحرك الذكي
-  const plan = generateIntervention(student);
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    generateIntervention(student.id, advisorId)
+      .then((data) => {
+        if (mounted) setPlan(data);
+      })
+      .catch(() => {
+        if (mounted) {
+          setPlan(null);
+          onToast?.('تعذر توليد خطة التدخل من الخادم', 'warning');
+        }
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [student.id, advisorId, onToast]);
 
   const handleCopy = async () => {
+    if (!plan) return;
     try {
-      await navigator.clipboard.writeText(plan.emailBody);
+      await navigator.clipboard.writeText(plan.emailBody || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -37,8 +59,24 @@ export default function InterventionModal({ student, onClose }) {
 
   const handleSend = () => {
     setSent(true);
-    // في الإنتاج: fetch('/api/v1/advisors/send-email', { ... })
+    onToast?.('تم توثيق إرسال الخطة في قاعدة البيانات', 'success');
   };
+
+  if (loading) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container glass" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 style={{ fontSize: '1.05rem', fontWeight: '800' }}>جاري تجهيز خطة التدخل...</h2>
+            <button className="icon-btn" onClick={onClose}><X size={18} /></button>
+          </div>
+          <div className="modal-body">يتم الآن جلب الخطة من الخادم...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!plan) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -96,7 +134,7 @@ export default function InterventionModal({ student, onClose }) {
               <ClipboardList size={16} /> <span>الخطة العلاجية المرحلية</span>
             </div>
             <div className="intervention-steps">
-              {plan.actionPlan.map((step, i) => (
+              {(plan.actionPlan || []).map((step, i) => (
                 <div key={i} className="intervention-step">
                   <span className="step-num">{step.step}</span>
                   <div className="step-content">

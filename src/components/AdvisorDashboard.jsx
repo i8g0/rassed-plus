@@ -1,23 +1,11 @@
-/**
- * AdvisorDashboard.jsx — لوحة المرشد الأكاديمي الكاملة
- * 
- * تدعم 4 تبويبات:
- *   1. dashboard  — لوحة القيادة الرئيسية (Smart Triage + Copilot)
- *   2. students   — قائمة الطلاب الكاملة مع فلاتر
- *   3. interventions — سجل التدخلات
- *   4. radar      — رادار المناهج
- */
-
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Users, ShieldAlert, Zap, TrendingUp, GraduationCap,
-  BrainCircuit, Mail, Sparkles, ArrowUpRight, BookOpen,
-  AlertTriangle, CheckCircle2, Clock, Search, Filter,
-  FileText, BarChart3, Target, Eye,
+  BrainCircuit, Mail, Sparkles, ArrowUpRight,
+  AlertTriangle, CheckCircle2, Clock, Search,
+  FileText, BarChart3, Eye,
 } from 'lucide-react';
-import { analyzeAllStudents, getAdvisorStats } from '../services/mockEngine';
-
-// ─── Loading Skeleton ──────────────────────────────────────────────────────────
+import { getAdvisorOverview, getInterventions, requestPeerMatch } from '../services/api';
 
 function LoadingSkeleton({ lines = 3, style }) {
   return (
@@ -28,8 +16,6 @@ function LoadingSkeleton({ lines = 3, style }) {
     </div>
   );
 }
-
-// ─── Stat Card ─────────────────────────────────────────────────────────────────
 
 function StatCard({ icon, label, value, trend, trendColor, iconBg, iconColor, valueColor }) {
   return (
@@ -48,8 +34,6 @@ function StatCard({ icon, label, value, trend, trendColor, iconBg, iconColor, va
   );
 }
 
-// ─── AI Insight Card ───────────────────────────────────────────────────────────
-
 function AiInsightCard({ color, icon, title, body }) {
   return (
     <div className="ai-card" style={{ background: `${color}08`, borderColor: `${color}22` }}>
@@ -59,21 +43,22 @@ function AiInsightCard({ color, icon, title, body }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TAB 1: لوحة القيادة (Dashboard)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function DashboardTab({ students, stats, onIntervention, onToast }) {
-  const handlePeerMatch = (student) => {
-    onToast(`تم إرسال طلب توأمة أكاديمية لـ ${student.name}`, 'info');
+function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch }) {
+  const handlePeerMatch = async (student) => {
+    const weakSkill = student.weakSkills?.[0] || 'هياكل بيانات';
+    try {
+      const result = await onPeerMatch(student.id, weakSkill);
+      onToast(result.message || `تم إرسال طلب توأمة أكاديمية لـ ${student.name}`, 'info');
+    } catch {
+      onToast('تعذرت عملية التوأمة من الخادم', 'warning');
+    }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* الإحصاءات */}
       <div className="stats-row animate-fade-up">
         <StatCard icon={<Users size={24} />} label="إجمالي الطلاب" value={stats.totalStudents.toLocaleString()}
-          trend="+12 هذا الفصل" trendColor="var(--brand-emerald)"
+          trend="محدث مباشرة" trendColor="var(--brand-emerald)"
           iconBg="rgba(16,185,129,0.12)" iconColor="var(--brand-emerald)" />
         <StatCard icon={<ShieldAlert size={24} />} label="تدخلات مطلوبة اليوم"
           value={stats.interventionsToday.toString()}
@@ -86,9 +71,7 @@ function DashboardTab({ students, stats, onIntervention, onToast }) {
           iconBg="rgba(34,211,238,0.12)" iconColor="var(--brand-cyan)" />
       </div>
 
-      {/* الفرز الذكي + التوصيات */}
       <div className="dashboard-grid animate-fade-up delay-2">
-        {/* قائمة الطلاب */}
         <div className="glass panel-card">
           <div className="panel-header">
             <div className="panel-title">
@@ -113,14 +96,12 @@ function DashboardTab({ students, stats, onIntervention, onToast }) {
                 <div className="student-issue">{s.primaryReason}</div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
                   {s.riskLevel === 'red' && (
-                    <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}
-                      onClick={() => onIntervention(s)}>
+                    <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
                       <Mail size={14} /> خطة تدخل
                     </button>
                   )}
                   {s.riskLevel === 'yellow' && (
-                    <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}
-                      onClick={() => handlePeerMatch(s)}>
+                    <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }} onClick={() => handlePeerMatch(s)}>
                       <Users size={14} /> توأمة
                     </button>
                   )}
@@ -130,7 +111,6 @@ function DashboardTab({ students, stats, onIntervention, onToast }) {
           </div>
         </div>
 
-        {/* توصيات Copilot */}
         <div className="glass panel-card">
           <div className="panel-header">
             <div className="panel-title">
@@ -143,13 +123,13 @@ function DashboardTab({ students, stats, onIntervention, onToast }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <AiInsightCard color="var(--brand-indigo)" icon={<BrainCircuit size={16} />}
               title="توجيه تكيفي"
-              body={`تم تحويل ${Math.floor(students.length * 7.5)} طالب إلى بودكاست بسبب بطء الاستيعاب. ${students.filter(s => s.taskTimeRatio > 2).length} طلاب يستغرقون وقتاً مضاعفاً.`} />
+              body={`تم رصد ${students.filter(s => s.taskTimeRatio > 2).length} طلاب يستغرقون وقتاً مضاعفاً في المهام.`} />
             <AiInsightCard color="var(--brand-amber)" icon={<TrendingUp size={16} />}
               title="رادار المناهج"
-              body={`CS301: ${students.filter(s => s.incompleteLectures > 40).length} طلاب لم يكملوا محاضراتها. نسبة فشل تتجاوز 60% — المشكلة قد تكون في أسلوب التدريس.`} />
+              body={`المواد عالية الخطورة مرتبطة بضعف الإكمال وارتفاع نسب الغياب.`} />
             <AiInsightCard color="var(--brand-emerald)" icon={<Zap size={16} />}
               title="بوصلة سوق العمل"
-              body={`${students.filter(s => s.gpa >= 3.5).length} طلاب مؤهلين لتوصيات كورسات متقدمة. اقترحنا دورة AI لطلاب الذكاء الاصطناعي.`} />
+              body={`${students.filter(s => s.gpa >= 3.5).length} طلاب جاهزون لمسارات مهنية متقدمة.`} />
           </div>
         </div>
       </div>
@@ -157,15 +137,11 @@ function DashboardTab({ students, stats, onIntervention, onToast }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TAB 2: الطلاب (Students List)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function StudentsTab({ students, onIntervention }) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
-  const filtered = students.filter(s => {
+  const filtered = students.filter((s) => {
     if (filter !== 'all' && s.riskLevel !== filter) return false;
     if (search && !s.name.includes(search) && !s.id.includes(search)) return false;
     return true;
@@ -173,9 +149,9 @@ function StudentsTab({ students, onIntervention }) {
 
   const counts = {
     all: students.length,
-    red: students.filter(s => s.riskLevel === 'red').length,
-    yellow: students.filter(s => s.riskLevel === 'yellow').length,
-    green: students.filter(s => s.riskLevel === 'green').length,
+    red: students.filter((s) => s.riskLevel === 'red').length,
+    yellow: students.filter((s) => s.riskLevel === 'yellow').length,
+    green: students.filter((s) => s.riskLevel === 'green').length,
   };
 
   return (
@@ -188,22 +164,13 @@ function StudentsTab({ students, onIntervention }) {
             </div>
             جميع الطلاب
           </div>
-          <span className="badge" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>
-            {filtered.length} طالب
-          </span>
+          <span className="badge" style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--brand-indigo)' }}>{filtered.length} طالب</span>
         </div>
 
-        {/* فلاتر + بحث */}
         <div className="filter-bar">
           <div className="search-input-wrap">
             <Search size={14} />
-            <input
-              type="text"
-              placeholder="ابحث بالاسم أو الرقم..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="search-input"
-            />
+            <input type="text" placeholder="ابحث بالاسم أو الرقم..." value={search} onChange={(e) => setSearch(e.target.value)} className="search-input" />
           </div>
           <div className="filter-chips">
             {[
@@ -211,21 +178,16 @@ function StudentsTab({ students, onIntervention }) {
               { key: 'red', label: '🔴 خطر', count: counts.red },
               { key: 'yellow', label: '🟡 تحذير', count: counts.yellow },
               { key: 'green', label: '🟢 سليم', count: counts.green },
-            ].map(f => (
-              <button
-                key={f.key}
-                className={`filter-chip ${filter === f.key ? 'active' : ''}`}
-                onClick={() => setFilter(f.key)}
-              >
+            ].map((f) => (
+              <button key={f.key} className={`filter-chip ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
                 {f.label} ({f.count})
               </button>
             ))}
           </div>
         </div>
 
-        {/* قائمة الطلاب التفصيلية */}
         <div className="students-detail-list">
-          {filtered.map(s => (
+          {filtered.map((s) => (
             <div key={s.id} className="student-detail-card">
               <div className="student-detail-header">
                 <div className={`risk-dot ${s.riskLevel}`} />
@@ -233,9 +195,7 @@ function StudentsTab({ students, onIntervention }) {
                   <span className="student-name">{s.name}</span>
                   <span className="student-meta">{s.id} | {s.major} | السنة {s.year}</span>
                 </div>
-                <div className="student-detail-score" style={{
-                  color: s.riskLevel === 'red' ? '#F43F5E' : s.riskLevel === 'yellow' ? '#F59E0B' : '#10B981'
-                }}>
+                <div className="student-detail-score" style={{ color: s.riskLevel === 'red' ? '#F43F5E' : s.riskLevel === 'yellow' ? '#F59E0B' : '#10B981' }}>
                   {s.riskScore}%
                 </div>
               </div>
@@ -245,9 +205,7 @@ function StudentsTab({ students, onIntervention }) {
                   <span>الحضور: <strong>{s.attendance}%</strong></span>
                   <span>إكمال المهام: <strong>{s.taskCompletion}%</strong></span>
                 </div>
-                <p className="student-detail-reason">
-                  <Sparkles size={12} /> {s.primaryReason}
-                </p>
+                <p className="student-detail-reason"><Sparkles size={12} /> {s.primaryReason}</p>
                 {s.factors.length > 0 && (
                   <div className="detail-factors">
                     {s.factors.map((f, i) => (
@@ -258,8 +216,7 @@ function StudentsTab({ students, onIntervention }) {
               </div>
               {s.riskLevel !== 'green' && (
                 <div className="student-detail-actions">
-                  <button className="btn btn-danger" style={{ fontSize: '0.78rem' }}
-                    onClick={() => onIntervention(s)}>
+                  <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
                     <Mail size={14} /> خطة تدخل
                   </button>
                   <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}>
@@ -275,24 +232,12 @@ function StudentsTab({ students, onIntervention }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TAB 3: التدخلات (Interventions Log)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function InterventionsTab() {
-  const interventionLog = [
-    { id: 1, student: 'أحمد محمود', date: '14 أبريل 2026', status: 'sent', type: 'بريد + لقاء', result: 'في انتظار الرد' },
-    { id: 2, student: 'نورة سعد', date: '12 أبريل 2026', status: 'meeting', type: 'لقاء شخصي', result: 'تم (تحسن 15%)' },
-    { id: 3, student: 'منى صالح', date: '10 أبريل 2026', status: 'completed', type: 'خطة أسبوعية', result: 'مكتمل — رُفع المعدل' },
-    { id: 4, student: 'خالد ناصر', date: '8 أبريل 2026', status: 'completed', type: 'توأمة أكاديمية', result: 'مكتمل — تحسن ملحوظ' },
-    { id: 5, student: 'ريم عبدالعزيز', date: '5 أبريل 2026', status: 'followup', type: 'إحالة نفسية', result: 'متابعة مستمرة' },
-  ];
-
+function InterventionsTab({ interventionLog }) {
   const statusMap = {
-    sent:      { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: 'تم الإرسال', Icon: Mail },
-    meeting:   { color: '#818CF8', bg: 'rgba(129,140,248,0.1)', label: 'لقاء', Icon: Users },
+    sent: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: 'تم الإرسال', Icon: Mail },
+    meeting: { color: '#818CF8', bg: 'rgba(129,140,248,0.1)', label: 'لقاء', Icon: Users },
     completed: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: 'مكتمل', Icon: CheckCircle2 },
-    followup:  { color: '#22D3EE', bg: 'rgba(34,211,238,0.1)', label: 'متابعة', Icon: Clock },
+    followup: { color: '#22D3EE', bg: 'rgba(34,211,238,0.1)', label: 'متابعة', Icon: Clock },
   };
 
   return (
@@ -306,13 +251,13 @@ function InterventionsTab() {
             سجل التدخلات
           </div>
           <span className="badge" style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981' }}>
-            {interventionLog.filter(i => i.status === 'completed').length} مكتمل
+            {interventionLog.filter((i) => i.status === 'completed').length} مكتمل
           </span>
         </div>
 
         <div className="interventions-list">
-          {interventionLog.map(item => {
-            const st = statusMap[item.status];
+          {interventionLog.map((item) => {
+            const st = statusMap[item.status] || statusMap.sent;
             const SIcon = st.Icon;
             return (
               <div key={item.id} className="intervention-log-item">
@@ -336,35 +281,7 @@ function InterventionsTab() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TAB 4: رادار المناهج (Curriculum Radar)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function RadarTab({ students }) {
-  const courses = [
-    {
-      id: 1, code: 'CS301', name: 'هياكل البيانات', instructor: 'د. أحمد العمري',
-      failRate: 62, avgGrade: 'C', enrollCount: 45,
-      issue: 'نسبة رسوب عالية جداً — 62% من الطلاب فشلوا في الاختبار النصفي',
-      suggestion: 'مراجعة أسلوب التدريس وإضافة محتوى بصري تفاعلي',
-      severity: 'red',
-    },
-    {
-      id: 2, code: 'PHYS201', name: 'الفيزياء العامة 2', instructor: 'د. سارة المطيري',
-      failRate: 38, avgGrade: 'C+', enrollCount: 60,
-      issue: 'الطلاب يقضون 3x الوقت المتوقع في الفصل الثالث',
-      suggestion: 'تقسيم الفصل الثالث إلى وحدات أصغر مع اختبارات تكوينية',
-      severity: 'yellow',
-    },
-    {
-      id: 3, code: 'STAT101', name: 'الإحصاء التطبيقي', instructor: 'د. خالد الشهري',
-      failRate: 15, avgGrade: 'B+', enrollCount: 80,
-      issue: 'لا توجد مشاكل جوهرية',
-      suggestion: 'استمرار النمط الحالي مع إضافة مشاريع تطبيقية',
-      severity: 'green',
-    },
-  ];
-
+function RadarTab({ courses }) {
   const severityColor = { red: '#F43F5E', yellow: '#F59E0B', green: '#10B981' };
 
   return (
@@ -378,12 +295,12 @@ function RadarTab({ students }) {
             رادار المناهج
           </div>
           <span className="badge" style={{ background: 'rgba(244,63,94,0.12)', color: '#F43F5E' }}>
-            {courses.filter(c => c.severity === 'red').length} مقرر يحتاج تدخل
+            {courses.filter((c) => c.severity === 'red').length} مقرر يحتاج تدخل
           </span>
         </div>
 
         <div className="radar-courses">
-          {courses.map(c => (
+          {courses.map((c) => (
             <div key={c.id} className="radar-course-card" style={{ borderColor: `${severityColor[c.severity]}22` }}>
               <div className="radar-course-header">
                 <div>
@@ -392,29 +309,26 @@ function RadarTab({ students }) {
                 </div>
                 <div className={`risk-dot ${c.severity}`} />
               </div>
-              <p className="radar-course-instructor">👨‍🏫 {c.instructor} — {c.enrollCount} طالب مسجل</p>
+              <p className="radar-course-instructor">👨‍🏫 {c.instructor} — {c.enroll_count} طالب مسجل</p>
 
               <div className="radar-metrics">
                 <div className="radar-metric">
                   <span className="radar-metric-label">نسبة الرسوب</span>
                   <div className="progress-track">
-                    <div className="progress-fill" style={{
-                      width: `${c.failRate}%`,
-                      background: `linear-gradient(90deg, ${severityColor[c.severity]}, ${severityColor[c.severity]}88)`
-                    }} />
+                    <div className="progress-fill" style={{ width: `${c.fail_rate}%`, background: `linear-gradient(90deg, ${severityColor[c.severity]}, ${severityColor[c.severity]}88)` }} />
                   </div>
-                  <span style={{ color: severityColor[c.severity], fontWeight: 700, fontSize: '0.82rem' }}>{c.failRate}%</span>
+                  <span style={{ color: severityColor[c.severity], fontWeight: 700, fontSize: '0.82rem' }}>{c.fail_rate}%</span>
                 </div>
-                <span className="radar-metric-grade">المعدل: <strong>{c.avgGrade}</strong></span>
+                <span className="radar-metric-grade">المعدل: <strong>{c.avg_grade}</strong></span>
               </div>
 
               <div className="radar-issue">
                 <AlertTriangle size={13} style={{ color: severityColor[c.severity], flexShrink: 0 }} />
-                <span>{c.issue}</span>
+                <span>المقرر {c.code} في مستوى إنذار {c.severity} ويحتاج متابعة أكاديمية.</span>
               </div>
               <div className="radar-suggestion">
                 <Sparkles size={13} style={{ color: '#818CF8', flexShrink: 0 }} />
-                <span>{c.suggestion}</span>
+                <span>توصية: تعزيز المحتوى التطبيقي والتقييم التكويني التدريجي.</span>
               </div>
             </div>
           ))}
@@ -424,31 +338,44 @@ function RadarTab({ students }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  MAIN EXPORT
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export default function AdvisorDashboard({ activeTab, onIntervention, onToast }) {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [stats, setStats] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [interventionLog, setInterventionLog] = useState([]);
 
-  // محاكاة تحميل البيانات من API
   useEffect(() => {
+    let mounted = true;
     setLoading(true);
-    const timer = setTimeout(() => {
-      setStudents(analyzeAllStudents());
-      setStats(getAdvisorStats());
-      setLoading(false);
-    }, 600); // 600ms يكفي لإعطاء إحساس بالتحميل
-    return () => clearTimeout(timer);
-  }, [activeTab]);
+
+    Promise.all([getAdvisorOverview(), getInterventions()])
+      .then(([overview, interventions]) => {
+        if (!mounted) return;
+        setStudents(overview.students || []);
+        setStats(overview.stats || null);
+        setCourses(overview.courses || []);
+        setInterventionLog(interventions || []);
+      })
+      .catch(() => {
+        if (mounted) onToast?.('تعذر تحميل بيانات لوحة المرشد', 'warning');
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [activeTab, onToast]);
+
+  const handlePeerMatch = (requesterId, weakSkill) => requestPeerMatch(requesterId, weakSkill);
 
   if (loading || !stats) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="stats-row animate-fade-up">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="glass stat-card" style={{ minHeight: '100px' }}>
               <LoadingSkeleton lines={2} />
             </div>
@@ -465,10 +392,18 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
     case 'students':
       return <StudentsTab students={students} onIntervention={onIntervention} />;
     case 'interventions':
-      return <InterventionsTab />;
+      return <InterventionsTab interventionLog={interventionLog} />;
     case 'radar':
-      return <RadarTab students={students} />;
+      return <RadarTab courses={courses} />;
     default:
-      return <DashboardTab students={students} stats={stats} onIntervention={onIntervention} onToast={onToast} />;
+      return (
+        <DashboardTab
+          students={students}
+          stats={stats}
+          onIntervention={onIntervention}
+          onToast={onToast}
+          onPeerMatch={handlePeerMatch}
+        />
+      );
   }
 }

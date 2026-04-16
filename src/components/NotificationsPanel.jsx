@@ -4,7 +4,6 @@
  */
 
 import { X, AlertTriangle, CheckCircle2, Info, Bell } from 'lucide-react';
-import { generateNotifications } from '../services/mockEngine';
 
 const typeConfig = {
   danger:  { color: '#F43F5E', Icon: AlertTriangle, bg: 'rgba(244,63,94,0.08)' },
@@ -13,8 +12,7 @@ const typeConfig = {
   info:    { color: '#818CF8', Icon: Info,           bg: 'rgba(129,140,248,0.08)' },
 };
 
-export default function NotificationsPanel({ role, onClose }) {
-  const notifications = generateNotifications(role);
+export default function NotificationsPanel({ notifications = [], onClose }) {
   const unread = notifications.filter(n => !n.read).length;
 
   return (

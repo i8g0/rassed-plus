@@ -1,28 +1,38 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GraduationCap, UserCircle2, LockKeyhole, AtSign, IdCard, LogIn } from 'lucide-react';
 import logo from '../assets/logo.png';
-import { authenticateUser, getLoginDemoAccounts } from '../services/mockEngine';
+import { getDemoAccounts, login } from '../services/api';
 
 export default function LoginScreen({ onLogin }) {
   const [role, setRole] = useState('student');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [demoAccounts, setDemoAccounts] = useState([]);
 
-  const demoAccounts = useMemo(() => getLoginDemoAccounts(), []);
+  useEffect(() => {
+    getDemoAccounts()
+      .then((data) => setDemoAccounts(data))
+      .catch(() => {
+        setDemoAccounts([]);
+      });
+  }, []);
+
   const accountsByRole = demoAccounts.filter((item) => item.role === role);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = authenticateUser(role, identifier, password);
-
-    if (!result.ok) {
-      setError(result.message);
-      return;
+    setLoading(true);
+    try {
+      const result = await login(role, identifier, password);
+      setError('');
+      onLogin(result.user);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    setError('');
-    onLogin(result.user);
   };
 
   const fillDemoAccount = (account) => {
@@ -97,7 +107,7 @@ export default function LoginScreen({ onLogin }) {
           {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="btn btn-primary login-submit">
-            <LogIn size={16} /> دخول إلى النظام
+            <LogIn size={16} /> {loading ? 'جاري الدخول...' : 'دخول إلى النظام'}
           </button>
         </form>
 

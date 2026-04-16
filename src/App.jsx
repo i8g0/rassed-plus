@@ -3,7 +3,7 @@
  * 
  * ✅ تنقل التابات يعمل فعلياً (كل tab يعرض محتوى مختلف)
  * ✅ Loading spinners عند تبديل الأدوار
- * ✅ بيانات ديناميكية من mockEngine
+ * ✅ بيانات ديناميكية من السيرفر الحقيقي
  * ✅ InterventionModal + NotificationsPanel + Toast
  * ✅ AdvisorDashboard منفصل في ملف مستقل
  */
@@ -11,15 +11,16 @@
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
-  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap,
+  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Rocket,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
 import AdvisorDashboard from './components/AdvisorDashboard';
 import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
-import { generateNotifications } from './services/mockEngine';
 import LoginScreen from './components/LoginScreen';
+import FeaturesHub from './components/FeaturesHub';
+import { getNotifications } from './services/api';
 import './App.css';
 
 // ─── Toast Component ──────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ const NAV_ADVISOR = [
   { id: 'students',      icon: Users,           label: 'الطلاب' },
   { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
   { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
+  { id: 'features',      icon: Rocket,          label: 'Features Hub' },
 ];
 
 const NAV_STUDENT = [
@@ -65,6 +67,7 @@ const NAV_STUDENT = [
   { id: 'tasks',    icon: Zap,             label: 'مهامي' },
   { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
+  { id: 'features', icon: Rocket,          label: 'Features Hub' },
 ];
 
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
@@ -75,6 +78,7 @@ export default function App() {
   const [activeTab, setTab]                     = useState('overview');
   const [interventionStudent, setIntervention]  = useState(null);
   const [showNotifs, setShowNotifs]             = useState(false);
+  const [notifications, setNotifications]       = useState([]);
   const [toast, setToast]                       = useState(null);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
@@ -104,7 +108,14 @@ export default function App() {
     setToast({ msg, type });
   };
 
-  const unreadCount = generateNotifications(role).filter(n => !n.read).length;
+  useEffect(() => {
+    if (!authUser) return;
+    getNotifications(role)
+      .then((data) => setNotifications(data || []))
+      .catch(() => setNotifications([]));
+  }, [authUser, role, showNotifs, activeTab]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   // الـ Copilot tip يتغير ديناميكياً حسب الدور والتبويب النشط
   const copilotTips = {
@@ -113,12 +124,14 @@ export default function App() {
       students: 'استخدم الفلتر للتركيز على الحالات الحمراء أولاً.',
       interventions: '3 تدخلات مكتملة هذا الشهر — نسبة نجاح 88%',
       radar: 'CS301 يحتاج مراجعة عاجلة — نسبة رسوب 62%',
+      features: 'يمكنك تفعيل/تعطيل 100 ميزة وربطها فوراً بقاعدة البيانات.',
     },
     student: {
       overview: 'لديكِ تسليم غداً ولم تبدئي! اضغطي على "مهامي" وقسّمي المهمة.',
       tasks: 'ابدئي بالمهمة الأسهل أولاً — ذلك يبني الزخم.',
       skills: 'كورس Data Analysis هو الأعلى طلباً هذا الفصل!',
       peers: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً.',
+      features: 'مركز الميزات الأسطورية يمنحك تجربة Super App متكاملة.',
     },
   };
   const copilotTip = copilotTips[role]?.[activeTab] || copilotTips[role]?.overview || '';
@@ -182,13 +195,15 @@ export default function App() {
         </header>
 
         {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
-        {role === 'advisor'
-          ? <AdvisorDashboard
-              activeTab={activeTab}
-              onIntervention={(s) => setIntervention(s)}
-              onToast={showToast}
-            />
-          : <StudentDashboard activeTab={activeTab} onToast={showToast} />
+        {activeTab === 'features'
+          ? <FeaturesHub onToast={showToast} />
+          : role === 'advisor'
+            ? <AdvisorDashboard
+                activeTab={activeTab}
+                onIntervention={(s) => setIntervention(s)}
+                onToast={showToast}
+              />
+            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} />
         }
       </main>
 
@@ -197,6 +212,8 @@ export default function App() {
       {interventionStudent && (
         <InterventionModal
           student={interventionStudent}
+          advisorId={authUser?.id}
+          onToast={showToast}
           onClose={() => {
             setIntervention(null);
             showToast('تم توليد خطة التدخل بنجاح');
@@ -206,7 +223,7 @@ export default function App() {
 
       {showNotifs && (
         <NotificationsPanel
-          role={role}
+          notifications={notifications}
           onClose={() => setShowNotifs(false)}
         />
       )}
