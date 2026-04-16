@@ -49,6 +49,97 @@ export const STUDENTS_DB = [
   },
 ];
 
+// حسابات تسجيل الدخول التجريبية (بيانات جاهزة للاستخدام في الواجهة)
+export const AUTH_ACCOUNTS = [
+  {
+    role: 'advisor',
+    login: 'khaled.advisor@university.edu',
+    altLogin: 'AD-1001',
+    password: 'Advisor@2026',
+    profile: {
+      id: 'AD-1001',
+      name: 'د. خالد القحطاني',
+      email: 'khaled.advisor@university.edu',
+      title: 'مرشد أكاديمي',
+      department: 'عمادة شؤون الطلاب',
+    },
+  },
+  {
+    role: 'student',
+    login: 'sara.k@university.edu',
+    altLogin: '44210988',
+    password: 'Sara@2026',
+    profile: {
+      id: '44210988',
+      name: 'سارة خالد',
+      email: 'sara.k@university.edu',
+      major: 'علوم الحاسب',
+      year: 2,
+    },
+  },
+  {
+    role: 'student',
+    login: 'ahmed.m@university.edu',
+    altLogin: '44120345',
+    password: 'Ahmed@2026',
+    profile: {
+      id: '44120345',
+      name: 'أحمد محمود',
+      email: 'ahmed.m@university.edu',
+      major: 'علوم الحاسب',
+      year: 3,
+    },
+  },
+];
+
+export function getLoginDemoAccounts() {
+  return AUTH_ACCOUNTS.map((account) => ({
+    role: account.role,
+    name: account.profile.name,
+    login: account.login,
+    altLogin: account.altLogin,
+    password: account.password,
+  }));
+}
+
+export function authenticateUser(role, identifier, password) {
+  const normalizedRole = String(role || '').trim().toLowerCase();
+  const normalizedIdentifier = String(identifier || '').trim().toLowerCase();
+  const normalizedPassword = String(password || '').trim();
+
+  if (!normalizedRole || !normalizedIdentifier || !normalizedPassword) {
+    return {
+      ok: false,
+      message: 'يرجى إدخال جميع الحقول المطلوبة.',
+    };
+  }
+
+  const account = AUTH_ACCOUNTS.find((item) => {
+    const login = item.login.toLowerCase();
+    const alt = item.altLogin.toLowerCase();
+    return (
+      item.role === normalizedRole
+      && (login === normalizedIdentifier || alt === normalizedIdentifier)
+      && item.password === normalizedPassword
+    );
+  });
+
+  if (!account) {
+    return {
+      ok: false,
+      message: 'بيانات الدخول غير صحيحة. تأكد من الدور والبريد/الرقم وكلمة المرور.',
+    };
+  }
+
+  return {
+    ok: true,
+    user: {
+      ...account.profile,
+      role: account.role,
+    },
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  1. خوارزمية تحليل الخطورة (Risk Analysis Engine)
 // ═══════════════════════════════════════════════════════════════════════════════
