@@ -121,6 +121,7 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+<<<<<<< HEAD
             CREATE TABLE IF NOT EXISTS chat_messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 student_id TEXT NOT NULL,
@@ -130,6 +131,58 @@ def init_db() -> None:
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
             );
+=======
+            CREATE TABLE IF NOT EXISTS interventions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                advisor_id TEXT NOT NULL,
+                risk_level TEXT NOT NULL,
+                risk_score REAL NOT NULL,
+                primary_reason TEXT NOT NULL,
+                factors TEXT NOT NULL,
+                email_subject TEXT NOT NULL,
+                email_body TEXT NOT NULL,
+                action_plan TEXT NOT NULL,
+                follow_up_date TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'sent',
+                result TEXT DEFAULT 'في انتظار الرد',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE,
+                FOREIGN KEY(advisor_id) REFERENCES advisors(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS skill_maps (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                skill_name TEXT NOT NULL,
+                skill_level REAL NOT NULL DEFAULT 0,
+                market_demand TEXT NOT NULL DEFAULT 'medium',
+                recommended_course TEXT,
+                course_platform TEXT,
+                course_link TEXT,
+                boost_percentage REAL NOT NULL DEFAULT 0,
+                is_hot INTEGER NOT NULL DEFAULT 0,
+                ai_reason TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS peer_matches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requester_id TEXT NOT NULL,
+                matched_id TEXT NOT NULL,
+                skill TEXT NOT NULL,
+                compatibility REAL NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'pending',
+                session_date TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(requester_id) REFERENCES students(id) ON DELETE CASCADE,
+                FOREIGN KEY(matched_id) REFERENCES students(id) ON DELETE CASCADE
+            );
+>>>>>>> origin/main
             """
         )
         _ensure_column(conn, "students", "gender", "TEXT NOT NULL DEFAULT 'male'")
@@ -186,6 +239,52 @@ def _seed_features(conn: sqlite3.Connection) -> None:
     )
 
 
+<<<<<<< HEAD
+=======
+def _seed_skill_maps(conn: sqlite3.Connection) -> None:
+    """بذر خرائط المهارات لكل الطلاب"""
+    if _table_has_rows(conn, "skill_maps"):
+        return
+
+    now = now_iso()
+    skills_data = [
+        # محمد عمار (44210988)
+        ("44210988", "تحليل البيانات", 35, "high", "Data Analysis with Python", "Coursera",
+         "https://www.coursera.org/learn/data-analysis-with-python", 40, 1,
+         "مطلوب بشدة في سوق العمل السعودي — الفرص زادت 40% مع رؤية 2030."),
+        ("44210988", "الذكاء الاصطناعي", 25, "high", "AI For Everyone", "Coursera",
+         "https://www.coursera.org/learn/ai-for-everyone", 55, 1,
+         "تخصصك يفتح لك الباب — ابدأ بالأساسيات الآن."),
+        ("44210988", "تطوير الويب", 50, "medium", "The Web Developer Bootcamp", "Udemy",
+         "https://www.udemy.com/course/the-web-developer-bootcamp/", 30, 0,
+         "مهارة أساسية لأي مبرمج — طوّر مستواك."),
+        ("44210988", "الأمن السيبراني", 15, "high", "Cybersecurity Fundamentals", "edX",
+         "https://www.edx.org/learn/cybersecurity", 60, 1,
+         "السعودية من أكبر المستثمرين في الأمن السيبراني."),
+        # فهد عبدالله (43990122)
+        ("43990122", "DevOps & Cloud", 70, "high", "AWS Cloud Practitioner", "AWS",
+         "https://aws.amazon.com/certification/", 50, 1,
+         "التحول الرقمي في السعودية يتطلب خبراء Cloud."),
+        ("43990122", "هندسة الأنظمة", 85, "medium", "System Design Primer", "GitHub",
+         "https://github.com/donnemartin/system-design-primer", 35, 0,
+         "أساس متين لمستقبل مهني في الشركات الكبرى."),
+        # أحمد محمود (44120345)
+        ("44120345", "البرمجة الأساسية", 20, "medium", "CS50 Introduction", "edX",
+         "https://www.edx.org/course/cs50", 25, 0,
+         "تقوية الأساسيات ستحسن أداءك في كل المقررات."),
+    ]
+
+    conn.executemany(
+        """
+        INSERT INTO skill_maps (student_id, skill_name, skill_level, market_demand, recommended_course,
+                                course_platform, course_link, boost_percentage, is_hot, ai_reason, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [(*row, now, now) for row in skills_data],
+    )
+
+
+>>>>>>> origin/main
 def seed_data(conn: sqlite3.Connection) -> None:
     now = now_iso()
 
@@ -204,7 +303,11 @@ def seed_data(conn: sqlite3.Connection) -> None:
     if not _table_has_rows(conn, "students"):
         students = [
             ("44120345", "AD-1001", "أحمد محمود", "male", "ahmed.m@university.edu", "Ahmed@2026", "علوم الحاسب", 3, 1.3, 40, 3.0, 25, 6, 75, ["خوارزميات", "رياضيات"], ["قواعد بيانات", "شبكات"]),
+<<<<<<< HEAD
             ("44210988", "AD-1001", "أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
+=======
+            ("44210988", "AD-1001", "محمد عمار", "male", "mohammed.ammar@university.edu", "Mohammed@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
+>>>>>>> origin/main
             ("43990122", "AD-1001", "فهد عبدالله", "male", "fahad.a@university.edu", "Fahad@2026", "هندسة البرمجيات", 4, 4.8, 97, 0.9, 98, 0, 2, ["برمجة متقدمة", "هياكل بيانات", "خوارزميات"], []),
             ("44112340", "AD-1002", "نورة سعد", "female", "noura.s@university.edu", "Noura@2026", "علوم الحاسب", 2, 1.6, 42, 2.5, 30, 7, 70, ["تصميم واجهات"], ["خوارزميات", "شبكات"]),
             ("44315200", "AD-1002", "عمر الشمري", "male", "omar.sh@university.edu", "Omar@2026", "نظم المعلومات", 3, 3.8, 90, 1.1, 91, 1, 10, ["قواعد بيانات", "شبكات", "إحصاء"], ["رياضيات"]),
@@ -235,14 +338,22 @@ def seed_data(conn: sqlite3.Connection) -> None:
             ],
         )
 
+<<<<<<< HEAD
     # توحيد ملف المستخدم الأساسي حتى لو كانت القاعدة موجودة من تشغيل سابق.
+=======
+    # توحيد ملف المستخدم الأساسي (محمد عمار) حتى لو كانت القاعدة موجودة من تشغيل سابق.
+>>>>>>> origin/main
     conn.execute(
         """
         UPDATE students
         SET name=?, gender=?, email=?, password=?, updated_at=?
         WHERE id=?
         """,
+<<<<<<< HEAD
         ("أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", now, "44210988"),
+=======
+        ("محمد عمار", "male", "mohammed.ammar@university.edu", "Mohammed@2026", now, "44210988"),
+>>>>>>> origin/main
     )
 
     if not _table_has_rows(conn, "courses"):
@@ -274,3 +385,7 @@ def seed_data(conn: sqlite3.Connection) -> None:
         )
 
     _seed_features(conn)
+<<<<<<< HEAD
+=======
+    _seed_skill_maps(conn)
+>>>>>>> origin/main

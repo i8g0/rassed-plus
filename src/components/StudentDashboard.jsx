@@ -5,7 +5,11 @@ import {
   Clock, Target, Briefcase,
   BrainCircuit, Sparkles, ArrowUpRight,
   ChevronDown, Play, ClipboardList, Timer,
+<<<<<<< HEAD
   ExternalLink, Check,
+=======
+  ExternalLink, Check, X, Activity,
+>>>>>>> origin/main
 } from 'lucide-react';
 import {
   createAiLog,
@@ -90,6 +94,7 @@ function HeroSection({ student }) {
   );
 }
 
+<<<<<<< HEAD
 function AdaptiveSection({ items, onToast, studentId }) {
   const [selected, setSelected] = useState(null);
 
@@ -146,6 +151,8 @@ function AdaptiveSection({ items, onToast, studentId }) {
     </div>
   );
 }
+=======
+>>>>>>> origin/main
 
 function PeersSection({ peers, onToast, studentId }) {
   const [requested, setRequested] = useState({});
@@ -252,6 +259,10 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
   const [tasks, setTasks] = useState(initialTasks);
   const [expandedId, setExpandedId] = useState(null);
   const [completedSteps, setCompletedSteps] = useState({});
+<<<<<<< HEAD
+=======
+  const [processingAdaptive, setProcessingAdaptive] = useState(null);
+>>>>>>> origin/main
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -301,6 +312,19 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
     if (!completedSteps[key]) onToast(`تم إكمال الخطوة ${stepIndex + 1} ✅`, 'success');
   };
 
+<<<<<<< HEAD
+=======
+  const handleAdaptiveMock = (taskId, type) => {
+    setProcessingAdaptive(taskId);
+    setTimeout(() => {
+      setProcessingAdaptive(null);
+      const label = type === 'map' ? 'الخريطة الذهنية' : 'المقطع الصوتي';
+      onToast(`تم تحويل المحتوى إلى ${label} بنجاح!`, 'success');
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, aiNote: `تم تفعيل ${label} 🧠` } : t));
+    }, 2000);
+  };
+
+>>>>>>> origin/main
   return (
     <div className="glass panel-card animate-fade-up delay-5">
       <div className="panel-header">
@@ -324,6 +348,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
                   <span className="task-deadline"><Timer size={12} /> {t.deadline}</span>
                   {t.progress > 0 && t.progress < 100 && (
                     <div style={{ marginTop: '0.4rem' }}>
+<<<<<<< HEAD
                       <div className="progress-track"><div className="progress-fill" style={{ width: `${t.progress}%`, background: `linear-gradient(90deg, ${u.color}, ${u.color}88)` }} /></div>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t.progress}%</span>
                     </div>
@@ -331,6 +356,28 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
                   <p className="task-ai-note" style={{ color: u.color }}><Sparkles size={12} /> {t.aiNote}</p>
                 </div>
                 {t.canSplit && (
+=======
+                       <div className="progress-track"><div className="progress-fill" style={{ width: `${t.progress}%`, background: `linear-gradient(90deg, ${u.color}, ${u.color}88)` }} /></div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t.progress}%</span>
+                    </div>
+                  )}
+                  {t.urgency === 'danger' && !t.aiNote?.includes('تم تفعيل') && (
+                    <div style={{ background: 'rgba(244,63,94,0.08)', padding: '0.7rem', borderRadius: '8px', marginTop: '0.6rem', border: '1px solid rgba(244,63,94,0.2)' }}>
+                      <p style={{ fontSize: '0.82rem', marginBottom: '0.5rem', color: '#F43F5E', fontWeight: 600 }}>يبدو أن هذا المحتوى النصي معقد، هل تفضل تحويله الآن؟</p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', color: '#818CF8', borderColor: 'rgba(129,140,248,0.3)' }} onClick={() => handleAdaptiveMock(t.id, 'map')} disabled={processingAdaptive === t.id}>
+                          {processingAdaptive === t.id ? 'جاري التحويل...' : <><MapPin size={12}/> خريطة ذهنية</>}
+                        </button>
+                        <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', color: '#34D399', borderColor: 'rgba(52,211,153,0.3)' }} onClick={() => handleAdaptiveMock(t.id, 'audio')} disabled={processingAdaptive === t.id}>
+                           {processingAdaptive === t.id ? 'جاري التحويل...' : <><Headphones size={12}/> مقطع صوتي</>}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <p className="task-ai-note" style={{ color: u.color }}><Sparkles size={12} /> {t.aiNote}</p>
+                </div>
+                {t.canSplit && t.urgency !== 'danger' && (
+>>>>>>> origin/main
                   <button className="btn btn-danger" style={{ fontSize: '0.78rem', flexShrink: 0 }} onClick={() => setExpandedId(open ? null : t.id)}>
                     <Zap size={13} /> {splitTaskLabel}
                     <ChevronDown size={13} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />
@@ -365,10 +412,62 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
   );
 }
 
+<<<<<<< HEAD
+=======
+function DigitalFatigueModal({ onClose }) {
+  const [timeLeft, setTimeLeft] = useState(30);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onClose]);
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 9999 }}>
+      <div className="modal-container glass animate-scale-in" style={{ maxWidth: '400px', textAlign: 'center' }}>
+        <div style={{ padding: '2rem' }}>
+          <Activity size={48} color="#22D3EE" style={{ margin: '0 auto 1rem' }} className="copilot-spin" />
+          <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', color: '#22D3EE' }}>أخذت وقتاً طويلاً!</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            جلساتك الرقمية ممتدة. الاستراحة الآن تزيد تركيزك بنسبة 20%. خذ نفساً عميقاً واسترخِ لمدة نصف دقيقة.
+          </p>
+          
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#A5B4FC', margin: '1rem 0' }}>
+            00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+             <button className="btn btn-primary" onClick={onClose}>
+               لقد استرحت 🧘‍♂️
+             </button>
+             <button className="btn btn-ghost" onClick={onClose}>
+               تخطي الآن
+             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+>>>>>>> origin/main
 export default function StudentDashboard({ activeTab, onToast, currentUser, gender = 'male' }) {
   const toast = onToast || (() => {});
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ student: null, adaptive: [], peers: [], skills: [], tasks: [], splitSteps: [] });
+<<<<<<< HEAD
+=======
+  const [showFatigue, setShowFatigue] = useState(false);
+>>>>>>> origin/main
 
   useEffect(() => {
     let mounted = true;
@@ -391,14 +490,32 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     };
   }, [currentUser?.id, activeTab, toast]);
 
+<<<<<<< HEAD
+=======
+  // منبه الإرهاق الرقمي يظهر بعد دقيقة (للشوز استخدم 10 ثواني)
+  useEffect(() => {
+    const fatigueTimer = setTimeout(() => setShowFatigue(true), 15000);
+    return () => clearTimeout(fatigueTimer);
+  }, []);
+
+>>>>>>> origin/main
   if (loading || !data.student) {
     return <div className="glass panel-card">جاري تحميل بيانات الطالب...</div>;
   }
 
+<<<<<<< HEAD
+=======
+  const renderFatigue = showFatigue ? <DigitalFatigueModal onClose={() => setShowFatigue(false)} /> : null;
+
+>>>>>>> origin/main
   switch (activeTab) {
     case 'tasks':
       return (
         <div className="student-dash">
+<<<<<<< HEAD
+=======
+          {renderFatigue}
+>>>>>>> origin/main
           <HeroSection student={data.student} />
           <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
         </div>
@@ -406,6 +523,10 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     case 'skills':
       return (
         <div className="student-dash">
+<<<<<<< HEAD
+=======
+          {renderFatigue}
+>>>>>>> origin/main
           <HeroSection student={data.student} />
           <SkillsSection skills={data.skills} onToast={toast} />
         </div>
@@ -413,6 +534,10 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     case 'peers':
       return (
         <div className="student-dash">
+<<<<<<< HEAD
+=======
+          {renderFatigue}
+>>>>>>> origin/main
           <HeroSection student={data.student} />
           <PeersSection peers={data.peers} onToast={toast} studentId={currentUser.id} />
         </div>
@@ -420,14 +545,24 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     default:
       return (
         <div className="student-dash">
+<<<<<<< HEAD
           <HeroSection student={data.student} />
           <div className="dashboard-grid-even">
             <AdaptiveSection items={data.adaptive} onToast={toast} studentId={currentUser.id} />
+=======
+          {renderFatigue}
+          <HeroSection student={data.student} />
+          <div className="dashboard-grid-even">
+            <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
+>>>>>>> origin/main
             <PeersSection peers={data.peers} onToast={toast} studentId={currentUser.id} />
           </div>
           <div className="dashboard-grid-even">
             <SkillsSection skills={data.skills} onToast={toast} />
+<<<<<<< HEAD
             <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
+=======
+>>>>>>> origin/main
           </div>
         </div>
       );
