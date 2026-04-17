@@ -1,0 +1,352 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ██████╗  █████╗ ███████╗███████╗███████╗██████╗     ██████╗ ██╗     ██╗   ██╗███████╗
+   ██╔══██╗██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗    ██╔══██╗██║     ██║   ██║██╔════╝
+   ██████╔╝███████║███████╗███████╗█████╗  ██║  ██║    ██████╔╝██║     ██║   ██║███████╗
+   ██╔══██╗██╔══██║╚════██║╚════██║██╔══╝  ██║  ██║    ██╔═══╝ ██║     ██║   ██║╚════██║
+   ██║  ██║██║  ██║███████║███████║███████╗██████╔╝    ██║     ███████╗╚██████╔╝███████║
+   ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═════╝     ╚═╝     ╚══════╝ ╚═════╝ ╚══════╝
+   نظام التصميم — Design System v2.0
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── لوحة الألوان الرئيسية ───────────────────────────────────── */
+  --bg-primary: #06080F;
+  --bg-secondary: #0C1020;
+  --bg-tertiary: #111729;
+  --bg-card: rgba(17, 23, 41, 0.65);
+  
+  /* ─── ألوان العلامة التجارية (Brand) ────────────────────────────── */
+  --brand-indigo: #6366F1;
+  --brand-violet: #8B5CF6;
+  --brand-cyan: #22D3EE;
+  --brand-emerald: #10B981;
+  --brand-amber: #F59E0B;
+  --brand-rose: #F43F5E;
+  
+  /* ─── التدرجات ──────────────────────────────────────────────────── */
+  --gradient-brand: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #22D3EE 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+  --gradient-danger: linear-gradient(135deg, #F43F5E 0%, #FB7185 100%);
+  --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.12) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 50% 80%, rgba(34,211,238,0.06) 0%, transparent 50%);
+  
+  /* ─── الزجاج (Glassmorphism) ────────────────────────────────────── */
+  --glass-bg: rgba(17, 23, 41, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shine: rgba(255, 255, 255, 0.03);
+  --glass-blur: 20px;
+  
+  /* ─── النصوص ────────────────────────────────────────────────────── */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  
+  /* ─── الظلال ────────────────────────────────────────────────────── */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  --shadow-glow-brand: 0 0 30px rgba(99,102,241,0.15), 0 0 60px rgba(99,102,241,0.05);
+  --shadow-glow-cyan: 0 0 30px rgba(34,211,238,0.15);
+  --shadow-glow-emerald: 0 0 30px rgba(16,185,129,0.15);
+  
+  /* ─── الأبعاد ───────────────────────────────────────────────────── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --sidebar-width: 280px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Reset & Base
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  direction: rtl;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ─── خلفية متحركة بشبكة نقاط ──────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--gradient-mesh);
+  z-index: -2;
+  animation: meshShift 20s ease infinite alternate;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.5;
+}
+
+@keyframes meshShift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Scrollbar
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(99,102,241,0.3);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.6); }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Glass Panel — البطاقة الزجاجية الأساسية
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  /* خط إضاءة خفيف من الأعلى يحاكي انعكاس الزجاج */
+  background-image: linear-gradient(180deg, var(--glass-shine) 0%, transparent 40%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* توهج ملوّن عند التحويم */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99,102,241,0.06), transparent 40%);
+}
+.glass:hover::before {
+  opacity: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Typography Utilities
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-emerald {
+  background: var(--gradient-success);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Animations — Premium Micro-Interactions
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideRight {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 1; }
+  100% { transform: scale(1.6);  opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(99,102,241,0.2); }
+  50%      { border-color: rgba(99,102,241,0.5); }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes gradientFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-up {
+  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-right {
+  animation: fadeSlideRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+.delay-5 { animation-delay: 0.40s; }
+.delay-6 { animation-delay: 0.48s; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Buttons
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.btn:hover::after { opacity: 1; }
+
+.btn-primary {
+  background: var(--gradient-brand);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+  background-size: 200% 200%;
+  animation: gradientFlow 3s ease infinite;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(99,102,241,0.45);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.btn-success {
+  background: var(--gradient-success);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(16,185,129,0.45);
+}
+
+.btn-danger {
+  background: var(--gradient-danger);
+  color: white;
+  box-shadow: 0 4px 15px rgba(244,63,94,0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Badge / Pill
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Progress Bar
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.progress-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  height: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+}
+
+/* بريق متحرك على شريط التقدم */
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
