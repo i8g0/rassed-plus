@@ -11,7 +11,7 @@
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
-  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Settings,
+  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Settings, Rocket,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
@@ -20,6 +20,7 @@ import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
 import SettingsPanel from './components/SettingsPanel';
+import RasedFeaturesGalaxy from './components/RasedFeaturesGalaxy';
 import { getNotifications } from './services/api';
 import { byGender } from './utils/localization';
 import './App.css';
@@ -60,6 +61,7 @@ const NAV_ADVISOR = [
   { id: 'students',      icon: Users,           label: 'الطلاب' },
   { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
   { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
+  { id: 'galaxy',        icon: Rocket,          label: 'مجرة الميزات' },
 ];
 
 const NAV_STUDENT = [
@@ -67,6 +69,7 @@ const NAV_STUDENT = [
   { id: 'tasks',    icon: Zap,             label: 'مهامي' },
   { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
+  { id: 'galaxy',   icon: Rocket,          label: 'مجرة الميزات' },
 ];
 
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
@@ -199,13 +202,15 @@ export default function App() {
         </header>
 
         {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
-        {role === 'advisor'
-          ? <AdvisorDashboard
-              activeTab={activeTab}
-              onIntervention={(s) => setIntervention(s)}
-              onToast={showToast}
-            />
-          : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
+        {activeTab === 'galaxy'
+          ? <RasedFeaturesGalaxy />
+          : role === 'advisor'
+            ? <AdvisorDashboard
+                activeTab={activeTab}
+                onIntervention={(s) => setIntervention(s)}
+                onToast={showToast}
+              />
+            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
         }
       </main>
 
