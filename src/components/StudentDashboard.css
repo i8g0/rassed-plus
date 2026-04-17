@@ -495,3 +495,42 @@
     font-size: 1.6rem;
   }
 }
+
+/* ─── Light Theme for Student Dashboard ──────────────────────────────────────── */
+
+[data-theme="light"] .hero-banner {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(34,211,238,0.04) 50%, rgba(139,92,246,0.06) 100%);
+  border-color: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .hero-mesh {
+  background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+}
+
+[data-theme="light"] .adaptive-card,
+[data-theme="light"] .peer-card,
+[data-theme="light"] .skill-card {
+  background: rgba(255,255,255,0.6);
+  border-color: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .adaptive-card:hover {
+  border-color: rgba(129,140,248,0.3);
+}
+
+[data-theme="light"] .peer-card:hover {
+  border-color: rgba(52,211,153,0.3);
+}
+
+[data-theme="light"] .alt-btn {
+  border-color: rgba(0,0,0,0.08);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .split-step {
+  border-color: rgba(0,0,0,0.04);
+}
+
+[data-theme="light"] .split-step:hover {
+  background: rgba(0,0,0,0.02);
+}

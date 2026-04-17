@@ -99,7 +99,14 @@ export async function getAdvisorOverview() {
 
   const students = analyzeAllStudents();
   const stats = getAdvisorStats();
-  return { students, stats };
+  
+  const courses = [
+    { id: '1', code: 'CS 321', name: 'الخوارزميات', instructor: 'د. عبدالله', enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
+    { id: '2', code: 'MATH 201', name: 'التفاضل والتكامل ٢', instructor: 'د. خالد', enroll_count: 150, fail_rate: 45, avg_grade: 2.5, severity: 'yellow' },
+    { id: '3', code: 'IS 101', name: 'نظم المعلومات', instructor: 'د. سارة', enroll_count: 200, fail_rate: 10, avg_grade: 4.2, severity: 'green' }
+  ];
+
+  return { students, stats, courses };
 }
 
 export async function getInterventions() {
@@ -110,7 +117,7 @@ export async function getInterventions() {
   return [
     { id: 1, studentName: 'أحمد محمود', status: 'active', createdAt: '2026-04-10', riskLevel: 'red' },
     { id: 2, studentName: 'نورة سعد', status: 'active', createdAt: '2026-04-12', riskLevel: 'red' },
-    { id: 3, studentName: 'أحمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
+    { id: 3, studentName: 'محمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
   ];
 }
 

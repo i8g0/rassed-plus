@@ -1349,3 +1349,93 @@
     font-size: 0.76rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Copilot Thinking Animation
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes copilotSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.copilot-spin {
+  animation: copilotSpin 1.5s linear infinite;
+  color: #22D3EE;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Light Theme Overrides
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .sidebar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: blur(20px);
+  border-color: rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .glass {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+}
+
+[data-theme="light"] .main-content {
+  background: var(--bg-primary);
+}
+
+[data-theme="light"] .main-header {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .icon-btn {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.08);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .icon-btn:hover {
+  background: rgba(0,0,0,0.06);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .nav-link {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .nav-link:hover {
+  background: rgba(0,0,0,0.04);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .student-item {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .student-item:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+[data-theme="light"] .stat-card {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .panel-card {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .login-shell {
+  background: #F8FAFC;
+}
+
+[data-theme="light"] .login-container {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="light"] .brand-logo-wrap {
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}

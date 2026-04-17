@@ -299,7 +299,26 @@ function RadarTab({ courses }) {
           </span>
         </div>
 
-        <div className="radar-courses">
+        <div className="course-chart-container" style={{ padding: '1.5rem', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+          <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>رسم بياني: نسبة الرسوب في المواد</h4>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '150px', paddingBottom: '1rem' }}>
+            {courses.map(c => (
+              <div key={c.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: severityColor[c.severity] }}>{c.fail_rate}%</div>
+                <div style={{ 
+                  width: '40px', 
+                  height: `${c.fail_rate}%`, 
+                  background: severityColor[c.severity], 
+                  borderRadius: '4px 4px 0 0',
+                  minHeight: '5px'
+                }}></div>
+                <div style={{ fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-secondary)' }}>{c.code}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="radar-courses" style={{ marginTop: '1rem' }}>
           {courses.map((c) => (
             <div key={c.id} className="radar-course-card" style={{ borderColor: `${severityColor[c.severity]}22` }}>
               <div className="radar-course-header">
