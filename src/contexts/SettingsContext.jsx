@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * contexts/SettingsContext.jsx — نظام الإعدادات العالمي
  *
@@ -15,7 +16,30 @@ const STORAGE_KEY = 'rased-plus-settings';
 const DEFAULT_SETTINGS = {
   theme: 'dark',
   language: 'ar',
+  animations: true,
+  sounds: true,
+  color_accent: '#2dd4bf',
 };
+
+function applyMotionPreference(enabled) {
+  const root = document.documentElement;
+  const styleId = 'rased-motion-control';
+  const existing = document.getElementById(styleId);
+
+  if (enabled) {
+    root.removeAttribute('data-motion');
+    if (existing) existing.remove();
+    return;
+  }
+
+  root.setAttribute('data-motion', 'off');
+  if (!existing) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = '*{animation:none !important;transition:none !important;scroll-behavior:auto !important;}';
+    document.head.appendChild(style);
+  }
+}
 
 function loadSettings() {
   try {
@@ -76,6 +100,15 @@ function applyToDOM(settings) {
     root.style.setProperty('--glass-bg', 'rgba(15,18,30,0.55)');
     root.style.setProperty('--glass-border', 'rgba(255,255,255,0.06)');
   }
+
+  // ═══ اللون الأساسي — ينعكس فوراً على متغيرات التصميم ═══
+  const accent = settings.color_accent || '#2dd4bf';
+  root.style.setProperty('--brand-primary', accent);
+  root.style.setProperty('--brand-cyan', accent);
+
+  // ═══ الحركة والصوت — تفعيل/تعطيل على DOM ═══
+  applyMotionPreference(Boolean(settings.animations));
+  root.setAttribute('data-sounds', settings.sounds ? 'on' : 'off');
 
   // ═══ اللغة — يغير dir و lang على <html> ═══
   root.dir = settings.language === 'en' ? 'ltr' : 'rtl';

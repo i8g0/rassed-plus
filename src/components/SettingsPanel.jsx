@@ -22,7 +22,7 @@ import {
   X, Settings, Power, Sparkles,
   ShieldCheck, Rocket, Bot,
   Palette, Globe, Volume2, Eye,
-  Moon, Sun, Monitor,
+  Moon, Sun, Monitor, RotateCcw,
 } from 'lucide-react';
 import { getFeatures, toggleFeature } from '../services/api';
 
@@ -74,21 +74,22 @@ const LOCAL_PREFERENCES = [
     icon: Palette,
     type: 'color',
     options: [
-      { value: '#6366F1', label: 'بنفسجي' },
+      { value: '#2dd4bf', label: 'فيروزي' },
+      { value: '#14b8a6', label: 'Teal' },
       { value: '#10B981', label: 'أخضر' },
-      { value: '#F59E0B', label: 'ذهبي' },
-      { value: '#F43F5E', label: 'وردي' },
-      { value: '#22D3EE', label: 'سماوي' },
-      { value: '#8B5CF6', label: 'أرجواني' },
+      { value: '#fbbf24', label: 'ذهبي' },
+      { value: '#fda4af', label: 'وردي' },
+      { value: '#22d3ee', label: 'سماوي' },
+      { value: '#0ea5a8', label: 'تركواز' },
     ],
-    defaultValue: '#6366F1',
+    defaultValue: '#2dd4bf',
   },
 ];
 
 const FEATURE_CATEGORY_META = {
   student: { title: 'ميزات الطلاب', subtitle: '40 ميزة', icon: Rocket, color: '#10B981' },
-  advisor: { title: 'ميزات المرشد والجامعة', subtitle: '30 ميزة', icon: ShieldCheck, color: '#F59E0B' },
-  ai:      { title: 'ميزات الذكاء الاصطناعي', subtitle: '30 ميزة', icon: Bot, color: '#818CF8' },
+  advisor: { title: 'ميزات المرشد والجامعة', subtitle: '30 ميزة', icon: ShieldCheck, color: '#fbbf24' },
+  ai:      { title: 'ميزات الذكاء الاصطناعي', subtitle: '30 ميزة', icon: Bot, color: '#2dd4bf' },
 };
 
 /* ─── Sub-components ───────────────────────────────────────────────────────── */
@@ -185,15 +186,6 @@ export default function SettingsPanel({ open, onClose, onToast }) {
   const [featuresLoaded, setFeaturesLoaded] = useState(false);
   const [busyCode, setBusyCode] = useState(null);
 
-  // التفضيلات — محلية (Local State) لتجنب تعارض البيانات
-  const [preferences, setPreferences] = useState(() => {
-    const saved = {};
-    LOCAL_PREFERENCES.forEach((p) => {
-      saved[p.id] = p.defaultValue;
-    });
-    return saved;
-  });
-
   // تحميل الميزات مباشرة لما البانل ينفتح
   useEffect(() => {
     if (!open || featuresLoaded) return;
@@ -241,15 +233,24 @@ export default function SettingsPanel({ open, onClose, onToast }) {
   };
 
   const handlePrefChange = (id, value) => {
-    setPreferences((prev) => ({ ...prev, [id]: value }));
-    updateSetting(id, value);
-    const pref = LOCAL_PREFERENCES.find((p) => p.id === id);
-    onToast?.(`تم تحديث ${pref?.label || id}`, 'info');
+    try {
+      updateSetting(id, value);
+      const pref = LOCAL_PREFERENCES.find((p) => p.id === id);
+      onToast?.(`تم تحديث ${pref?.label || id}`, 'info');
+    } catch (err) {
+      console.error('Preference update failed:', err);
+      onToast?.('تعذر تحديث الإعداد حالياً', 'warning');
+    }
   };
 
   const handleReset = () => {
-    resetSettings();
-    onToast?.('تم إعادة جميع الإعدادات للقيم الافتراضية', 'info');
+    try {
+      resetSettings();
+      onToast?.('تم إعادة جميع الإعدادات للقيم الافتراضية', 'info');
+    } catch (err) {
+      console.error('Reset settings failed:', err);
+      onToast?.('تعذر إعادة تعيين الإعدادات حالياً', 'warning');
+    }
   };
 
   // ⛔ ما نرندر شيء إذا مو مفتوح
@@ -405,7 +406,7 @@ const SETTINGS_PANEL_CSS = `
   height: 100vh;
   background: rgba(15,18,30,0.96);
   backdrop-filter: blur(40px);
-  border-right: 1px solid rgba(99,102,241,0.15);
+  border-right: 1px solid rgba(45,212,191,0.15);
   box-shadow: -12px 0 50px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
@@ -433,7 +434,7 @@ const SETTINGS_PANEL_CSS = `
 }
 
 .sp-header-icon {
-  color: #818CF8;
+  color: #2dd4bf;
 }
 
 .sp-close-btn, .sp-reset-btn {
@@ -452,12 +453,12 @@ const SETTINGS_PANEL_CSS = `
 .sp-close-btn:hover {
   background: rgba(244,63,94,0.12);
   border-color: rgba(244,63,94,0.3);
-  color: #F43F5E;
+  color: #fda4af;
 }
 .sp-reset-btn:hover {
   background: rgba(245,158,11,0.12);
   border-color: rgba(245,158,11,0.3);
-  color: #F59E0B;
+  color: #fbbf24;
 }
 
 /* ── Tabs ── */
@@ -491,13 +492,13 @@ const SETTINGS_PANEL_CSS = `
 }
 
 .sp-tab-active {
-  background: rgba(99,102,241,0.1) !important;
+  background: rgba(45,212,191,0.1) !important;
   color: #A5B4FC !important;
-  border-color: rgba(99,102,241,0.2) !important;
+  border-color: rgba(45,212,191,0.2) !important;
 }
 
 .sp-tab-badge {
-  background: rgba(99,102,241,0.2);
+  background: rgba(45,212,191,0.2);
   color: #A5B4FC;
   padding: 0.1rem 0.45rem;
   border-radius: 99px;
@@ -540,7 +541,7 @@ const SETTINGS_PANEL_CSS = `
   color: rgba(255,255,255,0.85);
 }
 .sp-pref-label svg {
-  color: #818CF8;
+  color: #2dd4bf;
 }
 
 /* Toggle Switch */
@@ -556,8 +557,8 @@ const SETTINGS_PANEL_CSS = `
 }
 
 .sp-toggle-on {
-  background: linear-gradient(135deg, #6366F1, #22D3EE);
-  box-shadow: 0 0 10px rgba(99,102,241,0.4);
+  background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+  box-shadow: 0 0 10px rgba(45,212,191,0.4);
 }
 
 .sp-toggle-off {
@@ -581,7 +582,7 @@ const SETTINGS_PANEL_CSS = `
 
 .sp-toggle-off .sp-toggle-thumb {
   left: 23px;
-  color: var(--accent, #818CF8);
+  color: var(--accent, #2dd4bf);
 }
 
 /* Select Buttons */
@@ -611,9 +612,9 @@ const SETTINGS_PANEL_CSS = `
 }
 
 .sp-select-active {
-  background: rgba(99,102,241,0.15) !important;
+  background: rgba(45,212,191,0.15) !important;
   color: #A5B4FC !important;
-  border-color: rgba(99,102,241,0.25) !important;
+  border-color: rgba(45,212,191,0.25) !important;
 }
 
 /* Color Dots */
@@ -649,7 +650,7 @@ const SETTINGS_PANEL_CSS = `
   align-items: center;
   padding: 1rem 1.1rem;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(34,211,238,0.08));
+  background: linear-gradient(135deg, rgba(45,212,191,0.12), rgba(34,211,238,0.08));
   border: 1px solid rgba(129,140,248,0.18);
   margin-bottom: 1rem;
 }
@@ -687,7 +688,7 @@ const SETTINGS_PANEL_CSS = `
   display: block;
   font-size: 1.5rem;
   font-weight: 900;
-  color: #22D3EE;
+  color: #2dd4bf;
   line-height: 1;
 }
 

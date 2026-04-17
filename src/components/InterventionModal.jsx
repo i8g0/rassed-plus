@@ -9,37 +9,41 @@
  *   - زر "نسخ الرسالة" وزر "إرسال" (محاكاة)
  */
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X, Mail, Copy, CheckCircle2, Send, Zap,
   ClipboardList, Calendar, Sparkles, User, Activity,
 } from 'lucide-react';
-import { generateIntervention } from '../services/api';
+import { useRased } from '../contexts/RasedContext';
 
-export default function InterventionModal({ student, advisorId, onClose, onToast }) {
+export default function InterventionModal({ student, onClose, onToast }) {
   const [copied, setCopied] = useState(false);
   const [sent, setSent]     = useState(false);
   const [plan, setPlan]     = useState(null);
   const [loading, setLoading] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState({});
+  const { triggerGenerateIntervention } = useRased();
 
-  const handleGenerate = () => {
+  useEffect(() => {
+    if (!student?.id) return;
+    handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id]);
+
+  const handleGenerate = async () => {
     setLoading(true);
-    let mounted = true;
-    generateIntervention(student.id, advisorId)
-      .then((data) => {
-        if (mounted) setPlan(data);
-      })
-      .catch(() => {
-        if (mounted) {
-          setPlan(null);
-          onToast?.('تعذر توليد خطة التدخل من الخادم', 'warning');
-        }
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+    setSent(false);
+    setCompletedSteps({});
+    try {
+      const data = await triggerGenerateIntervention(student?.id);
+      setPlan(data);
+    } catch {
+      setPlan(null);
+      onToast?.('تعذر توليد خطة التدخل من الخادم', 'warning');
+    } finally {
+      setLoading(false);
+    }
   };
-
   const handleCopy = async () => {
     if (!plan) return;
     try {
@@ -54,25 +58,23 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
   };
 
   const handleSend = () => {
-    setSent(true);
-    onToast?.('تم توثيق إرسال الخطة في قاعدة البيانات', 'success');
+    try {
+      setSent(true);
+      onToast?.('تم توثيق إرسال الخطة في قاعدة البيانات', 'success');
+    } catch (err) {
+      console.error('Send intervention action failed:', err);
+      onToast?.('تعذر اعتماد الإرسال حالياً', 'warning');
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-container glass" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h2 style={{ fontSize: '1.05rem', fontWeight: '800' }}>جاري تجهيز خطة التدخل...</h2>
-            <button className="icon-btn" onClick={onClose}><X size={18} /></button>
-          </div>
-          <div className="modal-body">يتم الآن جلب الخطة من الخادم...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!plan) return null;
+  const handleToggleStep = (index) => {
+    try {
+      setCompletedSteps((prev) => ({ ...prev, [index]: !prev[index] }));
+    } catch (err) {
+      console.error('Toggle intervention step failed:', err);
+      onToast?.('تعذر تحديث حالة المهمة', 'warning');
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -82,14 +84,14 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
-              background: student.riskLevel === 'red' ? 'rgba(244,63,94,0.12)' : 'rgba(245,158,11,0.12)',
-              color: student.riskLevel === 'red' ? '#F43F5E' : '#F59E0B',
+              background: student?.riskLevel === 'red' ? 'rgba(244,63,94,0.12)' : 'rgba(245,158,11,0.12)',
+              color: student?.riskLevel === 'red' ? '#fda4af' : '#fbbf24',
               padding: '0.5rem', borderRadius: '10px', display: 'flex',
             }}>
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>خطة تدخل — {student.name}</h2>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>خطة تدخل — {student?.name}</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>مُولّدة بواسطة Copilot الذكي</p>
             </div>
           </div>
@@ -98,62 +100,10 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
 
         {/* المحتوى */}
         <div className="modal-body">
-
-          {/* البريد الإلكتروني */}
-          <div className="modal-section">
-            <div className="modal-section-title">
-              <Mail size={16} /> <span>البريد الإلكتروني المقترح</span>
-            </div>
-            <p style={{ color: 'var(--brand-indigo)', fontWeight: '700', fontSize: '0.88rem', marginBottom: '0.5rem' }}>
-              {plan.emailSubject}
-            </p>
-            <div className="email-preview">
-              {plan.emailBody}
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-              <button className="btn btn-ghost" onClick={handleCopy}>
-                {copied ? <><CheckCircle2 size={14} /> تم النسخ!</> : <><Copy size={14} /> نسخ الرسالة</>}
-              </button>
-              <button
-                className={`btn ${sent ? 'btn-ghost' : 'btn-primary'}`}
-                onClick={handleSend}
-                disabled={sent}
-              >
-                {sent ? <><CheckCircle2 size={14} /> تم الإرسال ✓</> : <><Send size={14} /> إرسال للطالب</>}
-              </button>
-            </div>
-          </div>
-
-          {/* الخطة العلاجية */}
-          <div className="modal-section">
-            <div className="modal-section-title">
-              <ClipboardList size={16} /> <span>الخطة العلاجية المرحلية</span>
-            </div>
-            <div className="intervention-steps">
-              {(plan.actionPlan || []).map((step, i) => (
-                <div key={i} className="intervention-step">
-                  <span className="step-num">{step.step}</span>
-                  <div className="step-content">
-                    <span className="step-action">{step.action}</span>
-                    <div className="step-meta">
-                      <span><Calendar size={11} /> {step.timeline}</span>
-                      <span><User size={11} /> {step.owner}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* موعد المتابعة */}
-          <div className="modal-footer-info">
-            <Calendar size={15} />
-            <span>موعد المتابعة المقترح: <strong>{plan.followUpDate}</strong></span>
-          </div>
           {!plan && !loading && (
             <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-              <div style={{ background: 'rgba(99,102,241,0.1)', padding: '1rem', borderRadius: '50%', display: 'inline-flex', marginBottom: '1rem' }}>
-                <Zap size={32} color="#818CF8" />
+              <div style={{ background: 'rgba(45,212,191,0.1)', padding: '1rem', borderRadius: '50%', display: 'inline-flex', marginBottom: '1rem' }}>
+                <Zap size={32} color="#2dd4bf" />
               </div>
               <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>يحتاج الطالب لتدخل مبكر</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '300px', margin: '0 auto 1.5rem auto' }}>
@@ -167,8 +117,8 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
 
           {loading && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-               <Activity size={32} color="#22D3EE" className="copilot-spin" style={{ margin: '0 auto 1rem' }} />
-               <p style={{ color: '#22D3EE', fontWeight: 600 }}>يتم الآن توليد الخطة وصياغة البريد...</p>
+               <Activity size={32} color="#2dd4bf" className="copilot-spin" style={{ margin: '0 auto 1rem' }} />
+               <p style={{ color: '#2dd4bf', fontWeight: 600 }}>يتم الآن توليد الخطة وصياغة البريد...</p>
             </div>
           )}
 
@@ -205,14 +155,30 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
                   <ClipboardList size={16} /> <span>الخطة العلاجية المرحلية</span>
                 </div>
                 <div className="intervention-steps">
-                  {(plan.actionPlan || []).map((step, i) => (
-                    <div key={i} className="intervention-step">
-                      <span className="step-num">{step.step}</span>
+                  {(Array.isArray(plan?.actionPlan) ? plan.actionPlan : []).map((step, i) => (
+                    <div key={i} className="intervention-step" style={{ opacity: completedSteps?.[i] ? 0.55 : 1, transition: 'opacity 0.25s ease' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStep(i)}
+                        className="step-num"
+                        style={{
+                          border: completedSteps?.[i] ? '1px solid rgba(110,231,183,0.5)' : undefined,
+                          background: completedSteps?.[i] ? 'rgba(110,231,183,0.15)' : undefined,
+                          color: completedSteps?.[i] ? '#6ee7b7' : undefined,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        aria-label={`تبديل حالة المهمة ${step?.action || i + 1}`}
+                      >
+                        {completedSteps?.[i] ? '✓' : step?.step}
+                      </button>
                       <div className="step-content">
-                        <span className="step-action">{step.action}</span>
+                        <span className="step-action" style={{ textDecoration: completedSteps?.[i] ? 'line-through' : 'none' }}>{step?.action}</span>
                         <div className="step-meta">
-                          <span><Calendar size={11} /> {step.timeline}</span>
-                          <span><User size={11} /> {step.owner}</span>
+                          <span><Calendar size={11} /> {step?.timeline}</span>
+                          <span><User size={11} /> {step?.owner}</span>
                         </div>
                       </div>
                     </div>
@@ -220,10 +186,9 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
                 </div>
               </div>
 
-              {/* موعد المتابعة */}
               <div className="modal-footer-info animate-fade-up delay-3">
                 <Calendar size={15} />
-                <span>موعد المتابعة المقترح: <strong>{plan.followUpDate}</strong></span>
+                <span>موعد المتابعة المقترح: <strong>{plan?.followUpDate || 'غير محدد'}</strong></span>
               </div>
             </>
           )}

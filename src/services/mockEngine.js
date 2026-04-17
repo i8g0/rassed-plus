@@ -1,56 +1,102 @@
 /**
  * services/mockEngine.js
- * محرك البيانات الذكي المركزي — يحاكي عمل الـ Backend/AI
- * 
- * كل دالة تُرجع بيانات ديناميكية كأنها قادمة من API حقيقي.
- * يمكن استبدال أي دالة لاحقاً بـ fetch() حقيقي بدون تغيير الواجهات.
+ * محرك البيانات الذكي المركزي — يحاكي عمل الـ Backend/AI بقوة مستخدماً البيانات الأكاديمية العميقة.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  قاعدة البيانات الوهمية (Single Source of Truth)
-// ═══════════════════════════════════════════════════════════════════════════════
+import { studentsDB } from './mockStudentsDB.js';
 
-export const STUDENTS_DB = [
-  {
-    id: '44120345', name: 'أحمد محمود', major: 'علوم الحاسب', year: 3, gpa: 1.3,
-    attendance: 40, taskTimeRatio: 3.0, taskCompletion: 25, lateLogins: 6, incompleteLectures: 75,
-    strongSkills: ['خوارزميات', 'رياضيات'], weakSkills: ['قواعد بيانات', 'شبكات'],
-    email: 'ahmed.m@university.edu',
-  },
-  {
-    id: '44210988', name: 'محمد عمار', major: 'علوم الحاسب', year: 2, gpa: 3.4,
-    attendance: 82, taskTimeRatio: 2.1, taskCompletion: 72, lateLogins: 3, incompleteLectures: 40,
-    strongSkills: ['رياضيات', 'إحصاء'], weakSkills: ['برمجة متقدمة', 'هياكل بيانات'],
-    gender: 'male',
-    email: 'mohammed.ammar@university.edu',
-  },
-  {
-    id: '43990122', name: 'فهد عبدالله', major: 'هندسة البرمجيات', year: 4, gpa: 4.8,
-    attendance: 97, taskTimeRatio: 0.9, taskCompletion: 98, lateLogins: 0, incompleteLectures: 2,
-    strongSkills: ['برمجة متقدمة', 'هياكل بيانات', 'خوارزميات'], weakSkills: [],
-    email: 'fahad.a@university.edu',
-  },
-  {
-    id: '44112340', name: 'نورة سعد', major: 'علوم الحاسب', year: 2, gpa: 1.6,
-    attendance: 42, taskTimeRatio: 2.5, taskCompletion: 30, lateLogins: 7, incompleteLectures: 70,
-    strongSkills: ['تصميم واجهات'], weakSkills: ['خوارزميات', 'شبكات'],
-    email: 'noura.s@university.edu',
-  },
-  {
-    id: '44315200', name: 'عمر الشمري', major: 'نظم المعلومات', year: 3, gpa: 3.8,
-    attendance: 90, taskTimeRatio: 1.1, taskCompletion: 91, lateLogins: 1, incompleteLectures: 10,
-    strongSkills: ['قواعد بيانات', 'شبكات', 'إحصاء'], weakSkills: ['رياضيات'],
-    email: 'omar.sh@university.edu',
-  },
-  {
-    id: '44520101', name: 'لين الحربي', major: 'الذكاء الاصطناعي', year: 1, gpa: 4.2,
-    attendance: 93, taskTimeRatio: 1.3, taskCompletion: 85, lateLogins: 2, incompleteLectures: 15,
-    strongSkills: ['رياضيات', 'برمجة متقدمة'], weakSkills: ['إحصاء'],
-    email: 'leen.h@university.edu',
-  },
-];
+const RISK_TO_ENGINE_LEVEL = {
+  'Critical High': 'red',
+  High: 'red',
+  Medium: 'yellow',
+  Low: 'green',
+};
 
-// حسابات تسجيل الدخول التجريبية (بيانات جاهزة للاستخدام في الواجهة)
+const FEMALE_FIRST_NAMES = new Set([
+  'ريم', 'سارة', 'هديل', 'ليان', 'جود', 'نوف', 'رغد', 'لمى', 'شيماء', 'نجلاء',
+  'بتول', 'رنا', 'شهد', 'ديما',
+]);
+
+function inferGender(name) {
+  const firstName = String(name || '').trim().split(' ')[0];
+  return FEMALE_FIRST_NAMES.has(firstName) ? 'female' : 'male';
+}
+
+function buildSubmissionTimestamps(pattern) {
+  const deadline = '2026-05-01T23:59:00Z';
+  switch (pattern) {
+    case 'Early':
+    case 'مبكر جداً':
+      return [{ assignment: 'Coursework', actual_submission: '2026-04-28T12:00:00Z', deadline }];
+    case 'On-Time':
+    case 'على الوقت':
+      return [{ assignment: 'Coursework', actual_submission: '2026-05-01T20:30:00Z', deadline }];
+    case 'Last-Minute':
+    case 'الدقيقة الأخيرة (11:59pm)':
+      return [{ assignment: 'Coursework', actual_submission: '2026-05-01T23:10:00Z', deadline }];
+    case 'Late':
+    case 'متأخر مزمن':
+      return [{ assignment: 'Coursework', actual_submission: '2026-05-02T10:00:00Z', deadline }];
+    case 'Chronic Late Submissions':
+      return [
+        { assignment: 'Coursework-1', actual_submission: '2026-05-02T10:00:00Z', deadline },
+        { assignment: 'Coursework-2', actual_submission: '2026-05-03T12:00:00Z', deadline },
+      ];
+    case 'متذبذب':
+      return [
+        { assignment: 'Coursework-1', actual_submission: '2026-04-30T14:20:00Z', deadline },
+        { assignment: 'Coursework-2', actual_submission: '2026-05-02T01:10:00Z', deadline },
+      ];
+    default:
+      return [{ assignment: 'Coursework', actual_submission: '2026-05-01T20:30:00Z', deadline }];
+  }
+}
+
+export const STUDENTS_DB = studentsDB.map((student) => {
+  const mappedCourses = (student.current_semester_courses || []).map((course) => ({
+    course_code: course.course_code,
+    course_name: course.course_name,
+    attendance_percentage: course.attendance_rate,
+    assessments: {
+      midterm: course.midterm_score,
+      max_midterm: 20,
+      lab: course.lab_project_score,
+      max_lab: 30,
+    },
+    clo_analytics: course.clo_mastery,
+    submission_timestamps: Array.isArray(course.submission_timestamps) && course.submission_timestamps.length > 0
+      ? course.submission_timestamps.map((item) => ({
+        assignment: item.assignment || 'Coursework',
+        actual_submission: item.submitted_at || item.actual_submission,
+        deadline: item.due_at || item.deadline,
+      }))
+      : buildSubmissionTimestamps(course.submission_pattern),
+  }));
+
+  const avgAttendance = mappedCourses.length > 0
+    ? Math.round(mappedCourses.reduce((sum, c) => sum + c.attendance_percentage, 0) / mappedCourses.length)
+    : 90;
+
+  return {
+    id: student.id,
+    name: student.name,
+    gender: student.gender || inferGender(student.name),
+    major: student.major,
+    level: student.level,
+    year: student.level,
+    gpa: student.gpa,
+    cumulative_gpa: student.gpa,
+    risk_level: student.risk_level,
+    system_flags: Array.isArray(student.academic_flags) ? student.academic_flags : [],
+    current_courses: mappedCourses,
+    attendance: avgAttendance,
+    taskTimeRatio: student.risk_level === 'Critical High' ? 2.9 : student.risk_level === 'High' ? 2.4 : student.risk_level === 'Medium' ? 1.4 : 0.9,
+    taskCompletion: student.risk_level === 'Critical High' ? 32 : student.risk_level === 'High' ? 48 : student.risk_level === 'Medium' ? 71 : 93,
+    lateLogins: student.risk_level === 'Critical High' ? 11 : student.risk_level === 'High' ? 8 : student.risk_level === 'Medium' ? 4 : 1,
+    incompleteLectures: student.risk_level === 'Critical High' ? 23 : student.risk_level === 'High' ? 16 : student.risk_level === 'Medium' ? 8 : 2,
+  };
+});
+
 export const AUTH_ACCOUNTS = [
   {
     role: 'advisor',
@@ -66,30 +112,44 @@ export const AUTH_ACCOUNTS = [
     },
   },
   {
-    role: 'student',
-    login: 'mohammed.ammar@university.edu',
-    altLogin: '44210988',
-    password: 'Mohammed@2026',
+    role: 'advisor',
+    login: 'noura.supervisor@university.edu',
+    altLogin: 'AD-2001',
+    password: 'Supervisor@2026',
     profile: {
-      id: '44210988',
-      name: 'محمد عمار',
-      email: 'mohammed.ammar@university.edu',
-      major: 'علوم الحاسب',
-      year: 2,
-      gender: 'male',
+      id: 'AD-2001',
+      name: 'د. نورة السبيعي',
+      email: 'noura.supervisor@university.edu',
+      title: 'مشرفة أكاديمية',
+      department: 'عمادة شؤون الطالبات',
+      gender: 'female',
     },
   },
   {
     role: 'student',
-    login: 'ahmed.m@university.edu',
-    altLogin: '44120345',
-    password: 'Ahmed@2026',
+    login: 'mohammed.ammar@university.edu',
+    altLogin: 'SCS25001',
+    password: 'Mohammed@2026',
     profile: {
-      id: '44120345',
-      name: 'أحمد محمود',
-      email: 'ahmed.m@university.edu',
-      major: 'علوم الحاسب',
+      id: 'SCS25001',
+      name: 'محمد عمار القحطاني',
+      email: 'mohammed.ammar@university.edu',
+      major: 'هندسة برمجيات',
+      year: 7,
+    },
+  },
+  {
+    role: 'student',
+    login: 'reem.qahtani@university.edu',
+    altLogin: 'SCS25002',
+    password: 'Reem@2026',
+    profile: {
+      id: 'SCS25002',
+      name: 'ريم فهد القحطاني',
+      email: 'reem.qahtani@university.edu',
+      major: 'نظم معلومات',
       year: 3,
+      gender: 'female',
     },
   },
 ];
@@ -110,10 +170,7 @@ export function authenticateUser(role, identifier, password) {
   const normalizedPassword = String(password || '').trim();
 
   if (!normalizedRole || !normalizedIdentifier || !normalizedPassword) {
-    return {
-      ok: false,
-      message: 'يرجى إدخال جميع الحقول المطلوبة.',
-    };
+    return { ok: false, message: 'يرجى إدخال جميع الحقول المطلوبة.' };
   }
 
   const account = AUTH_ACCOUNTS.find((item) => {
@@ -127,102 +184,148 @@ export function authenticateUser(role, identifier, password) {
   });
 
   if (!account) {
-    return {
-      ok: false,
-      message: 'بيانات الدخول غير صحيحة. تأكد من الدور والبريد/الرقم وكلمة المرور.',
-    };
+    return { ok: false, message: 'بيانات الدخول غير صحيحة. تأكد من الدور والبريد/الرقم وكلمة المرور.' };
   }
 
-  return {
-    ok: true,
-    user: {
-      ...account.profile,
-      role: account.role,
-    },
-  };
+  return { ok: true, user: { ...account.profile, role: account.role } };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  1. خوارزمية تحليل الخطورة (Risk Analysis Engine)
+//  1. خوارزمية تحليل الخطورة الأكاديمية (Risk Analysis Engine)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/**
- * يحسب مؤشر الخطورة لطالب واحد بناءً على 6 عوامل بأوزان مختلفة.
- * هذه نفس الخوارزمية الموجودة في الـ Backend (main.py) لكن بـ JS.
- */
 export function analyzeStudentRisk(student) {
   const factors = [];
   let score = 0;
 
-  // الوزن 1: المعدل التراكمي (25%)
-  const gpaScore = Math.max(0, (2.5 - student.gpa) / 2.5) * 25;
+  // 1. المعدل التراكمي (30%)
+  const gpaScore = Math.max(0, (2.6 - student.cumulative_gpa) / 2.6) * 30;
   score += gpaScore;
-  if (student.gpa < 2.0) factors.push('معدل تراكمي حرج دون 2.0');
-  else if (student.gpa < 2.5) factors.push('معدل تراكمي منخفض دون 2.5');
+  if (student.cumulative_gpa < 2.0) factors.push('معدل تراكمي حرج أقل من النسبة المطلوبة لخطة التخرج');
+  else if (student.cumulative_gpa < 3.0) factors.push('معدل تراكمي منخفض يتطلب رفع المستوى لتجنب الإنذارات');
 
-  // الوزن 2: الحضور (20%)
-  const attendanceScore = Math.max(0, (80 - student.attendance) / 80) * 20;
+  // استخراج وتحليل المقررات الحالية
+  let missingOrLateSubmissions = 0;
+  let totalClos = 0;
+  let weakClos = 0;
+  let avgAttendance = 0;
+  let theoreticalPracticalGap = false;
+
+  if (student.current_courses && student.current_courses.length > 0) {
+    let attendanceSum = 0;
+    
+    student.current_courses.forEach(course => {
+      attendanceSum += course.attendance_percentage;
+      
+      // تحليل مخرجات التعلم (CLOs)
+      if (course.clo_analytics) {
+        let theoryAvg = 0; let theoryCount = 0;
+        let practicalAvg = 0; let practicalCount = 0;
+
+        Object.entries(course.clo_analytics).forEach(([key, val]) => {
+          totalClos++;
+          if (val < 60) weakClos++;
+          
+          if(key.includes('Project') || key.includes('Integration') || key.includes('Application')) {
+            practicalAvg += val; practicalCount++;
+          } else {
+            theoryAvg += val; theoryCount++;
+          }
+        });
+
+        if (practicalCount > 0 && theoryCount > 0) {
+            const tAvg = theoryAvg/theoryCount;
+            const pAvg = practicalAvg/practicalCount;
+            if (tAvg > 85 && pAvg < 65) {
+                theoreticalPracticalGap = true;
+            }
+        }
+      }
+      
+      // تحليل بطاقة التسليمات
+      if (course.submission_timestamps) {
+        course.submission_timestamps.forEach(sub => {
+          const actual = new Date(sub.actual_submission);
+          const deadline = new Date(sub.deadline);
+          // تسليم في الدقائق/ساعات الأخيرة أو متأخر
+          const hoursDiff = (deadline - actual) / (1000 * 60 * 60);
+          if (hoursDiff < 0) missingOrLateSubmissions += 1.5; // متأخر
+          else if (hoursDiff < 4) missingOrLateSubmissions += 1.0; // بآخر اللحظات
+        });
+      }
+    });
+    avgAttendance = attendanceSum / student.current_courses.length;
+  }
+
+  // 2. الحضور والمشاركة (20%)
+  const attendanceScore = Math.max(0, (85 - avgAttendance) / 85) * 20;
   score += attendanceScore;
-  if (student.attendance < 60) factors.push('غياب مفرط يتجاوز 40%');
-  else if (student.attendance < 80) factors.push('نسبة حضور دون المتوقع');
+  if (avgAttendance < 75) factors.push('غياب ملحوظ في الحضور والمشاركة النشطة يؤثر على درجة الأعمال الفَصليّة');
 
-  // الوزن 3: وقت الإنجاز (15%)
-  const timeScore = Math.min(15, Math.max(0, (student.taskTimeRatio - 1.5) / 1.5) * 15);
-  score += timeScore;
-  if (student.taskTimeRatio > 2.0) factors.push('يستغرق أكثر من ضعف الوقت المتوقع في المهام');
+  // 3. فجوات ومعضلات CLO (30%)
+  if (totalClos > 0) {
+    const cloFailRatio = weakClos / totalClos;
+    score += cloFailRatio * 30;
+    if (cloFailRatio > 0.3) factors.push(`ضعف أكاديمي في ${(cloFailRatio*100).toFixed(0)}% من مخرجات التعلم الأساسية`);
+    else if (weakClos > 0) factors.push('انخفاض أداء في مخرجات تعلم (CLOs) دقيقة محددة');
+  }
 
-  // الوزن 4: إكمال المهام (25%)
-  const taskScore = Math.max(0, (70 - student.taskCompletion) / 70) * 25;
-  score += taskScore;
-  if (student.taskCompletion < 50) factors.push('أقل من نصف المهام مكتملة');
-  else if (student.taskCompletion < 70) factors.push('معدل إكمال المهام منخفض');
+  if (theoreticalPracticalGap) {
+      score += 15;
+      factors.push('تفاوت ملحوظ بين التفوق النظري والضعف في التطبيق العملي/المشاريع');
+  }
 
-  // الوزن 5: الدخول المتأخر (10%)
-  const lateScore = Math.min(10, student.lateLogins * 1.5);
-  score += lateScore;
-  if (student.lateLogins >= 5) factors.push('نمط دخول متأخر متكرر (مؤشر قلق أو اضطراب نوم)');
-
-  // الوزن 6: المحاضرات غير المكتملة (5%)
-  const lectureScore = Math.min(5, (student.incompleteLectures / 100) * 5);
-  score += lectureScore;
-  if (student.incompleteLectures > 50) factors.push('أكثر من نصف المحاضرات لم تكتمل');
+  // 4. نمط التسليم / السلوك (20%)
+  const subScore = Math.min(20, missingOrLateSubmissions * 7);
+  score += subScore;
+  if (missingOrLateSubmissions >= 2) factors.push('نمط تسليم في اللحظات الأخيرة (Last-minute) يؤثر سلبياً على جودة المخرجات');
 
   score = Math.round(score * 100) / 100;
 
-  // تحديد المستوى
+  // تحديد مستوى الخطورة
   let riskLevel, riskLabel;
-  if (score >= 55) { riskLevel = 'red'; riskLabel = 'خطر — تدخل فوري'; }
-  else if (score >= 30) { riskLevel = 'yellow'; riskLabel = 'تحذير — يحتاج مراقبة'; }
-  else { riskLevel = 'green'; riskLabel = 'مسار سليم'; }
+  if (score >= 45) { riskLevel = 'red'; riskLabel = 'خطر — تدخل أكاديمي فوري'; }
+  else if (score >= 25 || (student.system_flags && student.system_flags.length > 0)) { riskLevel = 'yellow'; riskLabel = 'تحذير — بحاجة لمراقبة وتقوية'; }
+  else { riskLevel = 'green'; riskLabel = 'أداء مستقر وممتاز'; }
 
-  // استنتاج السبب الجذري
-  const combined = factors.join(' ');
-  let primaryReason;
-  if (combined.includes('متأخر') && score > 50) primaryReason = 'قلق أكاديمي مزمن واضطراب إدارة الوقت';
-  else if (combined.includes('غياب مفرط')) primaryReason = 'انفصال عاطفي عن البيئة الأكاديمية';
-  else if (combined.includes('ضعف الوقت')) primaryReason = 'فجوة في المفاهيم الأساسية تعيق الفهم';
-  else if (combined.includes('نصف المهام')) primaryReason = 'سوء إدارة المهام والأولويات';
-  else if (score > 60) primaryReason = 'تراكم متعدد المصادر يستدعي تدخلاً شاملاً';
-  else primaryReason = 'ضغط أكاديمي قابل للمعالجة بتوجيه مبكر';
+  // إذا كانت البيانات المصدر تحدد الخطر صراحة، نستخدمها لتوحيد عدادات ولوحات التصفية.
+  const mappedRisk = RISK_TO_ENGINE_LEVEL[student.risk_level];
+  if (mappedRisk) {
+    riskLevel = mappedRisk;
+    if (riskLevel === 'red') {
+      riskLabel = 'خطر — تدخل أكاديمي فوري';
+      score = Math.max(score, 55);
+    } else if (riskLevel === 'yellow') {
+      riskLabel = 'تحذير — بحاجة لمراقبة وتقوية';
+      score = Math.min(Math.max(score, 30), 44);
+    } else {
+      riskLabel = 'أداء مستقر وممتاز';
+      score = Math.min(score, 24);
+    }
+  }
 
-  // قائمة التوصيات
+  // اختيار السبب الرئيسي
+  const primaryReason = student.system_flags && student.system_flags[0] 
+     ? student.system_flags[0] 
+     : (factors[0] || 'حالة مستقرة بدون مشاكل وتتقدم أكاديمياً حسب الخطة');
+
   let recommendations;
   if (riskLevel === 'red') {
     recommendations = [
-      'جدولة لقاء عاجل مع المرشد خلال 48 ساعة',
-      'إحالة لوحدة الدعم النفسي إذا تأكدت مؤشرات القلق',
-      'وضع خطة تعافٍ أسبوعية بأهداف قابلة للقياس',
+      'توجيه الطالب بشكل عاجل لعيادات البرمجة وورش التقوية',
+      'بناء جدول مراجعة تكويني مع أستاذ المادة وتحديد متطلبات سابقة مفقودة',
+      'تخصيص مشاريع تطبيقية صغيرة لمعالجة فجوات الـ CLOs'
     ];
   } else if (riskLevel === 'yellow') {
     recommendations = [
-      'متابعة أسبوعية منتظمة من المرشد',
-      'اقتراح برامج إدارة الوقت وتقنيات المذاكرة',
-      'تفعيل التوأمة الأكاديمية مع زميل متفوق',
+      'اقتراح مصادر تعلم تطبيقية إضافية مستهدفة للمخرجات الضعيفة',
+      'تفعيل نظام التوأمة الأكاديمية مع طالب متفوق',
+      'التوجيه بضرورة تنظيم الوقت والبدء المبكر بالمهام البرمجية'
     ];
   } else {
     recommendations = [
-      'استمر في مسارك الممتاز',
-      'فكّر في برامج الطلاب المتميزين',
+      'ترشيح الطالب لبرنامج الذكاء الاصطناعي المتميز (مساعد تدريس)',
+      'توجيهه لمهام برمجية إثرائية متقدمة'
     ];
   }
 
@@ -233,56 +336,61 @@ export function analyzeStudentRisk(student) {
   };
 }
 
-/** يحلل كل الطلاب ويرتبهم حسب الخطورة */
 export function analyzeAllStudents() {
   return STUDENTS_DB
     .map(analyzeStudentRisk)
     .sort((a, b) => b.riskScore - a.riskScore);
 }
 
+export function getStudentsForAdvisor(advisorId, analyzedStudents = null) {
+  const all = Array.isArray(analyzedStudents) ? analyzedStudents : analyzeAllStudents();
+  if (advisorId === 'AD-2001') {
+    return all.filter((student) => student?.gender === 'female');
+  }
+  return all;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-//  2. مولد خطة التدخل (Intervention Generator)
+//  2. مولد خطة التدخل المتطورة (Intervention Generator)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function generateIntervention(student, advisorName = 'د. خالد') {
   const analyzed = student.riskLevel ? student : analyzeStudentRisk(student);
   const urgency = analyzed.riskLevel === 'red' ? 'عاجلة جداً' : 'استباقية';
 
-  const emailSubject = `📚 رسالة دعم أكاديمي ${urgency} — ${analyzed.name}`;
+  const emailSubject = `📊 خطة دعم أكاديمي مخصصة ${urgency} — الطالب: ${analyzed.name}`;
 
   const emailBody = `السلام عليكم ورحمة الله، ${analyzed.name}
 
-أتواصل معك ${advisorName} بشكل شخصي، ليس لأنك أخطأت، بل لأن النظام الذكي لاحظ بعض الإشارات التي قد تؤثر على مسيرتك الأكاديمية، وأريد أن أكون بجانبك قبل أن تستفحل.
+بصفتي مرشدك الأكاديمي (${advisorName})، يقوم نظام الذكاء الاصطناعي بالتتبع العميق للمخرجات (CLOs) للتأكد من تفوقك. رصدنا مؤخراً مؤشرات تتطلب تعزيزاً عاجلاً للمخرجات:
 
-📊 ما لاحظناه:
+📌 الملاحظات الأكاديمية الدقيقة:
 ${analyzed.primaryReason}
 
-العوامل المساهمة:
+الفجوات المرصودة بالأرقام:
 ${analyzed.factors.map(f => `  • ${f}`).join('\n')}
 
-نحن هنا لمساعدتك، وهذه الرسالة هي بداية الحل، وليست تقريعاً.
+هذا التقرير هو إضاءة لطريقك نحو التفوق لتدارك الفجوات قبل التأثير على المعدل النهائي.
+الرجاء مراجعة خطة العمل أدناه.
 
-ما الذي تحتاجه؟ أخبرني، دعنا نخطط معاً.
+تحياتي،
+${advisorName}`;
 
-مع تحياتي الصادقة،
-${advisorName}
-نظام راصد بلس — الإرشاد الأكاديمي الذكي`;
-
-  // بناء الخطة العلاجية
+  // بناء الخطة العلاجية الأكاديمية الصارمة
   const actionPlan = [
-    { step: 1, action: 'مقابلة شخصية مع المرشد', timeline: analyzed.riskLevel === 'red' ? 'خلال 48 ساعة' : 'خلال أسبوع', owner: 'المرشد' },
-    { step: 2, action: 'تحليل الجدول الأسبوعي وإعادة هيكلته', timeline: 'خلال 3 أيام من اللقاء', owner: 'المرشد + الطالب' },
+    { step: 1, action: 'حضور جلسة توجيه وتقييم فجوات (Gap Assessment)', timeline: analyzed.riskLevel === 'red' ? 'خلال 48 ساعة' : 'خلال 5 أيام', owner: 'المرشد الأكاديمي' },
+    { step: 2, action: 'تطبيق مهام برمجة وتصاميم خفيفة لإثبات إتقان الـ CLOs المتأثرة', timeline: 'أسبوعياً', owner: 'الطالب بالتعاون مع معيد المادة' },
   ];
 
-  if (analyzed.primaryReason.includes('قلق')) {
-    actionPlan.push({ step: 3, action: 'إحالة لوحدة الإرشاد النفسي', timeline: 'خلال أسبوع', owner: 'المرشد' });
-  } else if (analyzed.primaryReason.includes('إدارة') || analyzed.primaryReason.includes('مهام')) {
-    actionPlan.push({ step: 3, action: 'ورشة تقنيات إدارة المهام (Pomodoro + GTD)', timeline: 'خلال أسبوعين', owner: 'الدعم الأكاديمي' });
-  } else if (analyzed.primaryReason.includes('انفصال')) {
-    actionPlan.push({ step: 3, action: 'التواصل مع الأسرة بإذن الطالب', timeline: 'خلال 3 أيام', owner: 'المرشد' });
+  if (analyzed.primaryReason.includes('تراكمية')) {
+    actionPlan.push({ step: 3, action: 'التسجيل الإجباري في ورش مراجعة متطلبات التأسيس السابقة', timeline: 'فوري', owner: 'عمادة القبول والتسجيل' });
+  } else if (analyzed.primaryReason.includes('اللحظات الأخيرة') || analyzed.primaryReason.includes('نمط تسليم')) {
+    actionPlan.push({ step: 3, action: 'تقسيم المهام وتحديد تسليم أولي إلزامي (Milestone) قبل الموعد بـ 3 أيام', timeline: 'بداية كل واجب', owner: 'المرشد الأكاديمي' });
+  } else if (analyzed.primaryReason.includes('التطبيق العملي')) {
+    actionPlan.push({ step: 3, action: 'توأمة الطالب مع زميل متفوق لمشروع عملي مشترك', timeline: 'خلال 3 أيام', owner: 'إدارة شؤون الطلاب' });
   }
 
-  actionPlan.push({ step: actionPlan.length + 1, action: 'جلسة متابعة لتقييم التحسن', timeline: 'بعد 3 أسابيع', owner: 'المرشد' });
+  actionPlan.push({ step: actionPlan.length + 1, action: 'تقييم تكويني شامل لنسبة تحسن الـ CLO', timeline: 'ميدتيرم القادم', owner: 'أستاذ المادة' });
 
   const followUpDays = analyzed.riskLevel === 'red' ? 3 : 7;
   const followUpDate = new Date();
@@ -298,37 +406,27 @@ ${advisorName}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  3. الإشعارات (Notifications)
+//  3. الإشعارات والإحصاءات للمرشد
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function generateNotifications(role) {
   if (role === 'advisor') {
     return [
-      { id: 1, type: 'danger',  time: 'منذ 5 دقائق',  text: 'أحمد محمود: لم يحضر 3 محاضرات متتالية',       read: false },
-      { id: 2, type: 'warning', time: 'منذ 30 دقيقة', text: 'نورة سعد: تسجيل دخول في 3:00 فجراً',          read: false },
-      { id: 3, type: 'success', time: 'منذ ساعة',     text: 'عمر الشمري: رفع معدله من 3.5 إلى 3.8',       read: true },
-      { id: 4, type: 'info',    time: 'منذ 2 ساعة',    text: 'CS301: 60% فشل في الاختبار النصفي (رادار)',   read: false },
-      { id: 5, type: 'success', time: 'أمس',           text: 'خطة تدخل محمد عمار: بدأت تظهر تحسناً',       read: true },
+      { id: 1, type: 'danger',  time: 'منذ 5 دقائق',  text: 'تنبيه: "محمد عمار" يعاني من فجوة في منهجية الـ Multi-threading', read: false },
+      { id: 2, type: 'warning', time: 'منذ 30 دقيقة', text: 'نمط تسليم متأخر رُصد مجدداً للطالب "عبدالرحمن"', read: false },
+      { id: 3, type: 'success', time: 'منذ ساعة',     text: 'أسامة سلم تقييم الـ Frontend بنجاح بعد تدخل المرشد',  read: true },
+      { id: 4, type: 'danger',  time: 'منذ 2 ساعة',   text: 'انخفاض في نتائج تحليل المخاطر الأكاديمي بسبب MATH205 لـ "أحمد عمرو"', read: false },
     ];
   }
-  return [
-    { id: 1, type: 'danger',  time: 'منذ 10 دقائق', text: 'تذكير: تسليم تقرير هياكل البيانات غداً!',     read: false },
-    { id: 2, type: 'info',    time: 'منذ ساعة',     text: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً',  read: false },
-    { id: 3, type: 'success', time: 'منذ 3 ساعات',  text: 'أكمل اختبار الإحصاء التطبيقي بنجاح!',        read: true },
-    { id: 4, type: 'info',    time: 'أمس',           text: 'كورس Data Analysis متاح الآن على Coursera',  read: false },
-  ];
+  return [];
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  4. إحصاءات المرشد (Advisor Stats)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export function getAdvisorStats() {
-  const all = analyzeAllStudents();
+export function getAdvisorStats(students = null) {
+  const all = Array.isArray(students) ? students : analyzeAllStudents();
   const redCount = all.filter(s => s.riskLevel === 'red').length;
   const yellowCount = all.filter(s => s.riskLevel === 'yellow').length;
   return {
-    totalStudents: 1248,
+    totalStudents: all.length,
     interventionsToday: redCount + yellowCount,
     redCount,
     yellowCount,

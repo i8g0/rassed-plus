@@ -2,10 +2,10 @@
  * App.jsx — المدخل الرئيسي لنظام "راصد بلس"
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
-  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Settings, Rocket,
+  Search, Bell, LogOut, CheckCircle2, Zap, Settings,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
@@ -14,11 +14,10 @@ import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
 import SettingsPanel from './components/SettingsPanel';
-import RasedFeaturesGalaxy from './components/RasedFeaturesGalaxy';
 import AIChatbot from './components/AIChatbot';
 import { getNotifications } from './services/api';
-import { generateCopilotTip, THINKING_STATES } from './services/aiService';
 import { useUser } from './contexts/UserContext';
+import { useRased } from './contexts/RasedContext';
 import { byGender } from './utils/localization';
 import './App.css';
 
@@ -31,9 +30,9 @@ function Toast({ message, type = 'success', onClose }) {
   }, [onClose]);
 
   const colors = {
-    success: { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: '#10B981' },
-    info:    { bg: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.3)', color: '#818CF8' },
-    warning: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', color: '#F59E0B' },
+    success: { bg: 'rgba(110,231,183,0.10)', border: 'rgba(110,231,183,0.25)', color: '#6ee7b7' },
+    info:    { bg: 'rgba(45,212,191,0.10)', border: 'rgba(45,212,191,0.25)', color: '#2dd4bf' },
+    warning: { bg: 'rgba(251,191,36,0.10)', border: 'rgba(251,191,36,0.25)', color: '#fbbf24' },
   };
   const c = colors[type] || colors.success;
 
@@ -58,7 +57,6 @@ const NAV_ADVISOR = [
   { id: 'students',      icon: Users,           label: 'الطلاب' },
   { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
   { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
-  { id: 'galaxy',        icon: Rocket,          label: 'مجرة الميزات' },
 ];
 
 const NAV_STUDENT = [
@@ -66,13 +64,13 @@ const NAV_STUDENT = [
   { id: 'tasks',    icon: Zap,             label: 'مهامي' },
   { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
-  { id: 'galaxy',   icon: Rocket,          label: 'مجرة الميزات' },
 ];
 
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
 
 export default function App() {
   const { user, role, gender, name, login: loginUser, logout: logoutUser } = useUser();
+  const { runSystemDiagnostic } = useRased();
 
   const [activeTab, setTab]                     = useState('overview');
   const [interventionStudent, setIntervention]  = useState(null);
@@ -80,10 +78,8 @@ export default function App() {
   const [notifications, setNotifications]       = useState([]);
   const [toast, setToast]                       = useState(null);
   const [showSettings, setShowSettings]         = useState(false);
-
-  // Copilot AI
-  const [copilotTip, setCopilotTip]             = useState('');
-  const [copilotThinking, setCopilotThinking]   = useState(false);
+  const [searchSignal, setSearchSignal]         = useState(0);
+  const hasRunDiagnostic = useRef(false);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
   const headerTitle = `مرحباً، ${name} 👋`;
@@ -92,55 +88,77 @@ export default function App() {
     : `${byGender(gender, 'ابدأ', 'ابدئي')} يومك الدراسي بوضوح وخطة إنجاز ذكية`;
 
   const handleLogin = (userData) => {
-    loginUser(userData);
-    setTab(userData.role === 'advisor' ? 'dashboard' : 'overview');
+    try {
+      loginUser(userData);
+      setTab(userData?.role === 'advisor' ? 'dashboard' : 'overview');
+    } catch (err) {
+      console.error('Login flow failed:', err);
+      showToast('تعذر إكمال تسجيل الدخول حالياً', 'warning');
+    }
   };
 
   const handleLogout = () => {
-    logoutUser();
-    setTab('overview');
-    setShowNotifs(false);
-    setIntervention(null);
-    setToast(null);
+    try {
+      logoutUser();
+      setTab('overview');
+      setShowNotifs(false);
+      setIntervention(null);
+      setToast(null);
+      hasRunDiagnostic.current = false;
+    } catch (err) {
+      console.error('Logout flow failed:', err);
+      showToast('تعذر تسجيل الخروج حالياً', 'warning');
+    }
   };
 
   const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
+    try {
+      setToast({ msg, type });
+    } catch (err) {
+      console.error('Toast error:', err);
+    }
+  };
+
+  const handleSearchClick = () => {
+    try {
+      if (role === 'advisor') {
+        setTab('students');
+      }
+      setSearchSignal((prev) => prev + 1);
+      showToast('تم تفعيل البحث الذكي', 'info');
+    } catch (err) {
+      console.error('Search workflow failed:', err);
+      showToast('تعذر تفعيل البحث حالياً', 'warning');
+    }
   };
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     getNotifications(role)
-      .then((data) => setNotifications(data || []))
-      .catch(() => setNotifications([]));
+      .then((data) => {
+        if (!cancelled) setNotifications(data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setNotifications([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [user, role, showNotifs, activeTab]);
 
-  // Copilot AI tip — يتغير ديناميكياً حسب الدور والتبويب النشط
   useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
+    if (!user || hasRunDiagnostic.current) return;
+    hasRunDiagnostic.current = true;
 
-    setCopilotThinking(true);
-    generateCopilotTip(role, activeTab, user, (thinkingState) => {
-      if (!cancelled && thinkingState.state === THINKING_STATES.ANALYZING) {
-        setCopilotTip('🤔 أفكر...');
-      }
-    }).then((tip) => {
-      if (!cancelled) {
-        setCopilotTip(tip);
-        setCopilotThinking(false);
-      }
-    }).catch(() => {
-      if (!cancelled) {
-        setCopilotTip('راصد بلس يراقب أداءك ويقدم توصيات ذكية.');
-        setCopilotThinking(false);
-      }
-    });
+    try {
+      runSystemDiagnostic?.();
+    } catch (err) {
+      console.error('Diagnostic bootstrap failed:', err);
+    }
+  }, [user, runSystemDiagnostic]);
 
-    return () => { cancelled = true; };
-  }, [user, role, activeTab]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = (Array.isArray(notifications) ? notifications : []).filter(n => !n.read).length;
 
   if (!user) {
     return <LoginScreen onLogin={handleLogin} />;
@@ -165,21 +183,14 @@ export default function App() {
         </div>
 
         <nav className="nav-list">
-          {nav.map(({ id, icon: Icon, label }) => (
-            <a key={id}
-              className={`nav-link ${activeTab === id ? 'active' : ''}`}
-              onClick={() => setTab(id)}>
-              <Icon size={19} /> {label}
+          {nav.map((item) => (
+            <a key={item.id}
+              className={`nav-link ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => setTab(item.id)}>
+              {item.icon ? <item.icon size={19} /> : null} {item.label}
             </a>
           ))}
         </nav>
-
-        <div className="copilot-card">
-          <div className="copilot-card-title">
-            <Sparkles size={15} className={copilotThinking ? 'copilot-spin' : ''} /> توصية Copilot
-          </div>
-          <p className="copilot-card-body">{copilotTip}</p>
-        </div>
       </aside>
 
       {/* ═══ المحتوى الرئيسي ═══ */}
@@ -190,7 +201,7 @@ export default function App() {
             {subtitle && <p>{subtitle}</p>}
           </div>
           <div className="header-actions">
-            <button className="icon-btn"><Search size={18} /></button>
+            <button className="icon-btn" title="بحث" onClick={handleSearchClick}><Search size={18} /></button>
             <button className="icon-btn" data-notif={unreadCount > 0 ? 'true' : undefined}
               onClick={() => setShowNotifs(!showNotifs)}>
               <Bell size={18} />
@@ -205,16 +216,15 @@ export default function App() {
           </div>
         </header>
 
-        {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
-        {activeTab === 'galaxy'
-          ? <RasedFeaturesGalaxy />
-          : role === 'advisor'
-            ? <AdvisorDashboard
-                activeTab={activeTab}
-                onIntervention={(s) => setIntervention(s)}
-                onToast={showToast}
-              />
-            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={user} gender={gender} />
+        {/* اللوحة حسب الدور */}
+        {role === 'advisor'
+          ? <AdvisorDashboard
+              activeTab={activeTab}
+              onIntervention={(s) => setIntervention(s)}
+              onToast={showToast}
+              searchSignal={searchSignal}
+            />
+          : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={user} gender={gender} />
         }
       </main>
 

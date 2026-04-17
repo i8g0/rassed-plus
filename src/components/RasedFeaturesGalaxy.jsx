@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks, no-unused-vars */
 /**
  * RasedFeaturesGalaxy.jsx — مستكشف مجرة ميزات راصد بلس
  *

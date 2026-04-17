@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * contexts/UserContext.jsx — سياق المستخدم العالمي
  *

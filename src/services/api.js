@@ -9,11 +9,18 @@ import {
   authenticateUser,
   generateNotifications,
   analyzeAllStudents,
+  getStudentsForAdvisor,
   analyzeStudentRisk,
   getAdvisorStats,
-  generateIntervention as mockGenerateIntervention,
   STUDENTS_DB,
 } from './mockEngine';
+
+import {
+  generateInterventionPlan,
+  generateSmartReply,
+  generateSilentAnalysis,
+  generateAdaptiveContent
+} from './aiService';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -93,13 +100,13 @@ export async function getNotifications(role) {
 //  Advisor
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export async function getAdvisorOverview() {
+export async function getAdvisorOverview(advisorId = null) {
   const apiResult = await request('/api/advisor/overview');
   if (apiResult) return apiResult;
 
-  const students = analyzeAllStudents();
-  const stats = getAdvisorStats();
-  return { students, stats };
+  const analyzedStudents = analyzeAllStudents();
+  const students = getStudentsForAdvisor(advisorId, analyzedStudents);
+  const stats = getAdvisorStats(students);
   
   const courses = [
     { id: '1', code: 'CS 321', name: 'الخوارزميات', instructor: 'د. عبدالله', enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
@@ -114,12 +121,13 @@ export async function getInterventions() {
   const apiResult = await request('/api/interventions');
   if (apiResult) return apiResult;
 
-  // بيانات تدخلات تجريبية
+  // بيانات تدخلات تجريبية — تتوافق مع InterventionsTab
   return [
-    { id: 1, studentName: 'أحمد محمود', status: 'active', createdAt: '2026-04-10', riskLevel: 'red' },
-    { id: 2, studentName: 'نورة سعد', status: 'active', createdAt: '2026-04-12', riskLevel: 'red' },
-    { id: 3, studentName: 'أحمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
-    { id: 3, studentName: 'محمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
+    { id: 1, student: 'أحمد محمود', type: 'رسالة دعم أكاديمي', date: '2026-04-10', status: 'sent', result: 'بانتظار رد الطالب' },
+    { id: 2, student: 'نورة سعد', type: 'خطة تدخل عاجلة', date: '2026-04-12', status: 'meeting', result: 'تم جدولة لقاء مع المرشد' },
+    { id: 3, student: 'محمد عمار', type: 'جلسة متابعة أكاديمية', date: '2026-03-28', status: 'completed', result: 'تحسن المعدل من 2.1 إلى 3.4' },
+    { id: 4, student: 'لين الحربي', type: 'توجيه مهني', date: '2026-04-05', status: 'followup', result: 'متابعة التقدم بعد أسبوعين' },
+    { id: 5, student: 'عمر الشمري', type: 'رسالة تحفيزية', date: '2026-04-01', status: 'completed', result: 'استجابة إيجابية — رفع المعدل' },
   ];
 }
 
@@ -131,8 +139,17 @@ export async function generateIntervention(studentId, advisorId) {
   if (apiResult) return apiResult;
 
   const student = STUDENTS_DB.find((s) => s.id === studentId);
-  if (!student) throw new Error('لم يتم العثور على الطالب');
-  return mockGenerateIntervention(student);
+  if (!student) {
+    return {
+      id: `INV-${Date.now().toString().slice(-4)}`,
+      emailSubject: 'خطة دعم أكاديمي',
+      emailBody: 'لم يُعثر على بيانات الطالب في القاعدة. يرجى المحاولة لاحقاً.',
+      actionPlan: [{ step: '01', action: 'التحقق من بيانات الطالب', timeline: 'فوراً', owner: 'المرشد' }],
+      followUpDate: 'غير محدد',
+      status: 'draft'
+    };
+  }
+  return generateInterventionPlan(student);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -144,7 +161,13 @@ export async function getStudentDashboard(studentId) {
   if (apiResult) return apiResult;
 
   const student = STUDENTS_DB.find((s) => s.id === studentId);
-  if (!student) throw new Error('لم يتم العثور على الطالب');
+  if (!student) {
+    console.error('Student not found:', studentId);
+    return {
+      student: { name: 'طالب', gpa: 0, maxGpa: 5, completionRate: 0, status: 'warning', statusMessage: 'لم يتم العثور على بيانات الطالب', major: '', year: '', streak: 0 },
+      adaptive: [], tasks: [], skills: [], peers: [], splitSteps: []
+    };
+  }
   const analyzed = analyzeStudentRisk(student);
 
   // تحديد حالة الطالب للـ HeroSection
@@ -305,25 +328,47 @@ export async function updateStudentTaskProgress(studentId, progress) {
   return { ok: true, progress };
 }
 
-export async function requestPeerMatch(requesterId, weakSkill) {
+export async function requestPeerMatch(requesterId, weakSkill, preferredPeerId = null) {
   const apiResult = await request('/api/matchmaking/request', {
     method: 'POST',
-    body: JSON.stringify({ requester_id: requesterId, weak_skill: weakSkill }),
+    body: JSON.stringify({ requester_id: requesterId, weak_skill: weakSkill, preferred_peer_id: preferredPeerId }),
   });
   if (apiResult) return apiResult;
 
-  // mock matchmaking
-  const match = STUDENTS_DB.find(
-    (s) => s.id !== requesterId && s.strongSkills.includes(weakSkill)
+  // mock matchmaking based on real academic data in STUDENTS_DB
+  const requester = STUDENTS_DB.find((s) => s.id === requesterId);
+  const normalizedWeakSkill = String(weakSkill || '').toLowerCase();
+  const preferredPeer = preferredPeerId ? STUDENTS_DB.find((s) => s.id === preferredPeerId) : null;
+
+  const candidates = STUDENTS_DB.filter((s) => s.id !== requesterId);
+  const byCourseAffinity = candidates.find((candidate) =>
+    Array.isArray(candidate.current_courses)
+    && candidate.current_courses.some((course) => {
+      const courseName = String(course.course_name || '').toLowerCase();
+      const cloValues = Object.values(course.clo_analytics || {});
+      const cloAverage = cloValues.length > 0
+        ? cloValues.reduce((sum, val) => sum + Number(val || 0), 0) / cloValues.length
+        : 0;
+      return courseName.includes(normalizedWeakSkill) || cloAverage >= 85;
+    })
   );
+
+  const match = preferredPeer
+    || byCourseAffinity
+    || candidates
+      .slice()
+      .sort((a, b) => (b.gpa || 0) - (a.gpa || 0))[0]
+    || null;
+
   return {
     ok: true,
     match: match
       ? { id: match.id, name: match.name, skill: weakSkill, gpa: match.gpa }
       : null,
     message: match
-      ? `تم العثور على ${match.name} كتوأم أكاديمي في ${weakSkill}`
+      ? `تم العثور على ${match.name} كتوأم أكاديمي${weakSkill ? ` في ${weakSkill}` : ''}`
       : 'لم يتم العثور على توأم مناسب حالياً',
+    requester: requester ? { id: requester.id, name: requester.name } : null,
   };
 }
 
@@ -390,10 +435,18 @@ export async function sendStudentChat(studentId, message, sessionId = null) {
   });
   if (apiResult) return apiResult;
 
-  // Fallback mock response
+  // Fallback to real Gemini AI - LOAD EVERYTHING FOR THE AI
+  let fullStudentData = { id: studentId };
+  try {
+    fullStudentData = await getStudentDashboard(studentId);
+  } catch {
+    fullStudentData = STUDENTS_DB.find((s) => s.id === studentId) || { id: studentId };
+  }
+  
+  const reply = await generateSmartReply(message, false, fullStudentData);
   return {
-    response: 'عذراً، المرشد الذكي غير متاح حالياً. يرجى تشغيل الخادم الخلفي والمحاولة مرة أخرى.',
-    session_id: 'mock-session',
+    response: reply,
+    session_id: sessionId || 'ai-session',
     timestamp: new Date().toISOString(),
   };
 }
@@ -409,8 +462,10 @@ export async function sendAdvisorChat(advisorId, message, studentId = null) {
   });
   if (apiResult) return apiResult;
 
+  const studentContext = studentId ? STUDENTS_DB.find(s => s.id === studentId) : {};
+  const reply = await generateSmartReply(message, true, { advisorId, studentContext });
   return {
-    response: 'عذراً، المساعد الذكي غير متاح حالياً. يرجى تشغيل الخادم الخلفي.',
+    response: reply,
     timestamp: new Date().toISOString(),
   };
 }
@@ -424,22 +479,40 @@ export async function getChatHistory(studentId) {
 export async function getSilentAnalysis(studentId) {
   const apiResult = await request(`/api/student/silent-analysis/${encodeURIComponent(studentId)}`);
   if (apiResult) return apiResult;
-  return { alerts: [], overall_mood: 'neutral', priority_action: '' };
+  const student = STUDENTS_DB.find((s) => s.id === studentId);
+  if (!student) return { alerts: [], overall_mood: 'neutral', priority_action: '' };
+  
+  return generateSilentAnalysis(student);
 }
 
 export async function getStudentBrief(studentId) {
   const apiResult = await request(`/api/advisor/student-brief/${encodeURIComponent(studentId)}`);
   if (apiResult) return apiResult;
+  
+  const briefStudent = STUDENTS_DB.find((s) => s.id === studentId);
+
+  // Real mocked academic data if no server
   return {
-    emotional_state: 'غير متاح — الخادم غير متصل',
-    main_concerns: [],
-    topics_discussed: [],
-    risk_indicators: [],
-    recommended_actions: ['تشغيل الخادم الخلفي أولاً'],
-    conversation_summary: 'لا يمكن توليد الملخص بدون اتصال بالخادم.',
-    urgency: 'medium',
-    student_name: '',
+    clo_analysis: 'ضعف في تحليل الخوارزميات (65%) ومتوسط في الشجرية (70%)',
+    prerequisite_gaps: ['CS 111 (أساسيات البرمجة) - ضعف في المؤشرات (Pointers)'],
+    submission_habits: 'تأخر متكرر (يسلم المهام في آخر 3 ساعات قبل الموعد النهائي)',
+    assessment_metrics: { midterm: '14/20', assignments: 'جودة متذبذبة' },
+    recommended_actions: ['توجيه لورش عمل التطبيق العملي', 'مراجعة الأساسيات مع معيد المادة'],
+    conversation_summary: 'الطالب يواجه فجوة في المفاهيم الأساسية تعيق تقدمه في البرمجة المتقدمة.',
+    urgency: 'high',
+    student_name: briefStudent?.name || 'الطالب',
     student_id: studentId,
     total_messages: 0,
   };
+}
+
+export async function getAdaptiveTaskContent(taskName, type) {
+  const apiResult = await request('/api/student/adaptive-content', {
+    method: 'POST',
+    body: JSON.stringify({ taskName, type })
+  });
+  if (apiResult) return apiResult;
+  
+  // Real AI Fallback
+  return await generateAdaptiveContent(taskName, type);
 }
