@@ -11,8 +11,13 @@
 
 import { useEffect, useState } from 'react';
 import {
+<<<<<<< HEAD
+  X, Mail, Copy, CheckCircle2, Send,
+  ClipboardList, Calendar, Sparkles, User,
+=======
   X, Mail, Copy, CheckCircle2, Send, Zap,
   ClipboardList, Calendar, Sparkles, User, Activity,
+>>>>>>> origin/main
 } from 'lucide-react';
 import { generateIntervention } from '../services/api';
 
@@ -20,11 +25,19 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
   const [copied, setCopied] = useState(false);
   const [sent, setSent]     = useState(false);
   const [plan, setPlan]     = useState(null);
+<<<<<<< HEAD
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+=======
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = () => {
     setLoading(true);
     let mounted = true;
+>>>>>>> origin/main
     generateIntervention(student.id, advisorId)
       .then((data) => {
         if (mounted) setPlan(data);
@@ -38,7 +51,15 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
       .finally(() => {
         if (mounted) setLoading(false);
       });
+<<<<<<< HEAD
+
+    return () => {
+      mounted = false;
+    };
+  }, [student.id, advisorId, onToast]);
+=======
   };
+>>>>>>> origin/main
 
   const handleCopy = async () => {
     if (!plan) return;
@@ -58,6 +79,25 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
     onToast?.('تم توثيق إرسال الخطة في قاعدة البيانات', 'success');
   };
 
+<<<<<<< HEAD
+  if (loading) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container glass" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 style={{ fontSize: '1.05rem', fontWeight: '800' }}>جاري تجهيز خطة التدخل...</h2>
+            <button className="icon-btn" onClick={onClose}><X size={18} /></button>
+          </div>
+          <div className="modal-body">يتم الآن جلب الخطة من الخادم...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!plan) return null;
+
+=======
+>>>>>>> origin/main
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container glass" onClick={e => e.stopPropagation()}>
@@ -82,6 +122,60 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
 
         {/* المحتوى */}
         <div className="modal-body">
+<<<<<<< HEAD
+
+          {/* البريد الإلكتروني */}
+          <div className="modal-section">
+            <div className="modal-section-title">
+              <Mail size={16} /> <span>البريد الإلكتروني المقترح</span>
+            </div>
+            <p style={{ color: 'var(--brand-indigo)', fontWeight: '700', fontSize: '0.88rem', marginBottom: '0.5rem' }}>
+              {plan.emailSubject}
+            </p>
+            <div className="email-preview">
+              {plan.emailBody}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+              <button className="btn btn-ghost" onClick={handleCopy}>
+                {copied ? <><CheckCircle2 size={14} /> تم النسخ!</> : <><Copy size={14} /> نسخ الرسالة</>}
+              </button>
+              <button
+                className={`btn ${sent ? 'btn-ghost' : 'btn-primary'}`}
+                onClick={handleSend}
+                disabled={sent}
+              >
+                {sent ? <><CheckCircle2 size={14} /> تم الإرسال ✓</> : <><Send size={14} /> إرسال للطالب</>}
+              </button>
+            </div>
+          </div>
+
+          {/* الخطة العلاجية */}
+          <div className="modal-section">
+            <div className="modal-section-title">
+              <ClipboardList size={16} /> <span>الخطة العلاجية المرحلية</span>
+            </div>
+            <div className="intervention-steps">
+              {(plan.actionPlan || []).map((step, i) => (
+                <div key={i} className="intervention-step">
+                  <span className="step-num">{step.step}</span>
+                  <div className="step-content">
+                    <span className="step-action">{step.action}</span>
+                    <div className="step-meta">
+                      <span><Calendar size={11} /> {step.timeline}</span>
+                      <span><User size={11} /> {step.owner}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* موعد المتابعة */}
+          <div className="modal-footer-info">
+            <Calendar size={15} />
+            <span>موعد المتابعة المقترح: <strong>{plan.followUpDate}</strong></span>
+          </div>
+=======
           {!plan && !loading && (
             <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
               <div style={{ background: 'rgba(99,102,241,0.1)', padding: '1rem', borderRadius: '50%', display: 'inline-flex', marginBottom: '1rem' }}>
@@ -160,9 +254,13 @@ export default function InterventionModal({ student, advisorId, onClose, onToast
             </>
           )}
 
+>>>>>>> origin/main
         </div>
       </div>
     </div>
   );
 }
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main

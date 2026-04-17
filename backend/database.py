@@ -121,6 +121,17 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+<<<<<<< HEAD
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                session_id TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+            );
+=======
             CREATE TABLE IF NOT EXISTS interventions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 student_id TEXT NOT NULL,
@@ -171,6 +182,7 @@ def init_db() -> None:
                 FOREIGN KEY(requester_id) REFERENCES students(id) ON DELETE CASCADE,
                 FOREIGN KEY(matched_id) REFERENCES students(id) ON DELETE CASCADE
             );
+>>>>>>> origin/main
             """
         )
         _ensure_column(conn, "students", "gender", "TEXT NOT NULL DEFAULT 'male'")
@@ -227,6 +239,8 @@ def _seed_features(conn: sqlite3.Connection) -> None:
     )
 
 
+<<<<<<< HEAD
+=======
 def _seed_skill_maps(conn: sqlite3.Connection) -> None:
     """بذر خرائط المهارات لكل الطلاب"""
     if _table_has_rows(conn, "skill_maps"):
@@ -270,6 +284,7 @@ def _seed_skill_maps(conn: sqlite3.Connection) -> None:
     )
 
 
+>>>>>>> origin/main
 def seed_data(conn: sqlite3.Connection) -> None:
     now = now_iso()
 
@@ -288,7 +303,11 @@ def seed_data(conn: sqlite3.Connection) -> None:
     if not _table_has_rows(conn, "students"):
         students = [
             ("44120345", "AD-1001", "أحمد محمود", "male", "ahmed.m@university.edu", "Ahmed@2026", "علوم الحاسب", 3, 1.3, 40, 3.0, 25, 6, 75, ["خوارزميات", "رياضيات"], ["قواعد بيانات", "شبكات"]),
+<<<<<<< HEAD
+            ("44210988", "AD-1001", "أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
+=======
             ("44210988", "AD-1001", "محمد عمار", "male", "mohammed.ammar@university.edu", "Mohammed@2026", "علوم الحاسب", 2, 3.4, 82, 2.1, 72, 3, 40, ["رياضيات", "إحصاء"], ["برمجة متقدمة", "هياكل بيانات"]),
+>>>>>>> origin/main
             ("43990122", "AD-1001", "فهد عبدالله", "male", "fahad.a@university.edu", "Fahad@2026", "هندسة البرمجيات", 4, 4.8, 97, 0.9, 98, 0, 2, ["برمجة متقدمة", "هياكل بيانات", "خوارزميات"], []),
             ("44112340", "AD-1002", "نورة سعد", "female", "noura.s@university.edu", "Noura@2026", "علوم الحاسب", 2, 1.6, 42, 2.5, 30, 7, 70, ["تصميم واجهات"], ["خوارزميات", "شبكات"]),
             ("44315200", "AD-1002", "عمر الشمري", "male", "omar.sh@university.edu", "Omar@2026", "نظم المعلومات", 3, 3.8, 90, 1.1, 91, 1, 10, ["قواعد بيانات", "شبكات", "إحصاء"], ["رياضيات"]),
@@ -319,14 +338,22 @@ def seed_data(conn: sqlite3.Connection) -> None:
             ],
         )
 
+<<<<<<< HEAD
+    # توحيد ملف المستخدم الأساسي حتى لو كانت القاعدة موجودة من تشغيل سابق.
+=======
     # توحيد ملف المستخدم الأساسي (محمد عمار) حتى لو كانت القاعدة موجودة من تشغيل سابق.
+>>>>>>> origin/main
     conn.execute(
         """
         UPDATE students
         SET name=?, gender=?, email=?, password=?, updated_at=?
         WHERE id=?
         """,
+<<<<<<< HEAD
+        ("أحمد عمار", "male", "ahmad.ammar@university.edu", "Ahmad@2026", now, "44210988"),
+=======
         ("محمد عمار", "male", "mohammed.ammar@university.edu", "Mohammed@2026", now, "44210988"),
+>>>>>>> origin/main
     )
 
     if not _table_has_rows(conn, "courses"):
@@ -358,4 +385,7 @@ def seed_data(conn: sqlite3.Connection) -> None:
         )
 
     _seed_features(conn)
+<<<<<<< HEAD
+=======
     _seed_skill_maps(conn)
+>>>>>>> origin/main

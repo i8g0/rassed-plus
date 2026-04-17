@@ -1,6 +1,13 @@
 /**
  * SettingsPanel.jsx — لوحة الإعدادات والتخصيص (Slide-out)
  *
+<<<<<<< HEAD
+ * 🔧 مطوّر: محمد
+ * 📌 المهمة: نقل Features Hub من السايدبار إلى لوحة إعدادات في الهيدر
+ *
+ * ✅ معزول تماماً — لا يعدّل أي ملف مركزي
+ * ✅ CSS محلي داخل الملف لتجنب تعارض الستايلات
+=======
  * 🔧 مطوّر: محمد عمار
  * 📌 كل الإعدادات تحفظ في LocalStorage وتنعكس فوراً على كامل التطبيق
  *
@@ -10,10 +17,21 @@
  * ✅ الحركات — تعطيل/تفعيل كل الأنيميشنات
  * ✅ الأصوات — تفعيل أصوات الإشعارات
  * ✅ الميزات — تفعيل/تعطيل 100 ميزة
+>>>>>>> origin/main
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+<<<<<<< HEAD
+  X, Settings, Power, Sparkles,
+  ShieldCheck, Rocket, Bot,
+  Palette, Globe, Volume2, Eye,
+  Moon, Sun, Monitor,
+} from 'lucide-react';
+import { getFeatures, toggleFeature } from '../services/api';
+
+/* ─── بيانات إعدادات محلية (معزولة عن mockEngine) ───────────────────────── */
+=======
   X, Settings, Power,
   ShieldCheck, Rocket, Bot,
   Globe,
@@ -23,6 +41,7 @@ import { getFeatures, toggleFeature } from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
 
 /* ─── بيانات إعدادات محلية ────────────────────────────────────────────────── */
+>>>>>>> origin/main
 
 const LOCAL_PREFERENCES = [
   {
@@ -48,6 +67,38 @@ const LOCAL_PREFERENCES = [
     ],
     defaultValue: 'ar',
   },
+<<<<<<< HEAD
+  {
+    id: 'animations',
+    label: 'الحركات والتأثيرات',
+    icon: Eye,
+    type: 'toggle',
+    defaultValue: true,
+  },
+  {
+    id: 'sounds',
+    label: 'أصوات الإشعارات',
+    icon: Volume2,
+    type: 'toggle',
+    defaultValue: true,
+  },
+  {
+    id: 'color_accent',
+    label: 'اللون الأساسي',
+    icon: Palette,
+    type: 'color',
+    options: [
+      { value: '#6366F1', label: 'بنفسجي' },
+      { value: '#10B981', label: 'أخضر' },
+      { value: '#F59E0B', label: 'ذهبي' },
+      { value: '#F43F5E', label: 'وردي' },
+      { value: '#22D3EE', label: 'سماوي' },
+      { value: '#8B5CF6', label: 'أرجواني' },
+    ],
+    defaultValue: '#6366F1',
+  },
+=======
+>>>>>>> origin/main
 ];
 
 const FEATURE_CATEGORY_META = {
@@ -59,6 +110,26 @@ const FEATURE_CATEGORY_META = {
 /* ─── Sub-components ───────────────────────────────────────────────────────── */
 
 function PreferenceItem({ pref, value, onChange }) {
+<<<<<<< HEAD
+  if (pref.type === 'toggle') {
+    return (
+      <div className="sp-pref-item">
+        <div className="sp-pref-label">
+          <pref.icon size={16} />
+          <span>{pref.label}</span>
+        </div>
+        <button
+          className={`sp-toggle ${value ? 'sp-toggle-on' : 'sp-toggle-off'}`}
+          onClick={() => onChange(!value)}
+        >
+          <div className="sp-toggle-thumb" />
+        </button>
+      </div>
+    );
+  }
+
+=======
+>>>>>>> origin/main
   if (pref.type === 'select') {
     return (
       <div className="sp-pref-item">
@@ -81,6 +152,31 @@ function PreferenceItem({ pref, value, onChange }) {
     );
   }
 
+<<<<<<< HEAD
+  if (pref.type === 'color') {
+    return (
+      <div className="sp-pref-item">
+        <div className="sp-pref-label">
+          <pref.icon size={16} />
+          <span>{pref.label}</span>
+        </div>
+        <div className="sp-color-group">
+          {pref.options.map((opt) => (
+            <button
+              key={opt.value}
+              className={`sp-color-dot ${value === opt.value ? 'sp-color-active' : ''}`}
+              style={{ '--dot-color': opt.value }}
+              onClick={() => onChange(opt.value)}
+              title={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+=======
+>>>>>>> origin/main
   return null;
 }
 
@@ -105,12 +201,27 @@ function FeatureCard({ feature, onToggle, busy }) {
 /* ─── المكوّن الرئيسي ─────────────────────────────────────────────────────── */
 
 export default function SettingsPanel({ open, onClose, onToast }) {
+<<<<<<< HEAD
+=======
   const { settings, updateSetting, resetSettings } = useSettings();
+>>>>>>> origin/main
   const [activeSection, setActiveSection] = useState('prefs'); // 'prefs' | 'features'
   const [features, setFeatures] = useState([]);
   const [featuresLoaded, setFeaturesLoaded] = useState(false);
   const [busyCode, setBusyCode] = useState(null);
 
+<<<<<<< HEAD
+  // التفضيلات — محلية (Local State) لتجنب تعارض البيانات
+  const [preferences, setPreferences] = useState(() => {
+    const saved = {};
+    LOCAL_PREFERENCES.forEach((p) => {
+      saved[p.id] = p.defaultValue;
+    });
+    return saved;
+  });
+
+=======
+>>>>>>> origin/main
   // تحميل الميزات مباشرة لما البانل ينفتح
   useEffect(() => {
     if (!open || featuresLoaded) return;
@@ -158,16 +269,23 @@ export default function SettingsPanel({ open, onClose, onToast }) {
   };
 
   const handlePrefChange = (id, value) => {
+<<<<<<< HEAD
+    setPreferences((prev) => ({ ...prev, [id]: value }));
+=======
     updateSetting(id, value);
+>>>>>>> origin/main
     const pref = LOCAL_PREFERENCES.find((p) => p.id === id);
     onToast?.(`تم تحديث ${pref?.label || id}`, 'info');
   };
 
+<<<<<<< HEAD
+=======
   const handleReset = () => {
     resetSettings();
     onToast?.('تم إعادة جميع الإعدادات للقيم الافتراضية', 'info');
   };
 
+>>>>>>> origin/main
   // ⛔ ما نرندر شيء إذا مو مفتوح
   if (!open) return null;
 
@@ -186,6 +304,11 @@ export default function SettingsPanel({ open, onClose, onToast }) {
               <Settings size={20} className="sp-header-icon" />
               <span>الإعدادات والتخصيص</span>
             </div>
+<<<<<<< HEAD
+            <button className="sp-close-btn" onClick={onClose}>
+              <X size={18} />
+            </button>
+=======
             <div style={{ display: 'flex', gap: '0.4rem' }}>
               <button className="sp-reset-btn" onClick={handleReset} title="إعادة تعيين">
                 <RotateCcw size={15} />
@@ -194,6 +317,7 @@ export default function SettingsPanel({ open, onClose, onToast }) {
                 <X size={18} />
               </button>
             </div>
+>>>>>>> origin/main
           </div>
 
           {/* Tab Switcher */}
@@ -202,7 +326,11 @@ export default function SettingsPanel({ open, onClose, onToast }) {
               className={`sp-tab ${activeSection === 'prefs' ? 'sp-tab-active' : ''}`}
               onClick={() => setActiveSection('prefs')}
             >
+<<<<<<< HEAD
+              <Palette size={15} /> التخصيص
+=======
               <Settings size={15} /> التخصيص
+>>>>>>> origin/main
             </button>
             <button
               className={`sp-tab ${activeSection === 'features' ? 'sp-tab-active' : ''}`}
@@ -219,12 +347,20 @@ export default function SettingsPanel({ open, onClose, onToast }) {
             {/* ── قسم التفضيلات ── */}
             {activeSection === 'prefs' && (
               <div className="sp-prefs-section">
+<<<<<<< HEAD
+                <p className="sp-section-desc">خصّص تجربتك في راصد بلس حسب تفضيلاتك</p>
+=======
                 <p className="sp-section-desc">خصّص تجربتك في راصد بلس حسب تفضيلاتك — كل التغييرات تُحفظ تلقائياً</p>
+>>>>>>> origin/main
                 {LOCAL_PREFERENCES.map((pref) => (
                   <PreferenceItem
                     key={pref.id}
                     pref={pref}
+<<<<<<< HEAD
+                    value={preferences[pref.id]}
+=======
                     value={settings[pref.id]}
+>>>>>>> origin/main
                     onChange={(val) => handlePrefChange(pref.id, val)}
                   />
                 ))}
@@ -237,7 +373,11 @@ export default function SettingsPanel({ open, onClose, onToast }) {
                 {/* Hero */}
                 <div className="sp-features-hero">
                   <div>
+<<<<<<< HEAD
+                    <p className="sp-features-overline"><Sparkles size={13} /> Feature Customization</p>
+=======
                     <p className="sp-features-overline"><Rocket size={13} /> Feature Customization</p>
+>>>>>>> origin/main
                     <h3>تخصيص الميزات</h3>
                     <p className="sp-features-desc">فعّل أو عطّل الميزات حسب احتياجك</p>
                   </div>
@@ -352,7 +492,11 @@ const SETTINGS_PANEL_CSS = `
   color: #818CF8;
 }
 
+<<<<<<< HEAD
+.sp-close-btn {
+=======
 .sp-close-btn, .sp-reset-btn {
+>>>>>>> origin/main
   width: 36px;
   height: 36px;
   border: 1px solid rgba(255,255,255,0.08);
@@ -370,11 +514,14 @@ const SETTINGS_PANEL_CSS = `
   border-color: rgba(244,63,94,0.3);
   color: #F43F5E;
 }
+<<<<<<< HEAD
+=======
 .sp-reset-btn:hover {
   background: rgba(245,158,11,0.12);
   border-color: rgba(245,158,11,0.3);
   color: #F59E0B;
 }
+>>>>>>> origin/main
 
 /* ── Tabs ── */
 .sp-tabs {
@@ -456,7 +603,51 @@ const SETTINGS_PANEL_CSS = `
   color: rgba(255,255,255,0.85);
 }
 .sp-pref-label svg {
+<<<<<<< HEAD
+  color: #818CF8;
+}
+
+/* Toggle Switch */
+.sp-toggle {
+  width: 46px;
+  height: 26px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  flex-shrink: 0;
+}
+
+.sp-toggle-on {
+  background: linear-gradient(135deg, #6366F1, #22D3EE);
+  box-shadow: 0 0 10px rgba(99,102,241,0.4);
+}
+
+.sp-toggle-off {
+  background: rgba(255,255,255,0.08);
+}
+
+.sp-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+.sp-toggle-on .sp-toggle-thumb {
+  left: 3px;
+}
+
+.sp-toggle-off .sp-toggle-thumb {
+  left: 23px;
+=======
   color: var(--accent, #818CF8);
+>>>>>>> origin/main
 }
 
 /* Select Buttons */
@@ -491,6 +682,35 @@ const SETTINGS_PANEL_CSS = `
   border-color: rgba(99,102,241,0.25) !important;
 }
 
+<<<<<<< HEAD
+/* Color Dots */
+.sp-color-group {
+  display: flex;
+  gap: 6px;
+}
+
+.sp-color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--dot-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.sp-color-dot:hover {
+  transform: scale(1.15);
+}
+
+.sp-color-active {
+  border-color: white !important;
+  box-shadow: 0 0 12px var(--dot-color), 0 0 0 2px rgba(255,255,255,0.1);
+  transform: scale(1.15);
+}
+
+=======
+>>>>>>> origin/main
 /* ── Features Section ── */
 .sp-features-hero {
   display: flex;

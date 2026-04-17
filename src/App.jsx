@@ -1,13 +1,20 @@
 /**
  * App.jsx — المدخل الرئيسي لنظام "راصد بلس"
+<<<<<<< HEAD
+ * 
+=======
  *
+>>>>>>> origin/main
  * ✅ تنقل التابات يعمل فعلياً (كل tab يعرض محتوى مختلف)
  * ✅ Loading spinners عند تبديل الأدوار
  * ✅ بيانات ديناميكية من السيرفر الحقيقي
  * ✅ InterventionModal + NotificationsPanel + Toast
  * ✅ AdvisorDashboard منفصل في ملف مستقل
+<<<<<<< HEAD
+=======
  * ✅ SettingsContext + UserContext عالمي
  * ✅ Copilot AI ديناميكي مع حالات تفكير
+>>>>>>> origin/main
  */
 
 import { useState, useEffect } from 'react';
@@ -22,9 +29,15 @@ import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
 import SettingsPanel from './components/SettingsPanel';
+<<<<<<< HEAD
+import RasedFeaturesGalaxy from './components/RasedFeaturesGalaxy';
+import AIChatbot from './components/AIChatbot';
+import { getNotifications } from './services/api';
+=======
 import { getNotifications } from './services/api';
 import { generateCopilotTip, THINKING_STATES } from './services/aiService';
 import { useUser } from './contexts/UserContext';
+>>>>>>> origin/main
 import { byGender } from './utils/localization';
 import './App.css';
 
@@ -64,6 +77,10 @@ const NAV_ADVISOR = [
   { id: 'students',      icon: Users,           label: 'الطلاب' },
   { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
   { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
+<<<<<<< HEAD
+  { id: 'galaxy',        icon: Rocket,          label: 'مجرة الميزات' },
+=======
+>>>>>>> origin/main
 ];
 
 const NAV_STUDENT = [
@@ -71,13 +88,22 @@ const NAV_STUDENT = [
   { id: 'tasks',    icon: Zap,             label: 'مهامي' },
   { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
+<<<<<<< HEAD
+  { id: 'galaxy',   icon: Rocket,          label: 'مجرة الميزات' },
+=======
+>>>>>>> origin/main
 ];
 
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
 
 export default function App() {
+<<<<<<< HEAD
+  const [role, setRole]                         = useState('student');
+  const [authUser, setAuthUser]                 = useState(null);
+=======
   const { user, role, gender, name, login: loginUser, logout: logoutUser } = useUser();
 
+>>>>>>> origin/main
   const [activeTab, setTab]                     = useState('overview');
   const [interventionStudent, setIntervention]  = useState(null);
   const [showNotifs, setShowNotifs]             = useState(false);
@@ -85,6 +111,26 @@ export default function App() {
   const [toast, setToast]                       = useState(null);
   const [showSettings, setShowSettings]         = useState(false);
 
+<<<<<<< HEAD
+  const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
+  const studentGender = authUser?.gender || 'male';
+  const name = authUser?.name || (role === 'advisor' ? 'د. خالد' : 'محمد');
+  const headerTitle = `مرحباً، ${name} 👋`;
+  const subtitle = role === 'advisor'
+    ? 'إليك نظرة عامة على حالة الطلاب اليوم'
+    : 'ابدأ يومك الدراسي بوضوح وخطة إنجاز ذكية';
+
+  const handleLogin = (user) => {
+    const nextRole = user.role;
+    setAuthUser(user);
+    setRole(nextRole);
+    setTab(nextRole === 'advisor' ? 'dashboard' : 'overview');
+  };
+
+  const handleLogout = () => {
+    setAuthUser(null);
+    setRole('student');
+=======
   // Copilot AI
   const [copilotTip, setCopilotTip]             = useState('');
   const [copilotThinking, setCopilotThinking]   = useState(false);
@@ -102,6 +148,7 @@ export default function App() {
 
   const handleLogout = () => {
     logoutUser();
+>>>>>>> origin/main
     setTab('overview');
     setShowNotifs(false);
     setIntervention(null);
@@ -113,6 +160,36 @@ export default function App() {
   };
 
   useEffect(() => {
+<<<<<<< HEAD
+    if (!authUser) return;
+    getNotifications(role)
+      .then((data) => setNotifications(data || []))
+      .catch(() => setNotifications([]));
+  }, [authUser, role, showNotifs, activeTab]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // الـ Copilot tip يتغير ديناميكياً حسب الدور والتبويب النشط
+  const copilotTips = {
+    advisor: {
+      dashboard: 'تم رصد 2 طلاب بمؤشرات حمراء — اضغط "خطة تدخل" لتوليد رسالة فورية.',
+      students: 'استخدم الفلتر للتركيز على الحالات الحمراء أولاً.',
+      interventions: '3 تدخلات مكتملة هذا الشهر — نسبة نجاح 88%',
+      radar: 'CS301 يحتاج مراجعة عاجلة — نسبة رسوب 62%',
+      features: 'يمكنك تفعيل/تعطيل 100 ميزة وربطها فوراً بقاعدة البيانات.',
+    },
+    student: {
+      overview: `${byGender(studentGender, 'لديك', 'لديكِ')} تسليم غداً ولم ${byGender(studentGender, 'تبدأ', 'تبدئي')}! ${byGender(studentGender, 'اضغط', 'اضغطي')} على "مهامي" و${byGender(studentGender, 'قسّم', 'قسّمي')} المهمة.`,
+      tasks: `${byGender(studentGender, 'ابدأ', 'ابدئي')} بالمهمة الأسهل أولاً — ذلك يبني الزخم.`,
+      skills: 'كورس Data Analysis هو الأعلى طلباً هذا الفصل!',
+      peers: 'أحمد وافق على جلسة التوأمة — غداً 4 مساءً.',
+      features: 'مركز الميزات الأسطورية يمنحك تجربة Super App متكاملة.',
+    },
+  };
+  const copilotTip = copilotTips[role]?.[activeTab] || copilotTips[role]?.overview || '';
+
+  if (!authUser) {
+=======
     if (!user) return;
     getNotifications(role)
       .then((data) => setNotifications(data || []))
@@ -147,6 +224,7 @@ export default function App() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   if (!user) {
+>>>>>>> origin/main
     return <LoginScreen onLogin={handleLogin} />;
   }
 
@@ -162,7 +240,11 @@ export default function App() {
         </div>
 
         <div className="session-user glass" style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
+<<<<<<< HEAD
+          <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{authUser.name}</div>
+=======
           <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{user.name}</div>
+>>>>>>> origin/main
           <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>
             {role === 'advisor' ? 'مرشد أكاديمي' : 'طالب'}
           </div>
@@ -179,9 +261,13 @@ export default function App() {
         </nav>
 
         <div className="copilot-card">
+<<<<<<< HEAD
+          <div className="copilot-card-title"><Sparkles size={15} /> توصية Copilot</div>
+=======
           <div className="copilot-card-title">
             <Sparkles size={15} className={copilotThinking ? 'copilot-spin' : ''} /> توصية Copilot
           </div>
+>>>>>>> origin/main
           <p className="copilot-card-body">{copilotTip}</p>
         </div>
       </aside>
@@ -210,6 +296,17 @@ export default function App() {
         </header>
 
         {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
+<<<<<<< HEAD
+        {activeTab === 'galaxy'
+          ? <RasedFeaturesGalaxy />
+          : role === 'advisor'
+            ? <AdvisorDashboard
+                activeTab={activeTab}
+                onIntervention={(s) => setIntervention(s)}
+                onToast={showToast}
+              />
+            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
+=======
         {role === 'advisor'
           ? <AdvisorDashboard
               activeTab={activeTab}
@@ -217,6 +314,7 @@ export default function App() {
               onToast={showToast}
             />
           : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={user} gender={gender} />
+>>>>>>> origin/main
         }
       </main>
 
@@ -225,7 +323,11 @@ export default function App() {
       {interventionStudent && (
         <InterventionModal
           student={interventionStudent}
+<<<<<<< HEAD
+          advisorId={authUser?.id}
+=======
           advisorId={user?.id}
+>>>>>>> origin/main
           onToast={showToast}
           onClose={() => {
             setIntervention(null);
@@ -250,6 +352,12 @@ export default function App() {
       {toast && (
         <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
       )}
+<<<<<<< HEAD
+
+      {/* ═══ AI Chatbot (Floating) ═══ */}
+      <AIChatbot user={authUser} role={role} />
+=======
+>>>>>>> origin/main
     </div>
   );
 }

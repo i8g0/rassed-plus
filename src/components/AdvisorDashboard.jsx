@@ -3,9 +3,15 @@ import {
   Users, ShieldAlert, Zap, TrendingUp, GraduationCap,
   BrainCircuit, Mail, Sparkles, ArrowUpRight,
   AlertTriangle, CheckCircle2, Clock, Search,
+<<<<<<< HEAD
+  FileText, BarChart3, Eye, Bot, X,
+} from 'lucide-react';
+import { getAdvisorOverview, getInterventions, requestPeerMatch, getStudentBrief } from '../services/api';
+=======
   FileText, BarChart3, Eye,
 } from 'lucide-react';
 import { getAdvisorOverview, getInterventions, requestPeerMatch } from '../services/api';
+>>>>>>> origin/main
 
 function LoadingSkeleton({ lines = 3, style }) {
   return (
@@ -43,6 +49,96 @@ function AiInsightCard({ color, icon, title, body }) {
   );
 }
 
+<<<<<<< HEAD
+// ─── AI Brief Modal ─────────────────────────────────────────────────────────
+
+function BriefModal({ studentId, onClose }) {
+  const [brief, setBrief] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getStudentBrief(studentId)
+      .then((data) => setBrief(data))
+      .catch(() => setBrief(null))
+      .finally(() => setLoading(false));
+  }, [studentId]);
+
+  const urgencyLabels = { high: 'عاجل', medium: 'متوسط', low: 'منخفض' };
+
+  return (
+    <div className="brief-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="brief-modal">
+        <h2><BrainCircuit size={20} /> ملخص الذكاء الاصطناعي {brief?.student_name ? `— ${brief.student_name}` : ''}</h2>
+
+        {loading ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Sparkles size={24} style={{ animation: 'float 2s ease-in-out infinite', marginBottom: '0.5rem' }} />
+            <p>جاري تحليل بيانات الطالب ومحادثاته مع المرشد الذكي...</p>
+          </div>
+        ) : !brief ? (
+          <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>تعذر تحميل الملخص.</p>
+        ) : (
+          <>
+            {/* الحالة النفسية */}
+            <div className="brief-section">
+              <div className="brief-section-title">🧠 الحالة النفسية</div>
+              <p>{brief.emotional_state}</p>
+              <div style={{ marginTop: '0.5rem' }}>
+                <span className={`brief-urgency ${brief.urgency}`}>
+                  ⚡ أولوية: {urgencyLabels[brief.urgency] || brief.urgency}
+                </span>
+              </div>
+            </div>
+
+            {/* ملخص المحادثات */}
+            <div className="brief-section">
+              <div className="brief-section-title">💬 ملخص المحادثات ({brief.total_messages} رسالة)</div>
+              <p>{brief.conversation_summary}</p>
+            </div>
+
+            {/* المخاوف الرئيسية */}
+            {brief.main_concerns?.length > 0 && (
+              <div className="brief-section">
+                <div className="brief-section-title">⚠️ المخاوف الرئيسية</div>
+                <ul>
+                  {brief.main_concerns.map((c, i) => <li key={i}>{c}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {/* المواضيع */}
+            {brief.topics_discussed?.length > 0 && (
+              <div className="brief-section">
+                <div className="brief-section-title">📋 المواضيع المطروحة</div>
+                <ul>
+                  {brief.topics_discussed.map((t, i) => (
+                    <li key={i}>{t.topic || t} {t.frequency ? `(${t.frequency} مرات)` : ''}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* التوصيات */}
+            {brief.recommended_actions?.length > 0 && (
+              <div className="brief-section">
+                <div className="brief-section-title">✅ التوصيات</div>
+                <ul>
+                  {brief.recommended_actions.map((a, i) => <li key={i}>{a}</li>)}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+
+        <button className="brief-close-btn" onClick={onClose}>إغلاق</button>
+      </div>
+    </div>
+  );
+}
+
+=======
+>>>>>>> origin/main
 function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch }) {
   const handlePeerMatch = async (student) => {
     const weakSkill = student.weakSkills?.[0] || 'هياكل بيانات';
@@ -137,7 +233,11 @@ function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch })
   );
 }
 
+<<<<<<< HEAD
+function StudentsTab({ students, onIntervention, onBrief }) {
+=======
 function StudentsTab({ students, onIntervention }) {
+>>>>>>> origin/main
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -214,6 +314,21 @@ function StudentsTab({ students, onIntervention }) {
                   </div>
                 )}
               </div>
+<<<<<<< HEAD
+              <div className="student-detail-actions">
+                {s.riskLevel !== 'green' && (
+                  <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
+                    <Mail size={14} /> خطة تدخل
+                  </button>
+                )}
+                <button className="btn btn-ghost" style={{ fontSize: '0.78rem', color: '#818CF8', borderColor: 'rgba(99,102,241,0.3)' }} onClick={() => onBrief(s.id)}>
+                  <Bot size={14} /> ملخص AI
+                </button>
+                <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}>
+                  <Eye size={14} /> عرض الملف
+                </button>
+              </div>
+=======
               {s.riskLevel !== 'green' && (
                 <div className="student-detail-actions">
                   <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
@@ -224,6 +339,7 @@ function StudentsTab({ students, onIntervention }) {
                   </button>
                 </div>
               )}
+>>>>>>> origin/main
             </div>
           ))}
         </div>
@@ -299,6 +415,9 @@ function RadarTab({ courses }) {
           </span>
         </div>
 
+<<<<<<< HEAD
+        <div className="radar-courses">
+=======
         <div className="course-chart-container" style={{ padding: '1.5rem', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
           <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>رسم بياني: نسبة الرسوب في المواد</h4>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '150px', paddingBottom: '1rem' }}>
@@ -319,6 +438,7 @@ function RadarTab({ courses }) {
         </div>
 
         <div className="radar-courses" style={{ marginTop: '1rem' }}>
+>>>>>>> origin/main
           {courses.map((c) => (
             <div key={c.id} className="radar-course-card" style={{ borderColor: `${severityColor[c.severity]}22` }}>
               <div className="radar-course-header">
@@ -363,6 +483,10 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
   const [stats, setStats] = useState(null);
   const [courses, setCourses] = useState([]);
   const [interventionLog, setInterventionLog] = useState([]);
+<<<<<<< HEAD
+  const [briefStudentId, setBriefStudentId] = useState(null);
+=======
+>>>>>>> origin/main
 
   useEffect(() => {
     let mounted = true;
@@ -407,6 +531,40 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
     );
   }
 
+<<<<<<< HEAD
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'students':
+        return <StudentsTab students={students} onIntervention={onIntervention} onBrief={(id) => setBriefStudentId(id)} />;
+      case 'interventions':
+        return <InterventionsTab interventionLog={interventionLog} />;
+      case 'radar':
+        return <RadarTab courses={courses} />;
+      default:
+        return (
+          <DashboardTab
+            students={students}
+            stats={stats}
+            onIntervention={onIntervention}
+            onToast={onToast}
+            onPeerMatch={handlePeerMatch}
+          />
+        );
+    }
+  };
+
+  return (
+    <>
+      {renderTab()}
+      {briefStudentId && (
+        <BriefModal
+          studentId={briefStudentId}
+          onClose={() => setBriefStudentId(null)}
+        />
+      )}
+    </>
+  );
+=======
   switch (activeTab) {
     case 'students':
       return <StudentsTab students={students} onIntervention={onIntervention} />;
@@ -425,4 +583,5 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
         />
       );
   }
+>>>>>>> origin/main
 }

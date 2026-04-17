@@ -495,6 +495,8 @@
     font-size: 1.6rem;
   }
 }
+<<<<<<< HEAD
+=======
 
 /* ─── Light Theme for Student Dashboard ──────────────────────────────────────── */
 
@@ -534,3 +536,4 @@
 [data-theme="light"] .split-step:hover {
   background: rgba(0,0,0,0.02);
 }
+>>>>>>> origin/main

@@ -22,7 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
+.env
+=======
+>>>>>>> origin/main
 
 # Backend runtime artifacts
 backend/__pycache__/
 backend/*.db
+<<<<<<< HEAD
+backend/.env
+
+# Large binaries
+node-installer.msi
+
+# Gemini
+.gemini/
+=======
+>>>>>>> origin/main

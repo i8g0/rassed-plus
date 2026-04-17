@@ -99,6 +99,9 @@ export async function getAdvisorOverview() {
 
   const students = analyzeAllStudents();
   const stats = getAdvisorStats();
+<<<<<<< HEAD
+  return { students, stats };
+=======
   
   const courses = [
     { id: '1', code: 'CS 321', name: 'الخوارزميات', instructor: 'د. عبدالله', enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
@@ -107,6 +110,7 @@ export async function getAdvisorOverview() {
   ];
 
   return { students, stats, courses };
+>>>>>>> origin/main
 }
 
 export async function getInterventions() {
@@ -117,7 +121,11 @@ export async function getInterventions() {
   return [
     { id: 1, studentName: 'أحمد محمود', status: 'active', createdAt: '2026-04-10', riskLevel: 'red' },
     { id: 2, studentName: 'نورة سعد', status: 'active', createdAt: '2026-04-12', riskLevel: 'red' },
+<<<<<<< HEAD
+    { id: 3, studentName: 'أحمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
+=======
     { id: 3, studentName: 'محمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
+>>>>>>> origin/main
   ];
 }
 
@@ -372,3 +380,75 @@ export async function toggleFeature(code, enabled) {
 
   return { ok: true, code, enabled };
 }
+<<<<<<< HEAD
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  🤖 AI Chatbot APIs
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export async function sendStudentChat(studentId, message, sessionId = null) {
+  const apiResult = await request('/api/chat/student', {
+    method: 'POST',
+    body: JSON.stringify({
+      student_id: studentId,
+      message,
+      session_id: sessionId,
+    }),
+  });
+  if (apiResult) return apiResult;
+
+  // Fallback mock response
+  return {
+    response: 'عذراً، المرشد الذكي غير متاح حالياً. يرجى تشغيل الخادم الخلفي والمحاولة مرة أخرى.',
+    session_id: 'mock-session',
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export async function sendAdvisorChat(advisorId, message, studentId = null) {
+  const apiResult = await request('/api/chat/advisor', {
+    method: 'POST',
+    body: JSON.stringify({
+      advisor_id: advisorId,
+      message,
+      student_id: studentId,
+    }),
+  });
+  if (apiResult) return apiResult;
+
+  return {
+    response: 'عذراً، المساعد الذكي غير متاح حالياً. يرجى تشغيل الخادم الخلفي.',
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export async function getChatHistory(studentId) {
+  const apiResult = await request(`/api/chat/history/${encodeURIComponent(studentId)}`);
+  if (apiResult) return apiResult;
+  return [];
+}
+
+export async function getSilentAnalysis(studentId) {
+  const apiResult = await request(`/api/student/silent-analysis/${encodeURIComponent(studentId)}`);
+  if (apiResult) return apiResult;
+  return { alerts: [], overall_mood: 'neutral', priority_action: '' };
+}
+
+export async function getStudentBrief(studentId) {
+  const apiResult = await request(`/api/advisor/student-brief/${encodeURIComponent(studentId)}`);
+  if (apiResult) return apiResult;
+  return {
+    emotional_state: 'غير متاح — الخادم غير متصل',
+    main_concerns: [],
+    topics_discussed: [],
+    risk_indicators: [],
+    recommended_actions: ['تشغيل الخادم الخلفي أولاً'],
+    conversation_summary: 'لا يمكن توليد الملخص بدون اتصال بالخادم.',
+    urgency: 'medium',
+    student_name: '',
+    student_id: studentId,
+    total_messages: 0,
+  };
+}
+=======
+>>>>>>> origin/main
