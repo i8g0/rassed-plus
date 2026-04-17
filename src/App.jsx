@@ -11,7 +11,7 @@
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
-  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Rocket,
+  Search, Bell, LogOut, Sparkles, CheckCircle2, Zap, Settings,
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
@@ -19,7 +19,7 @@ import AdvisorDashboard from './components/AdvisorDashboard';
 import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
-import FeaturesHub from './components/FeaturesHub';
+import SettingsPanel from './components/SettingsPanel';
 import { getNotifications } from './services/api';
 import { byGender } from './utils/localization';
 import './App.css';
@@ -60,7 +60,6 @@ const NAV_ADVISOR = [
   { id: 'students',      icon: Users,           label: 'الطلاب' },
   { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
   { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
-  { id: 'features',      icon: Rocket,          label: 'Features Hub' },
 ];
 
 const NAV_STUDENT = [
@@ -68,7 +67,6 @@ const NAV_STUDENT = [
   { id: 'tasks',    icon: Zap,             label: 'مهامي' },
   { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
   { id: 'peers',    icon: Users,           label: 'التوأمة' },
-  { id: 'features', icon: Rocket,          label: 'Features Hub' },
 ];
 
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
@@ -81,6 +79,7 @@ export default function App() {
   const [showNotifs, setShowNotifs]             = useState(false);
   const [notifications, setNotifications]       = useState([]);
   const [toast, setToast]                       = useState(null);
+  const [showSettings, setShowSettings]         = useState(false);
 
   const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
   const studentGender = authUser?.gender || 'male';
@@ -189,6 +188,9 @@ export default function App() {
               onClick={() => setShowNotifs(!showNotifs)}>
               <Bell size={18} />
             </button>
+            <button className="icon-btn" title="الإعدادات والتخصيص" onClick={() => setShowSettings(!showSettings)}>
+              <Settings size={18} />
+            </button>
             <button className="icon-btn" title="تسجيل الخروج" onClick={handleLogout}>
               <LogOut size={17} />
             </button>
@@ -197,15 +199,13 @@ export default function App() {
         </header>
 
         {/* اللوحة حسب الدور — الآن activeTab يتم تمريره */}
-        {activeTab === 'features'
-          ? <FeaturesHub onToast={showToast} />
-          : role === 'advisor'
-            ? <AdvisorDashboard
-                activeTab={activeTab}
-                onIntervention={(s) => setIntervention(s)}
-                onToast={showToast}
-              />
-            : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
+        {role === 'advisor'
+          ? <AdvisorDashboard
+              activeTab={activeTab}
+              onIntervention={(s) => setIntervention(s)}
+              onToast={showToast}
+            />
+          : <StudentDashboard activeTab={activeTab} onToast={showToast} currentUser={authUser} gender={studentGender} />
         }
       </main>
 
@@ -229,6 +229,12 @@ export default function App() {
           onClose={() => setShowNotifs(false)}
         />
       )}
+
+      <SettingsPanel
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        onToast={showToast}
+      />
 
       {toast && (
         <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
