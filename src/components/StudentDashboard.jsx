@@ -5,11 +5,7 @@ import {
   Clock, Target, Briefcase,
   BrainCircuit, Sparkles, ArrowUpRight,
   ChevronDown, Play, ClipboardList, Timer,
-<<<<<<< HEAD
-  ExternalLink, Check,
-=======
   ExternalLink, Check, X, Activity,
->>>>>>> origin/main
 } from 'lucide-react';
 import {
   createAiLog,
@@ -94,7 +90,6 @@ function HeroSection({ student }) {
   );
 }
 
-<<<<<<< HEAD
 function AdaptiveSection({ items, onToast, studentId }) {
   const [selected, setSelected] = useState(null);
 
@@ -151,8 +146,6 @@ function AdaptiveSection({ items, onToast, studentId }) {
     </div>
   );
 }
-=======
->>>>>>> origin/main
 
 function PeersSection({ peers, onToast, studentId }) {
   const [requested, setRequested] = useState({});
@@ -259,10 +252,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
   const [tasks, setTasks] = useState(initialTasks);
   const [expandedId, setExpandedId] = useState(null);
   const [completedSteps, setCompletedSteps] = useState({});
-<<<<<<< HEAD
-=======
   const [processingAdaptive, setProcessingAdaptive] = useState(null);
->>>>>>> origin/main
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -312,8 +302,6 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
     if (!completedSteps[key]) onToast(`تم إكمال الخطوة ${stepIndex + 1} ✅`, 'success');
   };
 
-<<<<<<< HEAD
-=======
   const handleAdaptiveMock = (taskId, type) => {
     setProcessingAdaptive(taskId);
     setTimeout(() => {
@@ -324,7 +312,6 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
     }, 2000);
   };
 
->>>>>>> origin/main
   return (
     <div className="glass panel-card animate-fade-up delay-5">
       <div className="panel-header">
@@ -348,16 +335,7 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
                   <span className="task-deadline"><Timer size={12} /> {t.deadline}</span>
                   {t.progress > 0 && t.progress < 100 && (
                     <div style={{ marginTop: '0.4rem' }}>
-<<<<<<< HEAD
                       <div className="progress-track"><div className="progress-fill" style={{ width: `${t.progress}%`, background: `linear-gradient(90deg, ${u.color}, ${u.color}88)` }} /></div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t.progress}%</span>
-                    </div>
-                  )}
-                  <p className="task-ai-note" style={{ color: u.color }}><Sparkles size={12} /> {t.aiNote}</p>
-                </div>
-                {t.canSplit && (
-=======
-                       <div className="progress-track"><div className="progress-fill" style={{ width: `${t.progress}%`, background: `linear-gradient(90deg, ${u.color}, ${u.color}88)` }} /></div>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t.progress}%</span>
                     </div>
                   )}
@@ -377,7 +355,6 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
                   <p className="task-ai-note" style={{ color: u.color }}><Sparkles size={12} /> {t.aiNote}</p>
                 </div>
                 {t.canSplit && t.urgency !== 'danger' && (
->>>>>>> origin/main
                   <button className="btn btn-danger" style={{ fontSize: '0.78rem', flexShrink: 0 }} onClick={() => setExpandedId(open ? null : t.id)}>
                     <Zap size={13} /> {splitTaskLabel}
                     <ChevronDown size={13} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />
@@ -412,8 +389,6 @@ function TasksSection({ onToast, studentId, initialTasks = [], splitSteps = [], 
   );
 }
 
-<<<<<<< HEAD
-=======
 function DigitalFatigueModal({ onClose }) {
   const [timeLeft, setTimeLeft] = useState(30);
 
@@ -459,15 +434,11 @@ function DigitalFatigueModal({ onClose }) {
   );
 }
 
->>>>>>> origin/main
 export default function StudentDashboard({ activeTab, onToast, currentUser, gender = 'male' }) {
   const toast = onToast || (() => {});
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ student: null, adaptive: [], peers: [], skills: [], tasks: [], splitSteps: [] });
-<<<<<<< HEAD
-=======
   const [showFatigue, setShowFatigue] = useState(false);
->>>>>>> origin/main
 
   useEffect(() => {
     let mounted = true;
@@ -490,32 +461,23 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     };
   }, [currentUser?.id, activeTab, toast]);
 
-<<<<<<< HEAD
-=======
   // منبه الإرهاق الرقمي يظهر بعد دقيقة (للشوز استخدم 10 ثواني)
   useEffect(() => {
     const fatigueTimer = setTimeout(() => setShowFatigue(true), 15000);
     return () => clearTimeout(fatigueTimer);
   }, []);
 
->>>>>>> origin/main
   if (loading || !data.student) {
     return <div className="glass panel-card">جاري تحميل بيانات الطالب...</div>;
   }
 
-<<<<<<< HEAD
-=======
   const renderFatigue = showFatigue ? <DigitalFatigueModal onClose={() => setShowFatigue(false)} /> : null;
 
->>>>>>> origin/main
   switch (activeTab) {
     case 'tasks':
       return (
         <div className="student-dash">
-<<<<<<< HEAD
-=======
           {renderFatigue}
->>>>>>> origin/main
           <HeroSection student={data.student} />
           <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
         </div>
@@ -523,10 +485,7 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     case 'skills':
       return (
         <div className="student-dash">
-<<<<<<< HEAD
-=======
           {renderFatigue}
->>>>>>> origin/main
           <HeroSection student={data.student} />
           <SkillsSection skills={data.skills} onToast={toast} />
         </div>
@@ -534,10 +493,7 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     case 'peers':
       return (
         <div className="student-dash">
-<<<<<<< HEAD
-=======
           {renderFatigue}
->>>>>>> origin/main
           <HeroSection student={data.student} />
           <PeersSection peers={data.peers} onToast={toast} studentId={currentUser.id} />
         </div>
@@ -545,24 +501,14 @@ export default function StudentDashboard({ activeTab, onToast, currentUser, gend
     default:
       return (
         <div className="student-dash">
-<<<<<<< HEAD
           <HeroSection student={data.student} />
           <div className="dashboard-grid-even">
             <AdaptiveSection items={data.adaptive} onToast={toast} studentId={currentUser.id} />
-=======
-          {renderFatigue}
-          <HeroSection student={data.student} />
-          <div className="dashboard-grid-even">
             <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
->>>>>>> origin/main
-            <PeersSection peers={data.peers} onToast={toast} studentId={currentUser.id} />
           </div>
           <div className="dashboard-grid-even">
             <SkillsSection skills={data.skills} onToast={toast} />
-<<<<<<< HEAD
-            <TasksSection onToast={toast} studentId={currentUser.id} initialTasks={data.tasks} splitSteps={data.splitSteps} gender={gender} />
-=======
->>>>>>> origin/main
+            <PeersSection peers={data.peers} onToast={toast} studentId={currentUser.id} />
           </div>
         </div>
       );

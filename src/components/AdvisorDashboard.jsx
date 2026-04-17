@@ -3,15 +3,9 @@ import {
   Users, ShieldAlert, Zap, TrendingUp, GraduationCap,
   BrainCircuit, Mail, Sparkles, ArrowUpRight,
   AlertTriangle, CheckCircle2, Clock, Search,
-<<<<<<< HEAD
   FileText, BarChart3, Eye, Bot, X,
 } from 'lucide-react';
 import { getAdvisorOverview, getInterventions, requestPeerMatch, getStudentBrief } from '../services/api';
-=======
-  FileText, BarChart3, Eye,
-} from 'lucide-react';
-import { getAdvisorOverview, getInterventions, requestPeerMatch } from '../services/api';
->>>>>>> origin/main
 
 function LoadingSkeleton({ lines = 3, style }) {
   return (
@@ -49,7 +43,6 @@ function AiInsightCard({ color, icon, title, body }) {
   );
 }
 
-<<<<<<< HEAD
 // ─── AI Brief Modal ─────────────────────────────────────────────────────────
 
 function BriefModal({ studentId, onClose }) {
@@ -137,8 +130,6 @@ function BriefModal({ studentId, onClose }) {
   );
 }
 
-=======
->>>>>>> origin/main
 function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch }) {
   const handlePeerMatch = async (student) => {
     const weakSkill = student.weakSkills?.[0] || 'هياكل بيانات';
@@ -233,11 +224,7 @@ function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch })
   );
 }
 
-<<<<<<< HEAD
 function StudentsTab({ students, onIntervention, onBrief }) {
-=======
-function StudentsTab({ students, onIntervention }) {
->>>>>>> origin/main
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -314,7 +301,6 @@ function StudentsTab({ students, onIntervention }) {
                   </div>
                 )}
               </div>
-<<<<<<< HEAD
               <div className="student-detail-actions">
                 {s.riskLevel !== 'green' && (
                   <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
@@ -328,18 +314,6 @@ function StudentsTab({ students, onIntervention }) {
                   <Eye size={14} /> عرض الملف
                 </button>
               </div>
-=======
-              {s.riskLevel !== 'green' && (
-                <div className="student-detail-actions">
-                  <button className="btn btn-danger" style={{ fontSize: '0.78rem' }} onClick={() => onIntervention(s)}>
-                    <Mail size={14} /> خطة تدخل
-                  </button>
-                  <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}>
-                    <Eye size={14} /> عرض الملف
-                  </button>
-                </div>
-              )}
->>>>>>> origin/main
             </div>
           ))}
         </div>
@@ -415,9 +389,6 @@ function RadarTab({ courses }) {
           </span>
         </div>
 
-<<<<<<< HEAD
-        <div className="radar-courses">
-=======
         <div className="course-chart-container" style={{ padding: '1.5rem', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
           <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>رسم بياني: نسبة الرسوب في المواد</h4>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '150px', paddingBottom: '1rem' }}>
@@ -438,7 +409,6 @@ function RadarTab({ courses }) {
         </div>
 
         <div className="radar-courses" style={{ marginTop: '1rem' }}>
->>>>>>> origin/main
           {courses.map((c) => (
             <div key={c.id} className="radar-course-card" style={{ borderColor: `${severityColor[c.severity]}22` }}>
               <div className="radar-course-header">
@@ -483,10 +453,7 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
   const [stats, setStats] = useState(null);
   const [courses, setCourses] = useState([]);
   const [interventionLog, setInterventionLog] = useState([]);
-<<<<<<< HEAD
   const [briefStudentId, setBriefStudentId] = useState(null);
-=======
->>>>>>> origin/main
 
   useEffect(() => {
     let mounted = true;
@@ -531,7 +498,6 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
     );
   }
 
-<<<<<<< HEAD
   const renderTab = () => {
     switch (activeTab) {
       case 'students':
@@ -564,24 +530,4 @@ export default function AdvisorDashboard({ activeTab, onIntervention, onToast })
       )}
     </>
   );
-=======
-  switch (activeTab) {
-    case 'students':
-      return <StudentsTab students={students} onIntervention={onIntervention} />;
-    case 'interventions':
-      return <InterventionsTab interventionLog={interventionLog} />;
-    case 'radar':
-      return <RadarTab courses={courses} />;
-    default:
-      return (
-        <DashboardTab
-          students={students}
-          stats={stats}
-          onIntervention={onIntervention}
-          onToast={onToast}
-          onPeerMatch={handlePeerMatch}
-        />
-      );
-  }
->>>>>>> origin/main
 }

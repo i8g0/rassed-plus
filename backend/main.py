@@ -1,5 +1,4 @@
 import json
-<<<<<<< HEAD
 import os
 import uuid
 from datetime import datetime, timedelta
@@ -10,11 +9,6 @@ from openai import OpenAI
 
 load_dotenv()
 
-=======
-from datetime import datetime, timedelta
-from typing import Any, Literal, Optional
-
->>>>>>> origin/main
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -23,7 +17,6 @@ from database import get_db, init_db, now_iso
 
 init_db()
 
-<<<<<<< HEAD
 # ═══════════════════════════════════════════════════════════════════════════════
 #  DeepSeek AI Client
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -178,8 +171,6 @@ ADVISOR_BRIEF_PROMPT = """أنت محلل محادثات في منصة "راصد
 #  FastAPI App
 # ═══════════════════════════════════════════════════════════════════════════════
 
-=======
->>>>>>> origin/main
 app = FastAPI(
     title="Rassed Plus API",
     version="2.0.0",
@@ -283,7 +274,6 @@ def risk_analyze(student: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-<<<<<<< HEAD
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Helper: Build student context string for AI prompts
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -349,8 +339,6 @@ def call_ai_with_history(system_prompt: str, messages: list[dict], temperature: 
 #  Pydantic Models
 # ═══════════════════════════════════════════════════════════════════════════════
 
-=======
->>>>>>> origin/main
 class LoginRequest(BaseModel):
     role: Literal["student", "advisor"]
     identifier: str
@@ -421,7 +409,6 @@ class FeatureToggleRequest(BaseModel):
     enabled: bool
 
 
-<<<<<<< HEAD
 class ChatMessageRequest(BaseModel):
     student_id: str
     message: str
@@ -448,8 +435,6 @@ class AnalyzedStudentProfileIn(BaseModel):
 #  Core API Endpoints (existing)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-=======
->>>>>>> origin/main
 @app.get("/")
 def root():
     return {"status": "ok", "service": "Rassed Plus API", "timestamp": now_iso()}
@@ -1270,7 +1255,6 @@ def list_features(category: Optional[str] = None):
     ]
 
 
-<<<<<<< HEAD
 # ═══════════════════════════════════════════════════════════════════════════════
 #  🤖 AI Chatbot — Student
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1754,8 +1738,6 @@ def analyze_student(payload: AnalyzedStudentProfileIn):
         raise HTTPException(status_code=500, detail=f"AI Analysis Failed: {str(e)}")
 
 
-=======
->>>>>>> origin/main
 if __name__ == "__main__":
     import uvicorn
 

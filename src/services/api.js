@@ -99,9 +99,7 @@ export async function getAdvisorOverview() {
 
   const students = analyzeAllStudents();
   const stats = getAdvisorStats();
-<<<<<<< HEAD
   return { students, stats };
-=======
   
   const courses = [
     { id: '1', code: 'CS 321', name: 'الخوارزميات', instructor: 'د. عبدالله', enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
@@ -110,7 +108,6 @@ export async function getAdvisorOverview() {
   ];
 
   return { students, stats, courses };
->>>>>>> origin/main
 }
 
 export async function getInterventions() {
@@ -121,11 +118,8 @@ export async function getInterventions() {
   return [
     { id: 1, studentName: 'أحمد محمود', status: 'active', createdAt: '2026-04-10', riskLevel: 'red' },
     { id: 2, studentName: 'نورة سعد', status: 'active', createdAt: '2026-04-12', riskLevel: 'red' },
-<<<<<<< HEAD
     { id: 3, studentName: 'أحمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
-=======
     { id: 3, studentName: 'محمد عمار', status: 'completed', createdAt: '2026-03-28', riskLevel: 'yellow' },
->>>>>>> origin/main
   ];
 }
 
@@ -380,7 +374,6 @@ export async function toggleFeature(code, enabled) {
 
   return { ok: true, code, enabled };
 }
-<<<<<<< HEAD
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  🤖 AI Chatbot APIs
@@ -450,5 +443,3 @@ export async function getStudentBrief(studentId) {
     total_messages: 0,
   };
 }
-=======
->>>>>>> origin/main

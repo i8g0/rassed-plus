@@ -350,8 +350,6 @@ body::after {
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
-<<<<<<< HEAD
-=======
 
 /* ══════════════════════════════════════════════════════════════════════════════
    Light Theme — الوضع الفاتح الشامل
@@ -423,4 +421,3 @@ body::after {
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(99,102,241,0.4);
 }
->>>>>>> origin/main
