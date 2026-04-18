@@ -157,7 +157,7 @@ const DICTIONARY = {
       smartAnalyzing: 'يتم التحليل الذكي...',
       proactivePreparing: 'يتم التجهيز الاستباقي...',
       suggestedPlan: 'الخطة المقترحة — إجمالي: ~2.7 ساعة',
-      autoMessageTitle: 'رسالة منارة راصد التلقائية',
+      autoMessageTitle: 'منارة راصد',
       studentDataSync: 'جاري مزامنة بيانات الطالب...',
       retry: 'حاول مجدداً',
       // ── AttendanceRadar ──

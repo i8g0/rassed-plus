@@ -152,7 +152,7 @@ export async function getInterventions(advisorId = null) {
 
   const lang = normalizeLanguage(getCurrentLanguage());
   return translateNode([
-    { id: 1, student: byLanguage(lang, 'محمد عمار القحطاني', 'Mohammed Ammar Al-Qahtani'), type: byLanguage(lang, 'رسالة دعم أكاديمي', 'Academic Support Message'), date: '2026-04-10', status: 'sent', result: byLanguage(lang, 'بانتظار رد الطالب', 'Awaiting student response') },
+    { id: 1, student: byLanguage(lang, 'محمد القحطاني', 'Mohammed Al-Qahtani'), type: byLanguage(lang, 'رسالة دعم أكاديمي', 'Academic Support Message'), date: '2026-04-10', status: 'sent', result: byLanguage(lang, 'بانتظار رد الطالب', 'Awaiting student response') },
     { id: 2, student: byLanguage(lang, 'سلمان عبدالله المطيري', 'Salman Abdullah Al-Mutairi'), type: byLanguage(lang, 'خطة تدخل عاجلة', 'Urgent Intervention Plan'), date: '2026-04-12', status: 'meeting', result: byLanguage(lang, 'تم جدولة لقاء مع المرشد', 'Meeting scheduled with advisor') },
     { id: 3, student: byLanguage(lang, 'طارق سامي الغامدي', 'Tariq Sami Al-Ghamdi'), type: byLanguage(lang, 'جلسة متابعة أكاديمية', 'Academic Follow-up Session'), date: '2026-03-28', status: 'completed', result: byLanguage(lang, 'تحسن المعدل من 2.1 إلى 3.4', 'GPA improved from 2.1 to 3.4') },
     { id: 4, student: byLanguage(lang, 'عبدالعزيز حسن العنزي', 'Abdulaziz Hassan Al-Enezi'), type: byLanguage(lang, 'توجيه مهني', 'Career Guidance'), date: '2026-04-05', status: 'followup', result: byLanguage(lang, 'متابعة التقدم بعد أسبوعين', 'Follow-up on progress after 2 weeks') },

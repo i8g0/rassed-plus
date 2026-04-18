@@ -59,7 +59,7 @@ const COURSE_CATALOG = [
 ];
 
 const STUDENT_IDENTITIES = [
-  { id: 'SCS25001', name: 'محمد عمار القحطاني', gender: 'male', major: 'هندسة برمجيات', level: 3 },
+  { id: 'SCS25001', name: 'محمد القحطاني', gender: 'male', major: 'هندسة برمجيات', level: 3 },
   { id: 'SCS25002', name: 'ريم ناصر الشهري', gender: 'female', major: 'علوم الحاسب', level: 8 },
   { id: 'SCS25003', name: 'لينا خالد المالكي', gender: 'female', major: 'هندسة برمجيات', level: 5 },
   { id: 'SCS25004', name: 'سلمان عبدالله المطيري', gender: 'male', major: 'علوم الحاسب', level: 6 },
@@ -451,7 +451,7 @@ function buildStandardStudent(identity, index) {
 function buildMohammedAmmarCase() {
   const student = {
     id: 'SCS25001',
-    name: 'محمد عمار القحطاني',
+    name: 'محمد القحطاني',
     gender: 'male',
     major: 'هندسة برمجيات',
     level: 7,

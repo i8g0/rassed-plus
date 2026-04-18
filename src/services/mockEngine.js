@@ -162,7 +162,7 @@ export const AUTH_ACCOUNTS = [
     password: 'Mohammed@2026',
     profile: {
       id: 'SCS25001',
-      name: 'محمد عمار القحطاني',
+      name: 'محمد القحطاني',
       email: 'mohammed.ammar@university.edu',
       major: 'هندسة برمجيات',
       year: 7,

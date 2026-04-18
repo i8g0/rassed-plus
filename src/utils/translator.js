@@ -1,6 +1,6 @@
 export const DICTIONARY = {
   // Names
-  "محمد عمار القحطاني": "Mohammed Ammar Al-Qahtani",
+  "محمد القحطاني": "Mohammed Al-Qahtani",
   "د. خالد القحطاني": "Dr. Khalid Al-Qahtani",
   "د. نورة السبيعي": "Dr. Noura Al-Subaie",
   "ريم فهد القحطاني": "Reem Fahad Al-Qahtani",

@@ -186,10 +186,12 @@ export default function App() {
       {/* ═══ المحتوى الرئيسي ═══ */}
       <main className="main-content">
         <header className="main-header animate-fade-up">
-          <div className="header-greeting">
-            <h1>{headerTitle}</h1>
-            {subtitle && <p>{subtitle}</p>}
-          </div>
+          {role === 'advisor' && (
+            <div className="header-greeting">
+              <h1>{headerTitle}</h1>
+              {subtitle && <p>{subtitle}</p>}
+            </div>
+          )}
           <div className="header-actions">
             <button className="icon-btn" title={t('app.search')} onClick={handleSearchClick}><Search size={18} /></button>
             <button className="icon-btn" data-notif={unreadCount > 0 ? 'true' : undefined}
