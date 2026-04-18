@@ -488,8 +488,6 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
           </div>
           <div className="dashboard-grid-even">
             <SkillsSection skills={data.skills} onToast={toast} />
-          </div>
-          <div className="dashboard-grid-even">
             <PeersSection peers={data.peers} onToast={toast} currentStudentId={currentUser?.id} />
           </div>
         </div>
