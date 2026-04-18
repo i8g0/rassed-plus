@@ -1,4 +1,5 @@
-﻿const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+﻿/* global process */
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 if (!GEMINI_API_KEY) {
 	console.error('Missing GEMINI_API_KEY environment variable.');
 	process.exit(1);

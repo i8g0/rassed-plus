@@ -19,24 +19,17 @@ import {
   sendAdvisorChat,
   getSilentAnalysis,
   getChatHistory,
+  getBeaconProactiveOpening,
 } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
+import { byLanguage, normalizeLanguage } from '../utils/localization';
 import './AIChatbot.css';
 
-const STUDENT_QUICK_ACTIONS = [
-  'كيف أرفع معدلي؟',
-  'أنا ضعيف في التفاضل',
-  'نصائح للمذاكرة',
-  'كيف أحسن حضوري؟',
-  'ساعدني أنظم وقتي',
-];
+const STUDENT_QUICK_ACTIONS_AR = ['كيف أرفع معدلي؟', 'أنا ضعيف في التفاضل', 'نصائح للمذاكرة', 'كيف أحسن حضوري؟', 'ساعدني أنظم وقتي'];
+const STUDENT_QUICK_ACTIONS_EN = ['How can I raise my GPA?', 'I am weak in calculus', 'Study tips', 'How can I improve attendance?', 'Help me organize my time'];
 
-const ADVISOR_QUICK_ACTIONS = [
-  'من أكثر الطلاب خطراً؟',
-  'لخص حالة الطلاب',
-  'اقترح خطة تدخل',
-  'ما أهم الإنذارات؟',
-  'تحليل أداء المجموعة',
-];
+const ADVISOR_QUICK_ACTIONS_AR = ['من أكثر الطلاب خطراً؟', 'لخص حالة الطلاب', 'اقترح خطة تدخل', 'ما أهم الإنذارات؟', 'تحليل أداء المجموعة'];
+const ADVISOR_QUICK_ACTIONS_EN = ['Who are the highest-risk students?', 'Summarize student status', 'Suggest intervention plan', 'Top urgent alerts?', 'Analyze cohort performance'];
 
 const ALERT_ICONS = {
   danger: AlertTriangle,
@@ -64,6 +57,7 @@ function AlertCard({ alert }) {
 }
 
 function TypingIndicator() {
+  const lang = normalizeLanguage(typeof document === 'undefined' ? 'ar' : document.documentElement?.lang || 'ar');
   return (
     <div className="typing-indicator">
       <div className="typing-dots">
@@ -71,28 +65,31 @@ function TypingIndicator() {
         <div className="typing-dot" />
         <div className="typing-dot" />
       </div>
-      <span className="typing-text">يكتب...</span>
+      <span className="typing-text">{byLanguage(lang, 'يكتب...', 'Typing...')}</span>
     </div>
   );
 }
 
-function WelcomeMessage({ role, name }) {
+function WelcomeMessage({ role, name, language }) {
+  const lang = normalizeLanguage(language || 'ar');
   return (
     <div className="chat-welcome">
       <div className="chat-welcome-icon">
         <BrainCircuit size={28} />
       </div>
-      <h4>مرحباً {name}! 👋</h4>
+      <h4>{byLanguage(lang, `مرحباً ${name}! 👋`, `Welcome ${name}! 👋`)}</h4>
       <p>
         {role === 'student'
-          ? 'أنا مرشدك الأكاديمي الذكي. اسألني أي سؤال عن دراستك، معدلك، أو أي تحدي تواجهه — وسأساعدك بخطة واضحة!'
-          : 'أنا مساعدك الذكي. يمكنني تحليل حالات الطلاب، تلخيص الإنذارات، واقتراح خطط تدخل فورية.'}
+          ? byLanguage(lang, 'أنا منارة راصد. أحول أداءك الأكاديمي إلى خطة جدارة وفرص مهنية واضحة.', 'I am Manarat Rased. I turn your academic performance into a clear competency and career-action plan.')
+          : byLanguage(lang, 'أنا منارة راصد. أحلل حالات الطلاب وأحوّلها لإجراءات عملية تقرّبهم من سوق العمل.', 'I am Manarat Rased. I analyze student cases and convert them into practical advisor actions.')}
       </p>
     </div>
   );
 }
 
 export default function AIChatbot({ user, role }) {
+  const { settings } = useSettings();
+  const language = normalizeLanguage(settings?.language || 'ar');
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -105,8 +102,12 @@ export default function AIChatbot({ user, role }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const name = user?.name?.split(' ')[0] || 'مستخدم';
-  const quickActions = role === 'advisor' ? ADVISOR_QUICK_ACTIONS : STUDENT_QUICK_ACTIONS;
+  const name = user?.name?.split(' ')[0] || byLanguage(language, 'مستخدم', 'User');
+  const quickActions = role === 'advisor'
+    ? byLanguage(language, ADVISOR_QUICK_ACTIONS_AR, ADVISOR_QUICK_ACTIONS_EN)
+    : byLanguage(language, STUDENT_QUICK_ACTIONS_AR, STUDENT_QUICK_ACTIONS_EN);
+
+  const timeLocale = language === 'en' ? 'en-US' : 'ar-SA';
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -120,7 +121,7 @@ export default function AIChatbot({ user, role }) {
     if (!isOpen || alertsLoaded || role !== 'student' || !user?.id) return;
 
     setAlertsLoaded(true);
-    getSilentAnalysis(user.id)
+    getSilentAnalysis(user.id, language)
       .then((data) => {
         if (data?.alerts?.length > 0) {
           setAlerts(data.alerts);
@@ -129,7 +130,7 @@ export default function AIChatbot({ user, role }) {
       .catch(() => {
         // Silent fail — alerts are optional
       });
-  }, [isOpen, alertsLoaded, role, user?.id]);
+  }, [isOpen, alertsLoaded, role, user?.id, language]);
 
   // Load chat history on first open
   useEffect(() => {
@@ -149,6 +150,36 @@ export default function AIChatbot({ user, role }) {
       })
       .catch(() => {});
   }, [isOpen, messages.length, role, user?.id, scrollToBottom]);
+
+  useEffect(() => {
+    if (!isOpen || messages.length > 0) return;
+
+    const studentOpening = byLanguage(
+      language,
+      'أهلاً بك، اكتب لي المادة أو المهمة التي تحتاج دعماً فيها وسأعطيك خطة قصيرة تناسب وضعك الأكاديمي.',
+      'Welcome. Tell me the course or task you need support with, and I will give you a short plan that fits your academic status.',
+    );
+
+    if (role === 'student') {
+      const now = new Date().toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
+      setMessages((prev) => {
+        if (prev.length > 0) return prev;
+        return [...prev, { role: 'assistant', content: studentOpening, time: now }];
+      });
+      return;
+    }
+
+    getBeaconProactiveOpening(language)
+      .then((brief) => {
+        const msg = String(brief?.message || byLanguage(language, 'مرحباً بك، هذه لمحة سريعة عن مؤشرات الطلاب الأكثر أولوية حالياً.', 'Welcome. Here is a quick snapshot of highest-priority student indicators.')).trim();
+        const now = new Date().toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
+        setMessages((prev) => {
+          if (prev.length > 0) return prev;
+          return [...prev, { role: 'assistant', content: msg, time: now }];
+        });
+      })
+      .catch(() => {});
+  }, [isOpen, messages.length, role, language, timeLocale]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -180,7 +211,7 @@ export default function AIChatbot({ user, role }) {
     if (!msg || isLoading) return;
 
     // Add user message
-    const now = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+    const now = new Date().toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
     setMessages((prev) => [...prev, { role: 'user', content: msg, time: now }]);
     setInput('');
     setIsLoading(true);
@@ -188,23 +219,27 @@ export default function AIChatbot({ user, role }) {
     try {
       let response;
       if (role === 'student') {
-        const result = await sendStudentChat(user.id, msg, sessionId);
-        response = result.response;
-        if (result.session_id) setSessionId(result.session_id);
+        const result = await sendStudentChat(user.id, msg, sessionId, language);
+        response = result?.response;
+        if (result?.session_id) setSessionId(result.session_id);
       } else {
-        const result = await sendAdvisorChat(user.id, msg);
-        response = result.response;
+        const result = await sendAdvisorChat(user.id, msg, null, language);
+        response = result?.response;
       }
 
-      const replyTime = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-      setMessages((prev) => [...prev, { role: 'assistant', content: response, time: replyTime }]);
+      const replyTime = new Date().toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: response || byLanguage(language, 'تعذر استلام رد من الذكاء الاصطناعي.', 'Failed to receive an AI response.'),
+        time: replyTime,
+      }]);
     } catch {
-      const errTime = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+      const errTime = new Date().toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: 'عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى. 🔄',
+          content: byLanguage(language, 'عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي. يرجى المحاولة مرة أخرى. 🔄', 'Sorry, there was a connection error with AI. Please try again. 🔄'),
           time: errTime,
         },
       ]);
@@ -228,7 +263,7 @@ export default function AIChatbot({ user, role }) {
       <button
         className={`chatbot-fab ${hasAlerts && !isOpen ? 'has-alerts' : ''}`}
         onClick={isOpen ? handleClose : handleOpen}
-        title="المرشد الذكي"
+        title={byLanguage(language, 'المرشد الذكي', 'Smart Advisor')}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
         {hasAlerts && !isOpen && (
@@ -246,10 +281,10 @@ export default function AIChatbot({ user, role }) {
                 <Bot size={22} />
               </div>
               <div className="chatbot-header-text">
-                <h3>مُرشد راصد</h3>
+                <h3>{byLanguage(language, 'منارة راصد', 'Manarat Rased')}</h3>
                 <span>
                   <span className="chatbot-online-dot" />
-                  متصل الآن
+                  {byLanguage(language, 'متصل الآن', 'Online now')}
                 </span>
               </div>
             </div>
@@ -261,7 +296,7 @@ export default function AIChatbot({ user, role }) {
           {/* Messages */}
           <div className="chatbot-messages">
             {messages.length === 0 && alerts.length === 0 && (
-              <WelcomeMessage role={role} name={name} />
+              <WelcomeMessage role={role} name={name} language={language} />
             )}
 
             {/* Proactive Alerts */}
@@ -276,7 +311,7 @@ export default function AIChatbot({ user, role }) {
                   {msg.role === 'user' ? <User size={14} /> : <Sparkles size={14} />}
                 </div>
                 <div>
-                  <div className="chat-bubble">{msg.content}</div>
+                  <div className="chat-bubble" dir="auto">{msg.content}</div>
                   {msg.time && <span className="chat-msg-time">{msg.time}</span>}
                 </div>
               </div>
@@ -317,7 +352,9 @@ export default function AIChatbot({ user, role }) {
               ref={inputRef}
               className="chatbot-input"
               type="text"
-              placeholder={role === 'student' ? 'اسأل مرشدك الذكي...' : 'اسأل عن طلابك...'}
+              placeholder={role === 'student'
+                ? byLanguage(language, 'اسأل مرشدك الذكي...', 'Ask your smart advisor...')
+                : byLanguage(language, 'اسأل عن طلابك...', 'Ask about your students...')}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}

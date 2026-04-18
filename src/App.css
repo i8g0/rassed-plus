@@ -31,7 +31,7 @@
   width: 340px;
   height: 340px;
   background: radial-gradient(circle at 30% 30%, rgba(45,212,191,0.25), transparent 70%);
-  right: -90px;
+  inset-inline-end: -90px;
   top: -80px;
 }
 
@@ -39,7 +39,7 @@
   width: 280px;
   height: 280px;
   background: radial-gradient(circle at 40% 40%, rgba(45,212,191,0.15), transparent 70%);
-  left: -70px;
+  inset-inline-start: -70px;
   bottom: -60px;
 }
 
@@ -199,7 +199,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  border-left: 1px solid var(--glass-border);
+  border-inline-end: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -319,7 +319,7 @@
 .nav-link.active::before {
   content: '';
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: 20%;
   height: 60%;
   width: 3px;
@@ -343,7 +343,7 @@
   content: '';
   position: absolute;
   top: -50%;
-  right: -50%;
+  inset-inline-end: -50%;
   width: 100%;
   height: 100%;
   background: radial-gradient(circle, rgba(45,212,191,0.05), transparent 60%);
@@ -430,7 +430,7 @@
   content: '';
   position: absolute;
   top: 8px;
-  left: 8px;
+  inset-inline-start: 8px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -887,7 +887,7 @@
 .radar-course-code {
   font-size: 0.85rem;
   font-weight: 800;
-  margin-left: 0.5rem;
+  margin-inline-start: 0.5rem;
 }
 
 .radar-course-name {
@@ -1085,7 +1085,7 @@
 .notif-panel {
   position: absolute;
   top: 1rem;
-  left: calc(var(--sidebar-width) + 2rem);
+  inset-inline-start: calc(var(--sidebar-width) + 2rem);
   width: 380px;
   max-height: 480px;
   overflow-y: auto;
@@ -1300,7 +1300,7 @@
     grid-template-columns: 1fr;
   }
   .notif-panel {
-    left: 1rem;
+    inset-inline-start: 1rem;
     width: calc(100% - 2rem);
   }
 }
@@ -1311,7 +1311,7 @@
     width: 100%;
     height: auto;
     position: relative;
-    border-left: none;
+    border-inline-end: none;
     border-bottom: 1px solid var(--glass-border);
     padding: 1rem;
   }
@@ -1322,7 +1322,7 @@
   .modal-overlay { padding: 1rem; }
   .modal-container { max-height: 90vh; }
   .notif-panel {
-    left: 0.5rem;
+    inset-inline-start: 0.5rem;
     width: calc(100% - 1rem);
     top: 0.5rem;
   }

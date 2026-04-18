@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
-import AdvisorDashboard from './components/AdvisorDashboard';
+import Dashboard from './components/Dashboard';
 import InterventionModal from './components/InterventionModal';
 import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
@@ -18,7 +18,8 @@ import AIChatbot from './components/AIChatbot';
 import { getNotifications } from './services/api';
 import { useUser } from './contexts/UserContext';
 import { useRased } from './contexts/RasedContext';
-import { byGender } from './utils/localization';
+import { byGender, byLanguage, normalizeLanguage } from './utils/localization';
+import { useSettings } from './contexts/SettingsContext';
 import './App.css';
 
 // ─── Toast Component ──────────────────────────────────────────────────────────
@@ -50,27 +51,27 @@ function Toast({ message, type = 'success', onClose }) {
   );
 }
 
-// ─── التنقل ───────────────────────────────────────────────────────────────────
-
-const NAV_ADVISOR = [
-  { id: 'dashboard',     icon: LayoutDashboard, label: 'لوحة القيادة' },
-  { id: 'students',      icon: Users,           label: 'الطلاب' },
-  { id: 'interventions', icon: ShieldAlert,     label: 'التدخلات' },
-  { id: 'radar',         icon: TrendingUp,      label: 'رادار المناهج' },
-];
-
-const NAV_STUDENT = [
-  { id: 'overview', icon: LayoutDashboard, label: 'نظرة عامة' },
-  { id: 'tasks',    icon: Zap,             label: 'مهامي' },
-  { id: 'skills',   icon: TrendingUp,      label: 'بوصلة المهارات' },
-  { id: 'peers',    icon: Users,           label: 'التوأمة' },
-];
-
 // ─── التطبيق الرئيسي ─────────────────────────────────────────────────────────
 
 export default function App() {
   const { user, role, gender, name, login: loginUser, logout: logoutUser } = useUser();
   const { runSystemDiagnostic } = useRased();
+  const { settings } = useSettings();
+  const language = normalizeLanguage(settings?.language || 'ar');
+
+  const navAdvisor = [
+    { id: 'dashboard', icon: LayoutDashboard, label: byLanguage(language, 'لوحة القيادة', 'Dashboard') },
+    { id: 'students', icon: Users, label: byLanguage(language, 'الطلاب', 'Students') },
+    { id: 'interventions', icon: ShieldAlert, label: byLanguage(language, 'التدخلات', 'Interventions') },
+    { id: 'radar', icon: TrendingUp, label: byLanguage(language, 'رادار المناهج', 'Curriculum Radar') },
+  ];
+
+  const navStudent = [
+    { id: 'overview', icon: LayoutDashboard, label: byLanguage(language, 'نظرة عامة', 'Overview') },
+    { id: 'tasks', icon: Zap, label: byLanguage(language, 'مهامي', 'My Tasks') },
+    { id: 'skills', icon: TrendingUp, label: byLanguage(language, 'بوصلة المهارات', 'Skills Compass') },
+    { id: 'peers', icon: Users, label: byLanguage(language, 'التوأمة', 'Peer Match') },
+  ];
 
   const [activeTab, setTab]                     = useState('overview');
   const [interventionStudent, setIntervention]  = useState(null);
@@ -81,11 +82,19 @@ export default function App() {
   const [searchSignal, setSearchSignal]         = useState(0);
   const hasRunDiagnostic = useRef(false);
 
-  const nav  = role === 'advisor' ? NAV_ADVISOR : NAV_STUDENT;
-  const headerTitle = `مرحباً، ${name} 👋`;
+  const nav  = role === 'advisor' ? navAdvisor : navStudent;
+  const headerTitle = (
+    <span dir="auto">
+      {byLanguage(language, 'مرحباً،', 'Hello,')} <bdi>{name}</bdi> 👋
+    </span>
+  );
   const subtitle = role === 'advisor'
-    ? 'إليك نظرة عامة على حالة الطلاب اليوم'
-    : `${byGender(gender, 'ابدأ', 'ابدئي')} يومك الدراسي بوضوح وخطة إنجاز ذكية`;
+    ? byLanguage(language, 'إليك نظرة عامة على حالة الطلاب اليوم', 'Here is today\'s overview of your students')
+    : byLanguage(
+      language,
+      `${byGender(gender, 'ابدأ', 'ابدئي')} يومك الدراسي بوضوح وخطة إنجاز ذكية`,
+      'Start your study day with clarity and a smart execution plan',
+    );
 
   const handleLogin = (userData) => {
     try {
@@ -93,7 +102,7 @@ export default function App() {
       setTab(userData?.role === 'advisor' ? 'dashboard' : 'overview');
     } catch (err) {
       console.error('Login flow failed:', err);
-      showToast('تعذر إكمال تسجيل الدخول حالياً', 'warning');
+      showToast(byLanguage(language, 'تعذر إكمال تسجيل الدخول حالياً', 'Unable to complete login right now'), 'warning');
     }
   };
 
@@ -107,7 +116,7 @@ export default function App() {
       hasRunDiagnostic.current = false;
     } catch (err) {
       console.error('Logout flow failed:', err);
-      showToast('تعذر تسجيل الخروج حالياً', 'warning');
+      showToast(byLanguage(language, 'تعذر تسجيل الخروج حالياً', 'Unable to log out right now'), 'warning');
     }
   };
 
@@ -125,10 +134,10 @@ export default function App() {
         setTab('students');
       }
       setSearchSignal((prev) => prev + 1);
-      showToast('تم تفعيل البحث الذكي', 'info');
+      showToast(byLanguage(language, 'تم تفعيل البحث الذكي', 'Smart search activated'), 'info');
     } catch (err) {
       console.error('Search workflow failed:', err);
-      showToast('تعذر تفعيل البحث حالياً', 'warning');
+      showToast(byLanguage(language, 'تعذر تفعيل البحث حالياً', 'Unable to activate search right now'), 'warning');
     }
   };
 
@@ -178,7 +187,9 @@ export default function App() {
         <div className="session-user glass" style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
           <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{user.name}</div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>
-            {role === 'advisor' ? 'مرشد أكاديمي' : 'طالب'}
+            {role === 'advisor'
+              ? byLanguage(language, 'مرشد أكاديمي', 'Academic Advisor')
+              : byLanguage(language, 'طالب', 'Student')}
           </div>
         </div>
 
@@ -201,15 +212,15 @@ export default function App() {
             {subtitle && <p>{subtitle}</p>}
           </div>
           <div className="header-actions">
-            <button className="icon-btn" title="بحث" onClick={handleSearchClick}><Search size={18} /></button>
+            <button className="icon-btn" title={byLanguage(language, 'بحث', 'Search')} onClick={handleSearchClick}><Search size={18} /></button>
             <button className="icon-btn" data-notif={unreadCount > 0 ? 'true' : undefined}
               onClick={() => setShowNotifs(!showNotifs)}>
               <Bell size={18} />
             </button>
-            <button className="icon-btn" title="الإعدادات والتخصيص" onClick={() => setShowSettings(!showSettings)}>
+            <button className="icon-btn" title={byLanguage(language, 'الإعدادات والتخصيص', 'Settings and customization')} onClick={() => setShowSettings(!showSettings)}>
               <Settings size={18} />
             </button>
-            <button className="icon-btn" title="تسجيل الخروج" onClick={handleLogout}>
+            <button className="icon-btn" title={byLanguage(language, 'تسجيل الخروج', 'Log out')} onClick={handleLogout}>
               <LogOut size={17} />
             </button>
             <div className="avatar">{name.charAt(0)}</div>
@@ -218,7 +229,7 @@ export default function App() {
 
         {/* اللوحة حسب الدور */}
         {role === 'advisor'
-          ? <AdvisorDashboard
+          ? <Dashboard
               activeTab={activeTab}
               onIntervention={(s) => setIntervention(s)}
               onToast={showToast}
@@ -237,7 +248,7 @@ export default function App() {
           onToast={showToast}
           onClose={() => {
             setIntervention(null);
-            showToast('تم توليد خطة التدخل بنجاح');
+            showToast(byLanguage(language, 'تم توليد خطة التدخل بنجاح', 'Intervention plan generated successfully'));
           }}
         />
       )}

@@ -27,6 +27,7 @@ import {
 import { getFeatures, toggleFeature } from '../services/api';
 
 import { useSettings } from '../contexts/SettingsContext';
+import { byLanguage, normalizeLanguage } from '../utils/localization';
 
 /* ─── بيانات إعدادات محلية ────────────────────────────────────────────────── */
 
@@ -49,8 +50,8 @@ const LOCAL_PREFERENCES = [
     icon: Globe,
     type: 'select',
     options: [
-      { value: 'ar', label: 'العربية 🇸🇦' },
-      { value: 'en', label: 'English 🇺🇸' },
+      { value: 'ar', label: 'العربية' },
+      { value: 'en', label: 'English' },
     ],
     defaultValue: 'ar',
   },
@@ -181,6 +182,7 @@ function FeatureCard({ feature, onToggle, busy }) {
 
 export default function SettingsPanel({ open, onClose, onToast }) {
   const { settings, updateSetting, resetSettings } = useSettings();
+  const language = normalizeLanguage(settings?.language || 'ar');
   const [activeSection, setActiveSection] = useState('prefs'); // 'prefs' | 'features'
   const [features, setFeatures] = useState([]);
   const [featuresLoaded, setFeaturesLoaded] = useState(false);
@@ -200,11 +202,11 @@ export default function SettingsPanel({ open, onClose, onToast }) {
       .catch(() => {
         if (!cancelled) {
           setFeaturesLoaded(true);
-          onToast?.('تعذر تحميل الميزات', 'warning');
+          onToast?.(byLanguage(language, 'تعذر تحميل الميزات', 'Unable to load features'), 'warning');
         }
       });
     return () => { cancelled = true; };
-  }, [open, featuresLoaded, onToast]);
+  }, [open, featuresLoaded, onToast, language]);
 
   const grouped = useMemo(() => ({
     student: features.filter((f) => f.category === 'student'),
@@ -224,9 +226,16 @@ export default function SettingsPanel({ open, onClose, onToast }) {
           item.code === feature.code ? { ...item, enabled: nextEnabled } : item,
         ),
       );
-      onToast?.(`تم ${nextEnabled ? 'تفعيل' : 'إيقاف'} ${feature.name}`, nextEnabled ? 'success' : 'info');
+      onToast?.(
+        byLanguage(
+          language,
+          `تم ${nextEnabled ? 'تفعيل' : 'إيقاف'} ${feature.name}`,
+          `${nextEnabled ? 'Enabled' : 'Disabled'} ${feature.name}`,
+        ),
+        nextEnabled ? 'success' : 'info',
+      );
     } catch {
-      onToast?.('فشل تحديث حالة الميزة', 'warning');
+      onToast?.(byLanguage(language, 'فشل تحديث حالة الميزة', 'Failed to update feature status'), 'warning');
     } finally {
       setBusyCode(null);
     }
@@ -236,20 +245,23 @@ export default function SettingsPanel({ open, onClose, onToast }) {
     try {
       updateSetting(id, value);
       const pref = LOCAL_PREFERENCES.find((p) => p.id === id);
-      onToast?.(`تم تحديث ${pref?.label || id}`, 'info');
+      onToast?.(
+        byLanguage(language, `تم تحديث ${pref?.label || id}`, `Updated ${pref?.label || id}`),
+        'info',
+      );
     } catch (err) {
       console.error('Preference update failed:', err);
-      onToast?.('تعذر تحديث الإعداد حالياً', 'warning');
+      onToast?.(byLanguage(language, 'تعذر تحديث الإعداد حالياً', 'Unable to update this setting right now'), 'warning');
     }
   };
 
   const handleReset = () => {
     try {
       resetSettings();
-      onToast?.('تم إعادة جميع الإعدادات للقيم الافتراضية', 'info');
+      onToast?.(byLanguage(language, 'تم إعادة جميع الإعدادات للقيم الافتراضية', 'All settings were reset to defaults'), 'info');
     } catch (err) {
       console.error('Reset settings failed:', err);
-      onToast?.('تعذر إعادة تعيين الإعدادات حالياً', 'warning');
+      onToast?.(byLanguage(language, 'تعذر إعادة تعيين الإعدادات حالياً', 'Unable to reset settings right now'), 'warning');
     }
   };
 
@@ -269,10 +281,10 @@ export default function SettingsPanel({ open, onClose, onToast }) {
           <div className="sp-header">
             <div className="sp-header-title">
               <Settings size={20} className="sp-header-icon" />
-              <span>الإعدادات والتخصيص</span>
+              <span>{byLanguage(language, 'الإعدادات والتخصيص', 'Settings & Customization')}</span>
             </div>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button className="sp-reset-btn" onClick={handleReset} title="إعادة تعيين">
+              <button className="sp-reset-btn" onClick={handleReset} title={byLanguage(language, 'إعادة تعيين', 'Reset')}>
                 <RotateCcw size={15} />
               </button>
               <button className="sp-close-btn" onClick={onClose}>
@@ -287,13 +299,13 @@ export default function SettingsPanel({ open, onClose, onToast }) {
               className={`sp-tab ${activeSection === 'prefs' ? 'sp-tab-active' : ''}`}
               onClick={() => setActiveSection('prefs')}
             >
-              <Palette size={15} /> التخصيص
+              <Palette size={15} /> {byLanguage(language, 'التخصيص', 'Customization')}
             </button>
             <button
               className={`sp-tab ${activeSection === 'features' ? 'sp-tab-active' : ''}`}
               onClick={() => setActiveSection('features')}
             >
-              <Rocket size={15} /> الميزات
+              <Rocket size={15} /> {byLanguage(language, 'الميزات', 'Features')}
               {enabledCount > 0 && <span className="sp-tab-badge">{enabledCount}</span>}
             </button>
           </div>
@@ -304,7 +316,7 @@ export default function SettingsPanel({ open, onClose, onToast }) {
             {/* ── قسم التفضيلات ── */}
             {activeSection === 'prefs' && (
               <div className="sp-prefs-section">
-                <p className="sp-section-desc">خصّص تجربتك في راصد بلس حسب تفضيلاتك — كل التغييرات تُحفظ تلقائياً</p>
+                <p className="sp-section-desc">{byLanguage(language, 'خصّص تجربتك في راصد بلس حسب تفضيلاتك — كل التغييرات تُحفظ تلقائياً', 'Customize your Rased Plus experience — all changes are saved automatically')}</p>
                 {LOCAL_PREFERENCES.map((pref) => (
                   <PreferenceItem
                     key={pref.id}
@@ -322,18 +334,18 @@ export default function SettingsPanel({ open, onClose, onToast }) {
                 {/* Hero */}
                 <div className="sp-features-hero">
                   <div>
-                    <p className="sp-features-overline"><Rocket size={13} /> Feature Customization</p>
-                    <h3>تخصيص الميزات</h3>
-                    <p className="sp-features-desc">فعّل أو عطّل الميزات حسب احتياجك</p>
+                    <p className="sp-features-overline"><Rocket size={13} /> {byLanguage(language, 'تخصيص الميزات', 'Feature Customization')}</p>
+                    <h3>{byLanguage(language, 'تخصيص الميزات', 'Customize Features')}</h3>
+                    <p className="sp-features-desc">{byLanguage(language, 'فعّل أو عطّل الميزات حسب احتياجك', 'Enable or disable features based on your needs')}</p>
                   </div>
                   <div className="sp-features-kpi">
                     <span>{enabledCount}</span>
-                    <small>مفعلة</small>
+                    <small>{byLanguage(language, 'مفعلة', 'Enabled')}</small>
                   </div>
                 </div>
 
                 {!featuresLoaded ? (
-                  <div className="sp-loading">جاري تحميل الميزات...</div>
+                  <div className="sp-loading">{byLanguage(language, 'جاري تحميل الميزات...', 'Loading features...')}</div>
                 ) : (
                   Object.entries(FEATURE_CATEGORY_META).map(([key, meta]) => {
                     const Icon = meta.icon;
@@ -406,12 +418,12 @@ const SETTINGS_PANEL_CSS = `
   height: 100vh;
   background: rgba(15,18,30,0.96);
   backdrop-filter: blur(40px);
-  border-right: 1px solid rgba(45,212,191,0.15);
+  border-inline-end: 1px solid rgba(45,212,191,0.15);
   box-shadow: -12px 0 50px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
   animation: spSlideIn 0.35s cubic-bezier(0.22,1,0.36,1);
-  margin-right: auto;
+  margin-inline-end: auto;
   direction: rtl;
 }
 
@@ -577,11 +589,11 @@ const SETTINGS_PANEL_CSS = `
 }
 
 .sp-toggle-on .sp-toggle-thumb {
-  left: 3px;
+  inset-inline-start: 3px;
 }
 
 .sp-toggle-off .sp-toggle-thumb {
-  left: 23px;
+  inset-inline-start: 23px;
   color: var(--accent, #2dd4bf);
 }
 

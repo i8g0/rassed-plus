@@ -9,6 +9,7 @@ import {
   getInterventions,
   generateIntervention
 } from '../services/api';
+import { executeMagicAutomation, runAICoreLogic } from '../services/AI-Core-Logic';
 import { useUser } from './UserContext';
 
 const RasedContext = createContext();
@@ -22,6 +23,18 @@ export function RasedProvider({ children }) {
   // Workflows states
   const [matchLoading, setMatchLoading] = useState({});
   const [adaptiveLoading, setAdaptiveLoading] = useState({});
+  const [automation, setAutomation] = useState({
+    loading: false,
+    lastScanAt: null,
+    triageTop3: [],
+    proactiveAlerts: [],
+    twinningSuggestions: [],
+    criticalReports: [],
+    actionCommands: [],
+    uiState: { highlightStudentIds: [], alertCourseCodes: [] },
+    aiOverlay: null,
+    dispatchedCommands: [],
+  });
 
   // 1. جلب البيانات المركزية للطالب
   const fetchDashboard = useCallback(async () => {
@@ -165,6 +178,51 @@ export function RasedProvider({ children }) {
     }
   }, [user]);
 
+  const runAutonomousScan = useCallback(async (visibleState = {}) => {
+    if (role !== 'advisor') return null;
+
+    const sourceStudents = dashboardData?.overview?.students;
+    if (!Array.isArray(sourceStudents) || sourceStudents.length === 0) {
+      return null;
+    }
+
+    setAutomation((prev) => ({ ...prev, loading: true }));
+    try {
+      // Thinking delay to visualize deep analysis in the dashboard.
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const result = await runAICoreLogic({ students: sourceStudents, visibleState });
+      setAutomation((prev) => ({
+        ...prev,
+        loading: false,
+        lastScanAt: new Date().toISOString(),
+        triageTop3: result?.triageTop3 || [],
+        proactiveAlerts: result?.proactiveAlerts || [],
+        twinningSuggestions: result?.twinningSuggestions || [],
+        criticalReports: result?.criticalReports || [],
+        actionCommands: result?.actionCommands || [],
+        uiState: result?.uiState || { highlightStudentIds: [], alertCourseCodes: [] },
+        aiOverlay: result?.aiOverlay || null,
+      }));
+      return result;
+    } catch (err) {
+      console.error('Autonomous scan failed:', err);
+      setAutomation((prev) => ({ ...prev, loading: false }));
+      return null;
+    }
+  }, [dashboardData, role]);
+
+  const runMagicAutomation = useCallback(() => {
+    const selected = executeMagicAutomation(automation);
+    setAutomation((prev) => ({ ...prev, dispatchedCommands: selected }));
+    return selected;
+  }, [automation]);
+
+  useEffect(() => {
+    if (role !== 'advisor') return;
+    if (!dashboardData?.overview?.students?.length) return;
+    runAutonomousScan({ activeView: 'dashboard' });
+  }, [dashboardData, role, runAutonomousScan]);
+
   // 5. مسار التدخل الأكاديمي (Intervention Generation Workflow)
   const triggerGenerateIntervention = async (studentId) => {
     try {
@@ -205,10 +263,13 @@ export function RasedProvider({ children }) {
         updateTask,
         triggerGenerateIntervention,
         runSystemDiagnostic,
+        runAutonomousScan,
+        runMagicAutomation,
         
         // Loading States
         matchLoading,
-        adaptiveLoading
+        adaptiveLoading,
+        automation,
       }}
     >
       {children}

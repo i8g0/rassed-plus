@@ -22,6 +22,12 @@ function inferGender(name) {
   return FEMALE_FIRST_NAMES.has(firstName) ? 'female' : 'male';
 }
 
+function idSeed(value) {
+  return String(value || '')
+    .split('')
+    .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+}
+
 function buildSubmissionTimestamps(pattern) {
   const deadline = '2026-05-01T23:59:00Z';
   switch (pattern) {
@@ -53,10 +59,16 @@ function buildSubmissionTimestamps(pattern) {
 }
 
 export const STUDENTS_DB = studentsDB.map((student) => {
+  const seed = idSeed(student.id);
+  const completionNudge = (seed % 9) - 4;
+  const loginNudge = seed % 4;
+  const lectureNudge = seed % 6;
   const mappedCourses = (student.current_semester_courses || []).map((course) => ({
     course_code: course.course_code,
     course_name: course.course_name,
     attendance_percentage: course.attendance_rate,
+    absence_count: Number(course.absence_count ?? 0),
+    total_sessions: Number(course.total_sessions ?? 0),
     assessments: {
       midterm: course.midterm_score,
       max_midterm: 20,
@@ -88,12 +100,29 @@ export const STUDENTS_DB = studentsDB.map((student) => {
     cumulative_gpa: student.gpa,
     risk_level: student.risk_level,
     system_flags: Array.isArray(student.academic_flags) ? student.academic_flags : [],
+    behavioral_signals: {
+      platform_engagement: student?.behavioral_signals?.platform_engagement || 'Active',
+      daily_login_count: Number(student?.behavioral_signals?.daily_login_count ?? 2),
+      file_access_rate: Number(student?.behavioral_signals?.file_access_rate ?? 75),
+      session_depth: {
+        reading_minutes: Number(student?.behavioral_signals?.session_depth?.reading_minutes ?? 35),
+        idle_minutes: Number(student?.behavioral_signals?.session_depth?.idle_minutes ?? 12),
+        active_ratio: Number(student?.behavioral_signals?.session_depth?.active_ratio ?? 74),
+      },
+      behavior_fingerprint: student?.behavioral_signals?.behavior_fingerprint || `${student.id}|baseline`,
+    },
     current_courses: mappedCourses,
     attendance: avgAttendance,
     taskTimeRatio: student.risk_level === 'Critical High' ? 2.9 : student.risk_level === 'High' ? 2.4 : student.risk_level === 'Medium' ? 1.4 : 0.9,
-    taskCompletion: student.risk_level === 'Critical High' ? 32 : student.risk_level === 'High' ? 48 : student.risk_level === 'Medium' ? 71 : 93,
-    lateLogins: student.risk_level === 'Critical High' ? 11 : student.risk_level === 'High' ? 8 : student.risk_level === 'Medium' ? 4 : 1,
-    incompleteLectures: student.risk_level === 'Critical High' ? 23 : student.risk_level === 'High' ? 16 : student.risk_level === 'Medium' ? 8 : 2,
+    taskCompletion: Math.max(
+      15,
+      Math.min(
+        98,
+        (student.risk_level === 'Critical High' ? 32 : student.risk_level === 'High' ? 48 : student.risk_level === 'Medium' ? 71 : 93) + completionNudge,
+      ),
+    ),
+    lateLogins: (student.risk_level === 'Critical High' ? 11 : student.risk_level === 'High' ? 8 : student.risk_level === 'Medium' ? 4 : 1) + loginNudge,
+    incompleteLectures: (student.risk_level === 'Critical High' ? 23 : student.risk_level === 'High' ? 16 : student.risk_level === 'Medium' ? 8 : 2) + lectureNudge,
   };
 });
 
@@ -109,6 +138,7 @@ export const AUTH_ACCOUNTS = [
       email: 'khaled.advisor@university.edu',
       title: 'مرشد أكاديمي',
       department: 'عمادة شؤون الطلاب',
+      gender: 'male',
     },
   },
   {
@@ -195,6 +225,7 @@ export function authenticateUser(role, identifier, password) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function analyzeStudentRisk(student) {
+  const seed = idSeed(student?.id);
   const factors = [];
   let score = 0;
 
@@ -304,6 +335,15 @@ export function analyzeStudentRisk(student) {
     }
   }
 
+  const uniquenessBump = (seed % 31) / 10;
+  if (riskLevel === 'red') {
+    score = Math.min(96, Math.max(55, Number((score + uniquenessBump).toFixed(1))));
+  } else if (riskLevel === 'yellow') {
+    score = Math.min(54.9, Math.max(30, Number((score + uniquenessBump).toFixed(1))));
+  } else {
+    score = Math.min(29.9, Math.max(8, Number((score + uniquenessBump).toFixed(1))));
+  }
+
   // اختيار السبب الرئيسي
   const primaryReason = student.system_flags && student.system_flags[0] 
      ? student.system_flags[0] 
@@ -344,9 +384,19 @@ export function analyzeAllStudents() {
 
 export function getStudentsForAdvisor(advisorId, analyzedStudents = null) {
   const all = Array.isArray(analyzedStudents) ? analyzedStudents : analyzeAllStudents();
-  if (advisorId === 'AD-2001') {
-    return all.filter((student) => student?.gender === 'female');
+  const advisorAccount = AUTH_ACCOUNTS.find(
+    (account) => account.role === 'advisor' && account.profile?.id === advisorId,
+  );
+  const advisorGender = String(advisorAccount?.profile?.gender || '').toLowerCase();
+
+  if (advisorGender === 'female') {
+    return all.filter((student) => String(student?.gender || '').toLowerCase() === 'female');
   }
+
+  if (advisorGender === 'male') {
+    return all.filter((student) => String(student?.gender || '').toLowerCase() === 'male');
+  }
+
   return all;
 }
 
