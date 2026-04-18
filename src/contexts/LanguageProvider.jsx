@@ -19,6 +19,7 @@ const DICTIONARY = {
       interventionPlan: 'خطة تدخل',
       maleStudentWord: 'طالب',
       femaleStudentWord: 'طالبة',
+      appName: 'راصد بلس',
     },
     advisor: {
       briefTitle: 'ملخص الذكاء الاصطناعي',
@@ -159,6 +160,157 @@ const DICTIONARY = {
       autoMessageTitle: 'رسالة منارة راصد التلقائية',
       studentDataSync: 'جاري مزامنة بيانات الطالب...',
       retry: 'حاول مجدداً',
+      // ── AttendanceRadar ──
+      attendanceRadar: 'رادار الغياب والحرمان',
+      debarLimit: 'حد الحرمان: 25%',
+      noAttendanceData: 'لا توجد بيانات حضور متاحة.',
+      unknownCourse: 'مقرر غير معروف',
+      absenceOf: 'غياب {{count}} من {{total}} محاضرة',
+      absencePercent: '{{percent}}% غياب',
+      statusDebarred: 'حالة حرمان',
+      statusFirstWarning: 'إنذار أول',
+      statusSafe: 'آمن',
+      noteDebarred: 'تجاوزت نسبة الغياب الحد الرسمي (25%).',
+      noteFirstWarning: 'اقتربت من حد الحرمان، يلزم رفع الالتزام فوراً.',
+      noteSafe: 'وضع الحضور مطمئن حالياً.',
+      // ── AssignmentsList ──
+      unifiedAssignments: 'نظام تتبع الواجبات الموحد',
+      assignmentsBadge: 'واجب',
+      noAssignments: 'لا توجد واجبات مجمعة حالياً.',
+      unknownAssignment: 'واجب غير معرف',
+      unknownCourseName: 'مقرر غير معروف',
+      dateUnavailable: 'تاريخ غير متوفر',
+      insufficientData: 'بيانات غير كافية',
+      deadlineExpired: 'انتهى الموعد',
+      remainingHours: 'متبقي {{hours}} ساعة',
+      remainingDays: 'متبقي {{days}} يوم',
+      remainingDaysHours: 'متبقي {{days}} يوم و{{hours}} ساعة',
+      urgencyHigh: 'عالي',
+      urgencyMedium: 'متوسط',
+      urgencyLow: 'مريح',
+      urgencyIncomplete: 'غير مكتمل',
+    },
+    // ── NotificationsPanel ──
+    notifications: {
+      title: 'الإشعارات',
+      newCount: '{{count}} جديد',
+    },
+    // ── LoginScreen ──
+    login: {
+      title: 'تسجيل الدخول',
+      subtitle: 'اختر الدور أولاً ثم سجّل الدخول كطالب أو مرشد',
+      studentRole: 'طالب',
+      advisorRole: 'مرشد',
+      emailLabelAdvisor: 'البريد أو رقم المرشد',
+      emailLabelStudent: 'البريد أو الرقم الجامعي',
+      emailPlaceholderAdvisor: 'khaled.advisor@university.edu أو AD-1001',
+      emailPlaceholderStudent: 'ahmad.ammar@university.edu أو 44210988',
+      passwordLabel: 'كلمة المرور',
+      passwordPlaceholder: 'ادخل كلمة المرور',
+      submitting: 'جاري الدخول...',
+      submitButton: 'دخول إلى النظام',
+      demoTitle: 'بيانات دخول جاهزة',
+      demoSubtitle: 'يمكنك الضغط على أي حساب لتعبئة الحقول تلقائياً:',
+      passwordPrefix: 'كلمة المرور',
+    },
+    // ── InterventionModal ──
+    intervention: {
+      planTitle: 'خطة تدخل — {{name}}',
+      generatedBy: 'مُولّدة بواسطة Copilot الذكي',
+      needsIntervention: 'يحتاج الطالب لتدخل مبكر',
+      aiAnalyzing: 'يقوم محرك الذكاء الاصطناعي بتحليل سجل الطالب، المهام المتأخرة، والمعدل لتوليد خطة إنقاذ متكاملة وبريد إلكتروني مخصص.',
+      generatePlan: 'توليد خطة إنقاذ',
+      generating: 'يتم الآن توليد الخطة وصياغة البريد...',
+      suggestedEmail: 'البريد الإلكتروني المقترح',
+      copied: 'تم النسخ!',
+      copyMessage: 'نسخ الرسالة',
+      sent: 'تم الإرسال ✓',
+      approveAndSend: 'اعتماد وإرسال',
+      remedialPlan: 'الخطة العلاجية المرحلية',
+      followUpDate: 'موعد المتابعة المقترح:',
+      undetermined: 'غير محدد',
+      toggleStepAriaLabel: 'تبديل حالة المهمة {{step}}',
+      planSentSuccess: 'تم توثيق إرسال الخطة في قاعدة البيانات',
+      planSendFailed: 'تعذر اعتماد الإرسال حالياً',
+      generateFailed: 'تعذر توليد خطة التدخل من الخادم',
+      toggleStepFailed: 'تعذر تحديث حالة المهمة',
+    },
+    // ── SettingsPanel ──
+    settings: {
+      title: 'الإعدادات والتخصيص',
+      reset: 'إعادة تعيين',
+      customizationTab: 'التخصيص',
+      featuresTab: 'الميزات',
+      customizeDesc: 'خصّص تجربتك في راصد بلس حسب تفضيلاتك — كل التغييرات تُحفظ تلقائياً',
+      featureCustomization: 'تخصيص الميزات',
+      customizeFeatures: 'تخصيص الميزات',
+      featureDesc: 'فعّل أو عطّل الميزات حسب احتياجك',
+      enabled: 'مفعلة',
+      loadingFeatures: 'جاري تحميل الميزات...',
+      featureEnabled: 'مفعلة',
+      featureDisabled: 'موقفة',
+      loadFailed: 'تعذر تحميل الميزات',
+      toggleSuccess: 'تم {{action}} {{name}}',
+      toggleFailed: 'فشل تحديث حالة الميزة',
+      enableAction: 'تفعيل',
+      disableAction: 'إيقاف',
+      updated: 'تم تحديث {{name}}',
+      updateFailed: 'تعذر تحديث الإعداد حالياً',
+      resetDone: 'تم إعادة جميع الإعدادات للقيم الافتراضية',
+      resetFailed: 'تعذر إعادة تعيين الإعدادات حالياً',
+      // Preference labels
+      prefTheme: 'المظهر',
+      prefLanguage: 'اللغة',
+      prefAnimations: 'الحركات والتأثيرات',
+      prefSounds: 'أصوات الإشعارات',
+      prefAccent: 'اللون الأساسي',
+      themeDark: 'داكن',
+      themeLight: 'فاتح',
+      themeAuto: 'تلقائي',
+      langArabic: 'العربية',
+      langEnglish: 'English',
+      colorTeal: 'فيروزي',
+      colorTealDark: 'Teal',
+      colorGreen: 'أخضر',
+      colorGold: 'ذهبي',
+      colorPink: 'وردي',
+      colorSky: 'سماوي',
+      colorTurquoise: 'تركواز',
+      // Feature categories
+      catStudent: 'ميزات الطلاب',
+      catStudentCount: '40 ميزة',
+      catAdvisor: 'ميزات المرشد والجامعة',
+      catAdvisorCount: '30 ميزة',
+      catAi: 'ميزات الذكاء الاصطناعي',
+      catAiCount: '30 ميزة',
+      enabledSuffix: 'مفعلة',
+    },
+    // ── App-level ──
+    app: {
+      greeting: 'مرحباً،',
+      advisorSubtitle: 'إليك نظرة عامة على حالة الطلاب اليوم',
+      studentSubtitleMale: 'ابدأ يومك الدراسي بوضوح وخطة إنجاز ذكية',
+      studentSubtitleFemale: 'ابدئي يومك الدراسي بوضوح وخطة إنجاز ذكية',
+      search: 'بحث',
+      settingsTooltip: 'الإعدادات والتخصيص',
+      logout: 'تسجيل الخروج',
+      academicAdvisor: 'مرشد أكاديمي',
+      studentRole: 'طالب',
+      loginFailed: 'تعذر إكمال تسجيل الدخول حالياً',
+      logoutFailed: 'تعذر تسجيل الخروج حالياً',
+      smartSearchActivated: 'تم تفعيل البحث الذكي',
+      searchFailed: 'تعذر تفعيل البحث حالياً',
+      interventionSuccess: 'تم توليد خطة التدخل بنجاح',
+      // Nav items - advisor
+      navDashboard: 'لوحة القيادة',
+      navStudents: 'الطلاب',
+      navInterventions: 'التدخلات',
+      navCurriculumRadar: 'رادار المناهج',
+      // Nav items - student
+      navOverview: 'نظرة عامة',
+      navMyTasks: 'مهامي',
+      navSkillsCompass: 'بوصلة المهارات',
+      navPeerMatch: 'التوأمة',
     },
   },
   en: {
@@ -174,6 +326,7 @@ const DICTIONARY = {
       interventionPlan: 'Intervention Plan',
       maleStudentWord: 'student',
       femaleStudentWord: 'student',
+      appName: 'Rased Plus',
     },
     advisor: {
       briefTitle: 'AI Brief',
@@ -314,6 +467,157 @@ const DICTIONARY = {
       autoMessageTitle: 'Automatic Message from Manarat Rased',
       studentDataSync: 'Syncing student data...',
       retry: 'Try again',
+      // ── AttendanceRadar ──
+      attendanceRadar: 'Attendance & Debarment Radar',
+      debarLimit: 'Debarment Limit: 25%',
+      noAttendanceData: 'No attendance data available.',
+      unknownCourse: 'Unknown Course',
+      absenceOf: '{{count}} absences out of {{total}} lectures',
+      absencePercent: '{{percent}}% absence',
+      statusDebarred: 'Debarred',
+      statusFirstWarning: 'First Warning',
+      statusSafe: 'Safe',
+      noteDebarred: 'Absence rate exceeded the official limit (25%).',
+      noteFirstWarning: 'Approaching debarment limit; immediate compliance required.',
+      noteSafe: 'Attendance status is currently satisfactory.',
+      // ── AssignmentsList ──
+      unifiedAssignments: 'Unified Assignments Tracker',
+      assignmentsBadge: 'assignments',
+      noAssignments: 'No assignments aggregated yet.',
+      unknownAssignment: 'Unnamed Assignment',
+      unknownCourseName: 'Unknown Course',
+      dateUnavailable: 'Date unavailable',
+      insufficientData: 'Insufficient data',
+      deadlineExpired: 'Deadline passed',
+      remainingHours: '{{hours}} hours remaining',
+      remainingDays: '{{days}} days remaining',
+      remainingDaysHours: '{{days}} days and {{hours}} hours remaining',
+      urgencyHigh: 'High',
+      urgencyMedium: 'Medium',
+      urgencyLow: 'Comfortable',
+      urgencyIncomplete: 'Incomplete',
+    },
+    // ── NotificationsPanel ──
+    notifications: {
+      title: 'Notifications',
+      newCount: '{{count}} new',
+    },
+    // ── LoginScreen ──
+    login: {
+      title: 'Sign In',
+      subtitle: 'Choose your role first, then sign in as a student or advisor',
+      studentRole: 'Student',
+      advisorRole: 'Advisor',
+      emailLabelAdvisor: 'Email or Advisor ID',
+      emailLabelStudent: 'Email or Student ID',
+      emailPlaceholderAdvisor: 'khaled.advisor@university.edu or AD-1001',
+      emailPlaceholderStudent: 'ahmad.ammar@university.edu or 44210988',
+      passwordLabel: 'Password',
+      passwordPlaceholder: 'Enter your password',
+      submitting: 'Signing in...',
+      submitButton: 'Sign in to system',
+      demoTitle: 'Demo Accounts',
+      demoSubtitle: 'Click any account to fill credentials automatically:',
+      passwordPrefix: 'Password',
+    },
+    // ── InterventionModal ──
+    intervention: {
+      planTitle: 'Intervention Plan — {{name}}',
+      generatedBy: 'Generated by AI Copilot',
+      needsIntervention: 'Student needs early intervention',
+      aiAnalyzing: 'The AI engine analyzes the student record, late tasks, and GPA to generate a comprehensive rescue plan and personalized email.',
+      generatePlan: 'Generate Rescue Plan',
+      generating: 'Generating plan and composing email...',
+      suggestedEmail: 'Suggested Email',
+      copied: 'Copied!',
+      copyMessage: 'Copy Message',
+      sent: 'Sent ✓',
+      approveAndSend: 'Approve & Send',
+      remedialPlan: 'Phased Remediation Plan',
+      followUpDate: 'Suggested follow-up date:',
+      undetermined: 'Not determined',
+      toggleStepAriaLabel: 'Toggle step {{step}}',
+      planSentSuccess: 'Plan delivery documented in database',
+      planSendFailed: 'Unable to confirm delivery right now',
+      generateFailed: 'Failed to generate intervention plan from server',
+      toggleStepFailed: 'Unable to update step status',
+    },
+    // ── SettingsPanel ──
+    settings: {
+      title: 'Settings & Customization',
+      reset: 'Reset',
+      customizationTab: 'Customization',
+      featuresTab: 'Features',
+      customizeDesc: 'Customize your Rased Plus experience — all changes are saved automatically',
+      featureCustomization: 'Feature Customization',
+      customizeFeatures: 'Customize Features',
+      featureDesc: 'Enable or disable features based on your needs',
+      enabled: 'Enabled',
+      loadingFeatures: 'Loading features...',
+      featureEnabled: 'Enabled',
+      featureDisabled: 'Disabled',
+      loadFailed: 'Unable to load features',
+      toggleSuccess: '{{action}} {{name}}',
+      toggleFailed: 'Failed to update feature status',
+      enableAction: 'Enabled',
+      disableAction: 'Disabled',
+      updated: 'Updated {{name}}',
+      updateFailed: 'Unable to update this setting right now',
+      resetDone: 'All settings were reset to defaults',
+      resetFailed: 'Unable to reset settings right now',
+      // Preference labels
+      prefTheme: 'Theme',
+      prefLanguage: 'Language',
+      prefAnimations: 'Animations & Effects',
+      prefSounds: 'Notification Sounds',
+      prefAccent: 'Accent Color',
+      themeDark: 'Dark',
+      themeLight: 'Light',
+      themeAuto: 'Auto',
+      langArabic: 'العربية',
+      langEnglish: 'English',
+      colorTeal: 'Teal',
+      colorTealDark: 'Teal',
+      colorGreen: 'Green',
+      colorGold: 'Gold',
+      colorPink: 'Pink',
+      colorSky: 'Sky',
+      colorTurquoise: 'Turquoise',
+      // Feature categories
+      catStudent: 'Student Features',
+      catStudentCount: '40 features',
+      catAdvisor: 'Advisor & University Features',
+      catAdvisorCount: '30 features',
+      catAi: 'AI Features',
+      catAiCount: '30 features',
+      enabledSuffix: 'enabled',
+    },
+    // ── App-level ──
+    app: {
+      greeting: 'Hello,',
+      advisorSubtitle: "Here is today's overview of your students",
+      studentSubtitleMale: 'Start your study day with clarity and a smart execution plan',
+      studentSubtitleFemale: 'Start your study day with clarity and a smart execution plan',
+      search: 'Search',
+      settingsTooltip: 'Settings and customization',
+      logout: 'Log out',
+      academicAdvisor: 'Academic Advisor',
+      studentRole: 'Student',
+      loginFailed: 'Unable to complete login right now',
+      logoutFailed: 'Unable to log out right now',
+      smartSearchActivated: 'Smart search activated',
+      searchFailed: 'Unable to activate search right now',
+      interventionSuccess: 'Intervention plan generated successfully',
+      // Nav items - advisor
+      navDashboard: 'Dashboard',
+      navStudents: 'Students',
+      navInterventions: 'Interventions',
+      navCurriculumRadar: 'Curriculum Radar',
+      // Nav items - student
+      navOverview: 'Overview',
+      navMyTasks: 'My Tasks',
+      navSkillsCompass: 'Skills Compass',
+      navPeerMatch: 'Peer Match',
     },
   },
 };
@@ -337,14 +641,20 @@ export function LanguageProvider({ children }) {
     const root = document.documentElement;
     root.lang = language;
     root.dir = language === 'ar' ? 'rtl' : 'ltr';
-    root.style.setProperty('--font-family-primary', language === 'ar' ? 'Tajawal, Cairo, IBM Plex Sans Arabic, sans-serif' : 'Inter, Roboto, sans-serif');
+    root.style.setProperty(
+      '--font-family-primary',
+      language === 'ar'
+        ? "'Tajawal', 'Cairo', 'IBM Plex Sans Arabic', sans-serif"
+        : "'Inter', 'Roboto', system-ui, sans-serif",
+    );
     root.style.fontFamily = 'var(--font-family-primary)';
   }, [language]);
 
   const t = useCallback((key, vars = {}) => {
     const langPack = DICTIONARY[language] || DICTIONARY.ar;
     const fallbackPack = DICTIONARY.ar;
-    const raw = deepGet(langPack, key) ?? deepGet(fallbackPack, key) ?? key;
+    // Support { defaultValue } in vars for backward compat
+    const raw = deepGet(langPack, key) ?? deepGet(fallbackPack, key) ?? vars?.defaultValue ?? key;
     return typeof raw === 'string' ? interpolate(raw, vars) : raw;
   }, [language]);
 
@@ -373,6 +683,17 @@ export function LanguageProvider({ children }) {
     })}%`;
   }, [formatNumber]);
 
+  const formatRelativeTime = useCallback((hoursRemaining) => {
+    if (!Number.isFinite(hoursRemaining)) return t('student.insufficientData');
+    if (hoursRemaining <= 0) return t('student.deadlineExpired');
+    if (hoursRemaining < 24) return t('student.remainingHours', { hours: Math.ceil(hoursRemaining) });
+    const days = Math.floor(hoursRemaining / 24);
+    const hours = Math.ceil(hoursRemaining % 24);
+    if (hours === 24) return t('student.remainingDays', { days: days + 1 });
+    if (hours === 0) return t('student.remainingDays', { days });
+    return t('student.remainingDaysHours', { days, hours });
+  }, [t]);
+
   const value = useMemo(() => ({
     language,
     isArabic: language === 'ar',
@@ -380,7 +701,8 @@ export function LanguageProvider({ children }) {
     formatDate,
     formatNumber,
     formatPercent,
-  }), [language, t, formatDate, formatNumber, formatPercent]);
+    formatRelativeTime,
+  }), [language, t, formatDate, formatNumber, formatPercent, formatRelativeTime]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

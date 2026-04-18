@@ -1,20 +1,10 @@
 import { CalendarClock, Clock3 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageProvider';function formatRemaining(hoursRemaining) {
-  if (!Number.isFinite(hoursRemaining)) return 'بيانات غير كافية';
-  if (hoursRemaining <= 0) return 'انتهى الموعد';
-  if (hoursRemaining < 24) return `متبقي ${Math.ceil(hoursRemaining)} ساعة`;
+import { useLanguage } from '../contexts/LanguageProvider';
 
-  const days = Math.floor(hoursRemaining / 24);
-  const hours = Math.ceil(hoursRemaining % 24);
-  if (hours === 24) return `متبقي ${days + 1} يوم`;
-  if (hours === 0) return `متبقي ${days} يوم`;
-  return `متبقي ${days} يوم و${hours} ساعة`;
-}
-
-function getUrgencyStyle(hoursRemaining) {
+function getUrgencyStyle(hoursRemaining, t) {
   if (!Number.isFinite(hoursRemaining)) {
     return {
-      label: 'غير مكتمل',
+      label: t('student.urgencyIncomplete'),
       color: '#94a3b8',
       border: 'rgba(148,163,184,0.25)',
       bg: 'rgba(148,163,184,0.08)',
@@ -23,7 +13,7 @@ function getUrgencyStyle(hoursRemaining) {
 
   if (hoursRemaining <= 24) {
     return {
-      label: 'عالي',
+      label: t('student.urgencyHigh'),
       color: '#fda4af',
       border: 'rgba(253,164,175,0.35)',
       bg: 'rgba(253,164,175,0.10)',
@@ -32,7 +22,7 @@ function getUrgencyStyle(hoursRemaining) {
 
   if (hoursRemaining <= 48) {
     return {
-      label: 'متوسط',
+      label: t('student.urgencyMedium'),
       color: '#fbbf24',
       border: 'rgba(251,191,36,0.35)',
       bg: 'rgba(251,191,36,0.10)',
@@ -40,7 +30,7 @@ function getUrgencyStyle(hoursRemaining) {
   }
 
   return {
-    label: 'مريح',
+    label: t('student.urgencyLow'),
     color: '#6ee7b7',
     border: 'rgba(110,231,183,0.35)',
     bg: 'rgba(110,231,183,0.10)',
@@ -48,7 +38,7 @@ function getUrgencyStyle(hoursRemaining) {
 }
 
 export default function AssignmentsList({ assignments = [] }) {
-  const { t } = useLanguage();
+  const { t, formatRelativeTime } = useLanguage();
   const safeAssignments = Array.isArray(assignments) ? assignments : [];
 
   return (
@@ -58,21 +48,21 @@ export default function AssignmentsList({ assignments = [] }) {
           <div className="panel-title-icon" style={{ background: 'rgba(45,212,191,0.12)', color: '#2dd4bf' }}>
             <CalendarClock size={18} />
           </div>
-          {t('student.unifiedAssignments', { defaultValue: 'نظام تتبع الواجبات الموحد' })}
+          {t('student.unifiedAssignments')}
         </div>
         <span className="badge" style={{ background: 'rgba(45,212,191,0.12)', color: '#2dd4bf' }}>
-          {safeAssignments.length} {t('student.assignmentsBadge', { defaultValue: 'واجب' })}
+          {safeAssignments.length} {t('student.assignmentsBadge')}
         </span>
       </div>
 
       {safeAssignments.length === 0 ? (
         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.6rem 0.2rem' }}>
-          {t('student.noAssignments', { defaultValue: 'لا توجد واجبات مجمعة حالياً.' })}
+          {t('student.noAssignments')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           {safeAssignments.map((item) => {
-            const urgency = getUrgencyStyle(item?.hoursRemaining);
+            const urgency = getUrgencyStyle(item?.hoursRemaining, t);
             return (
               <div
                 key={item?.id || `${item?.courseName}-${item?.assignmentName}-${item?.dueAt}`}
@@ -85,8 +75,8 @@ export default function AssignmentsList({ assignments = [] }) {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.7rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>{item?.assignmentName ?? 'واجب غير معرف'}</div>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{item?.courseName ?? 'مقرر غير معروف'}</div>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>{item?.assignmentName ?? t('student.unknownAssignment')}</div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{item?.courseName ?? t('student.unknownCourseName')}</div>
                   </div>
                   <span
                     style={{
@@ -105,11 +95,11 @@ export default function AssignmentsList({ assignments = [] }) {
                 <div style={{ marginTop: '0.55rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                     <CalendarClock size={13} />
-                    {item?.dueLabel ?? 'تاريخ غير متوفر'}
+                    {item?.dueLabel ?? t('student.dateUnavailable')}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: urgency.color }}>
                     <Clock3 size={13} />
-                    {formatRemaining(item?.hoursRemaining)}
+                    {formatRelativeTime(item?.hoursRemaining)}
                   </span>
                 </div>
               </div>

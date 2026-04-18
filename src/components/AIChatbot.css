@@ -294,11 +294,11 @@
 }
 
 .chat-message.user .chat-msg-time {
-  text-align: right;
+  text-align: end;
 }
 
 .chat-message.assistant .chat-msg-time {
-  text-align: left;
+  text-align: start;
 }
 
 /* ─── Typing Indicator ──────────────────────────────────────────────────────── */
@@ -452,7 +452,7 @@
   font-size: 0.85rem;
   outline: none;
   transition: all 0.3s ease;
-  direction: rtl;
+  direction: inherit;
 }
 
 .chatbot-input::placeholder {

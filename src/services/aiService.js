@@ -1,10 +1,31 @@
 // src/services/aiService.js
 import { byLanguage, getCurrentLanguage, normalizeLanguage } from '../utils/localization';
 
+const ZEN_API_KEY = import.meta.env.VITE_ZEN_API_KEY || '';
+const ZEN_MODEL = import.meta.env.VITE_ZEN_MODEL || 'nemotron-3-super-free';
+const ZEN_BASE_URL = (import.meta.env.VITE_ZEN_BASE_URL || '').replace(/\/$/, '');
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_NEMOTRON_API_KEY || '';
+const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'nvidia/llama-3.1-nemotron-70b-instruct:free';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GOOGLE_API_KEY || '';
 const GEMINI_URL = GEMINI_API_KEY
   ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`
   : '';
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || '';
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
+const AI_REQUEST_TIMEOUT_MS = 12000;
+
+export function hasAnyRemoteAIProvider() {
+  return Boolean(ZEN_API_KEY || OPENROUTER_API_KEY || GEMINI_API_KEY || GROQ_API_KEY);
+}
+
+export function getAISetupHint(language = null) {
+  const lang = resolveLanguage(language);
+  return byLanguage(
+    lang,
+    'تنبيه إعداد: الذكاء الحقيقي غير مفعل حالياً. أضف VITE_ZEN_API_KEY (أو VITE_OPENROUTER_API_KEY / VITE_GEMINI_API_KEY / VITE_GROQ_API_KEY) في ملف .env ثم أعد تشغيل npm run dev.',
+    'Setup notice: Real AI is not enabled. Add VITE_ZEN_API_KEY (or VITE_OPENROUTER_API_KEY / VITE_GEMINI_API_KEY / VITE_GROQ_API_KEY) in .env, then restart npm run dev.',
+  );
+}
 
 function resolveLanguage(language = null) {
   return normalizeLanguage(language || getCurrentLanguage());
@@ -146,21 +167,170 @@ function localAdaptiveContent(taskName, type, language = 'ar') {
 
 async function callGemini(prompt) {
   if (!GEMINI_URL) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(GEMINI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
     });
+    clearTimeout(timeout);
     const data = await response.json();
     if (data.candidates && data.candidates.length > 0) {
       return data.candidates[0].content.parts[0].text;
     }
     return null;
   } catch (error) {
+    clearTimeout(timeout);
     console.error("Gemini API Error:", error);
     return null;
   }
+}
+
+function extractAssistantText(data) {
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (typeof part?.text === 'string' ? part.text : ''))
+      .join('')
+      .trim() || null;
+  }
+  return null;
+}
+
+async function callZen(prompt, language = 'ar') {
+  if (!ZEN_API_KEY) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  try {
+    const base = ZEN_BASE_URL || 'https://opencode.ai/zen/v1';
+    const response = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ZEN_API_KEY}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: ZEN_MODEL,
+        temperature: 0.4,
+        messages: [
+          {
+            role: 'system',
+            content: byLanguage(language, 'أنت مساعد أكاديمي عملي ومباشر.', 'You are a practical academic assistant.'),
+          },
+          { role: 'user', content: String(prompt || '') },
+        ],
+      }),
+    });
+
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return extractAssistantText(data);
+  } catch (error) {
+    clearTimeout(timeout);
+    console.error('ZEN API Error:', error);
+    return null;
+  }
+}
+
+async function callOpenRouter(prompt, language = 'ar') {
+  if (!OPENROUTER_API_KEY) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
+        'X-Title': 'Rased Plus',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        temperature: 0.5,
+        messages: [
+          {
+            role: 'system',
+            content: byLanguage(language, 'أنت مساعد أكاديمي عربي دقيق ومباشر.', 'You are a concise and practical academic assistant.'),
+          },
+          { role: 'user', content: String(prompt || '') },
+        ],
+      }),
+    });
+
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return extractAssistantText(data);
+  } catch (error) {
+    clearTimeout(timeout);
+    console.error('OpenRouter API Error:', error);
+    return null;
+  }
+}
+
+async function callGroq(prompt, language = 'ar') {
+  if (!GROQ_API_KEY) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        temperature: 0.4,
+        messages: [
+          {
+            role: 'system',
+            content: byLanguage(language, 'أنت مساعد أكاديمي عملي ومباشر.', 'You are a practical academic assistant.'),
+          },
+          { role: 'user', content: String(prompt || '') },
+        ],
+      }),
+    });
+
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return extractAssistantText(data);
+  } catch (error) {
+    clearTimeout(timeout);
+    console.error('Groq API Error:', error);
+    return null;
+  }
+}
+
+async function callBestProvider(prompt, language = 'ar') {
+  // Priority: ZEN -> OpenRouter -> Gemini -> Groq
+  const zenResult = await callZen(prompt, language);
+  if (zenResult) return zenResult;
+
+  const openRouterResult = await callOpenRouter(prompt, language);
+  if (openRouterResult) return openRouterResult;
+
+  const geminiResult = await callGemini(prompt);
+  if (geminiResult) return geminiResult;
+
+  const groqResult = await callGroq(prompt, language);
+  if (groqResult) return groqResult;
+
+  return null;
 }
 
 export async function getRasedAIRecommendation(studentData, question, language = null) {
@@ -180,7 +350,7 @@ Mandatory instruction: respond in English only, with no Arabic words.
 Provide a short, professional, and direct academic response that is both encouraging and objective.
 `,
   );
-  return await callGemini(prompt) || localSmartReply(question, false, studentData, lang);
+  return await callBestProvider(prompt, lang) || localSmartReply(question, false, studentData, lang);
 }
 
 export async function generateInterventionPlan(studentData, language = null) {
@@ -220,7 +390,8 @@ Respond strictly as a JSON object only (no extra text):
 }
 `,
   );
-  const result = await callGemini(prompt);
+  const result = await callBestProvider(prompt, lang);
+  if (!result) return localInterventionPlan(studentData, lang);
   try {
     const cleanJson = result.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanJson);
@@ -274,7 +445,7 @@ Strict instructions:
 `,
   );
   
-  return await callGemini(prompt) || localSmartReply(message, isAdvisor, contextData, lang);
+  return await callBestProvider(prompt, lang) || localSmartReply(message, isAdvisor, contextData, lang);
 }
 
 export async function generateSilentAnalysis(studentData, language = null) {
@@ -303,7 +474,8 @@ Return a very short JSON report only with:
 Respond only with valid JSON and no extra text.`,
   );
 
-  const result = await callGemini(prompt);
+  const result = await callBestProvider(prompt, lang);
+  if (!result) return localSilentAnalysis(studentData, lang);
   try {
     const cleanJson = result.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleanJson);
@@ -324,7 +496,7 @@ export async function generateAdaptiveContent(taskName, type, language = null) {
     `Task: "${taskName}".
 The student is struggling with this task. Write ${label} in less than 3 lines in English only. Do not add introductions.`,
   );
-  const result = await callGemini(prompt);
+  const result = await callBestProvider(prompt, lang);
   return result || localAdaptiveContent(taskName, type, lang);
 }
 
@@ -339,7 +511,7 @@ ${String(message || '').trim()}`,
 Message:
 ${String(message || '').trim()}`,
   );
-  return await callGemini(prompt) || localSmartReply(String(message || ''), false, {}, lang);
+  return await callBestProvider(prompt, lang) || localSmartReply(String(message || ''), false, {}, lang);
 }
 
 export function buildBeaconOpeningMessage(upcomingAssignmentsCount = 0, debarmentRiskCount = 0, language = null) {
@@ -363,19 +535,23 @@ export async function checkNemotronFreeModel() {
   try {
     const probe = await sendMessageToAI('Reply with one word: OK', { language: 'en' });
     const ok = String(probe || '').trim().length > 0;
+    const provider = ZEN_API_KEY ? 'zen' : (OPENROUTER_API_KEY ? 'openrouter' : (GEMINI_API_KEY ? 'gemini' : (GROQ_API_KEY ? 'groq' : 'local-fallback')));
+    const model = ZEN_API_KEY ? ZEN_MODEL : (OPENROUTER_API_KEY ? OPENROUTER_MODEL : (GEMINI_API_KEY ? 'gemini-2.5-flash' : (GROQ_API_KEY ? GROQ_MODEL : 'local-smart-reply')));
     return {
       ok,
       status: ok ? 200 : 503,
-      provider: 'gemini',
-      model: 'gemini-2.5-flash',
+      provider,
+      model,
       message: ok ? 'AI provider reachable' : 'AI provider not reachable',
     };
   } catch {
+    const provider = ZEN_API_KEY ? 'zen' : (OPENROUTER_API_KEY ? 'openrouter' : (GEMINI_API_KEY ? 'gemini' : (GROQ_API_KEY ? 'groq' : 'local-fallback')));
+    const model = ZEN_API_KEY ? ZEN_MODEL : (OPENROUTER_API_KEY ? OPENROUTER_MODEL : (GEMINI_API_KEY ? 'gemini-2.5-flash' : (GROQ_API_KEY ? GROQ_MODEL : 'local-smart-reply')));
     return {
       ok: false,
       status: 503,
-      provider: 'gemini',
-      model: 'gemini-2.5-flash',
+      provider,
+      model,
       message: 'AI provider check failed',
     };
   }

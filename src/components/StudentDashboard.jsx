@@ -53,6 +53,8 @@ function CircleProgress({ value, max, label, color, size = 110 }) {
 
 function HeroSection({ student }) {
   const { t, formatDate } = useLanguage();
+  const statusText = student?.statusMessage || t('student.loadingStatus');
+  const hideUrgentStatus = /يحتاج تدخل أكاديمي عاجل|requires urgent academic intervention/i.test(String(statusText));
   const statusMap = {
     success: { color: '#6ee7b7', bg: 'rgba(110,231,183,0.1)', border: 'rgba(110,231,183,0.25)', Icon: CheckCircle2 },
     warning: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)', Icon: AlertTriangle },
@@ -70,14 +72,12 @@ function HeroSection({ student }) {
         <div className="hero-text">
           <p className="hero-date">{formatDate(new Date(), { weekday: 'long' })}</p>
           <h1 className="hero-title">{t('student.welcome', { name: (student?.name || t('common.studentPlaceholder')).split(' ')[0] })}<span className="hero-wave">👋</span></h1>
-          <div className="hero-status" style={{ background: st.bg, borderColor: st.border, color: st.color }}>
-            <st.Icon size={15} />
-            <span>{student?.statusMessage || t('student.loadingStatus')}</span>
-          </div>
-          <div className="hero-meta">
-            {student?.major || ''} — {student?.year || ''}
-            {student?.streak > 0 && <span className="streak-badge">🔥 {student.streak} {t('student.streakDays')}</span>}
-          </div>
+          {!hideUrgentStatus && (
+            <div className="hero-status" style={{ background: st.bg, borderColor: st.border, color: st.color }}>
+              <st.Icon size={15} />
+              <span>{statusText}</span>
+            </div>
+          )}
         </div>
 
         <div className="hero-stats">
@@ -460,12 +460,6 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
     case 'tasks':
       return (
         <div className="student-dash">
-          <HeroSection student={data.student} />
-          <StudentAIAutoMessage message={data.aiAutoMessage} />
-          <div className="dashboard-grid-even">
-            <AssignmentsList assignments={data.unifiedAssignments} />
-            <AttendanceRadar courses={data.attendanceRadar} />
-          </div>
           <TasksSection onToast={toast} initialTasks={data.tasks} splitSteps={data.splitSteps} />
         </div>
       );
@@ -494,10 +488,9 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
           </div>
           <div className="dashboard-grid-even">
             <AdaptiveSection items={data.adaptive} onToast={toast} studentId={currentUser?.id} />
-            <TasksSection onToast={toast} initialTasks={data.tasks} splitSteps={data.splitSteps} />
+            <SkillsSection skills={data.skills} onToast={toast} />
           </div>
           <div className="dashboard-grid-even">
-            <SkillsSection skills={data.skills} onToast={toast} />
             <PeersSection peers={data.peers} onToast={toast} currentStudentId={currentUser?.id} />
           </div>
         </div>

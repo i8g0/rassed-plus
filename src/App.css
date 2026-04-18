@@ -165,7 +165,7 @@
 }
 
 .demo-account {
-  text-align: right;
+  text-align: start;
   background: rgba(255,255,255,0.02);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
@@ -855,7 +855,7 @@
   color: var(--text-secondary);
   flex-shrink: 0;
   min-width: 120px;
-  text-align: left;
+  text-align: end;
 }
 
 /* ─── Radar (Curriculum) ───────────────────────────────────────────────────── */

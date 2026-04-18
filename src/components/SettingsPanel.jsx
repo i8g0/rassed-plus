@@ -27,71 +27,75 @@ import {
 import { getFeatures, toggleFeature } from '../services/api';
 
 import { useSettings } from '../contexts/SettingsContext';
-import { byLanguage, normalizeLanguage } from '../utils/localization';
+import { useLanguage } from '../contexts/LanguageProvider';
 
 /* ─── بيانات إعدادات محلية ────────────────────────────────────────────────── */
 
-const LOCAL_PREFERENCES = [
-  {
-    id: 'theme',
-    label: 'المظهر',
-    icon: Moon,
-    type: 'select',
-    options: [
-      { value: 'dark', label: 'داكن', icon: Moon },
-      { value: 'light', label: 'فاتح', icon: Sun },
-      { value: 'auto', label: 'تلقائي', icon: Monitor },
-    ],
-    defaultValue: 'dark',
-  },
-  {
-    id: 'language',
-    label: 'اللغة',
-    icon: Globe,
-    type: 'select',
-    options: [
-      { value: 'ar', label: 'العربية' },
-      { value: 'en', label: 'English' },
-    ],
-    defaultValue: 'ar',
-  },
-  {
-    id: 'animations',
-    label: 'الحركات والتأثيرات',
-    icon: Eye,
-    type: 'toggle',
-    defaultValue: true,
-  },
-  {
-    id: 'sounds',
-    label: 'أصوات الإشعارات',
-    icon: Volume2,
-    type: 'toggle',
-    defaultValue: true,
-  },
-  {
-    id: 'color_accent',
-    label: 'اللون الأساسي',
-    icon: Palette,
-    type: 'color',
-    options: [
-      { value: '#2dd4bf', label: 'فيروزي' },
-      { value: '#14b8a6', label: 'Teal' },
-      { value: '#10B981', label: 'أخضر' },
-      { value: '#fbbf24', label: 'ذهبي' },
-      { value: '#fda4af', label: 'وردي' },
-      { value: '#22d3ee', label: 'سماوي' },
-      { value: '#0ea5a8', label: 'تركواز' },
-    ],
-    defaultValue: '#2dd4bf',
-  },
-];
+function getLocalPreferences(t) {
+  return [
+    {
+      id: 'theme',
+      label: t('settings.prefTheme'),
+      icon: Moon,
+      type: 'select',
+      options: [
+        { value: 'dark', label: t('settings.themeDark'), icon: Moon },
+        { value: 'light', label: t('settings.themeLight'), icon: Sun },
+        { value: 'auto', label: t('settings.themeAuto'), icon: Monitor },
+      ],
+      defaultValue: 'dark',
+    },
+    {
+      id: 'language',
+      label: t('settings.prefLanguage'),
+      icon: Globe,
+      type: 'select',
+      options: [
+        { value: 'ar', label: t('settings.langArabic') },
+        { value: 'en', label: t('settings.langEnglish') },
+      ],
+      defaultValue: 'ar',
+    },
+    {
+      id: 'animations',
+      label: t('settings.prefAnimations'),
+      icon: Eye,
+      type: 'toggle',
+      defaultValue: true,
+    },
+    {
+      id: 'sounds',
+      label: t('settings.prefSounds'),
+      icon: Volume2,
+      type: 'toggle',
+      defaultValue: true,
+    },
+    {
+      id: 'color_accent',
+      label: t('settings.prefAccent'),
+      icon: Palette,
+      type: 'color',
+      options: [
+        { value: '#2dd4bf', label: t('settings.colorTeal') },
+        { value: '#14b8a6', label: t('settings.colorTealDark') },
+        { value: '#10B981', label: t('settings.colorGreen') },
+        { value: '#fbbf24', label: t('settings.colorGold') },
+        { value: '#fda4af', label: t('settings.colorPink') },
+        { value: '#22d3ee', label: t('settings.colorSky') },
+        { value: '#0ea5a8', label: t('settings.colorTurquoise') },
+      ],
+      defaultValue: '#2dd4bf',
+    },
+  ];
+}
 
-const FEATURE_CATEGORY_META = {
-  student: { title: 'ميزات الطلاب', subtitle: '40 ميزة', icon: Rocket, color: '#10B981' },
-  advisor: { title: 'ميزات المرشد والجامعة', subtitle: '30 ميزة', icon: ShieldCheck, color: '#fbbf24' },
-  ai:      { title: 'ميزات الذكاء الاصطناعي', subtitle: '30 ميزة', icon: Bot, color: '#2dd4bf' },
-};
+function getFeatureCategoryMeta(t) {
+  return {
+    student: { title: t('settings.catStudent'), subtitle: t('settings.catStudentCount'), icon: Rocket, color: '#10B981' },
+    advisor: { title: t('settings.catAdvisor'), subtitle: t('settings.catAdvisorCount'), icon: ShieldCheck, color: '#fbbf24' },
+    ai:      { title: t('settings.catAi'), subtitle: t('settings.catAiCount'), icon: Bot, color: '#2dd4bf' },
+  };
+}
 
 /* ─── Sub-components ───────────────────────────────────────────────────────── */
 
@@ -160,7 +164,7 @@ function PreferenceItem({ pref, value, onChange }) {
   return null;
 }
 
-function FeatureCard({ feature, onToggle, busy }) {
+function FeatureCard({ feature, onToggle, busy, t }) {
   return (
     <div className={`sp-feature-card ${feature.enabled ? 'sp-feature-enabled' : ''}`}>
       <div className="sp-feature-info">
@@ -172,7 +176,7 @@ function FeatureCard({ feature, onToggle, busy }) {
         onClick={() => onToggle(feature)}
         disabled={busy}
       >
-        <Power size={12} /> {feature.enabled ? 'مفعلة' : 'موقفة'}
+        <Power size={12} /> {feature.enabled ? t('settings.featureEnabled') : t('settings.featureDisabled')}
       </button>
     </div>
   );
@@ -182,11 +186,13 @@ function FeatureCard({ feature, onToggle, busy }) {
 
 export default function SettingsPanel({ open, onClose, onToast }) {
   const { settings, updateSetting, resetSettings } = useSettings();
-  const language = normalizeLanguage(settings?.language || 'ar');
+  const { t, language } = useLanguage();
   const [activeSection, setActiveSection] = useState('prefs'); // 'prefs' | 'features'
   const [features, setFeatures] = useState([]);
   const [featuresLoaded, setFeaturesLoaded] = useState(false);
   const [busyCode, setBusyCode] = useState(null);
+  const LOCAL_PREFERENCES = useMemo(() => getLocalPreferences(t), [t]);
+  const FEATURE_CATEGORY_META = useMemo(() => getFeatureCategoryMeta(t), [t]);
 
   // تحميل الميزات مباشرة لما البانل ينفتح
   useEffect(() => {
@@ -202,11 +208,11 @@ export default function SettingsPanel({ open, onClose, onToast }) {
       .catch(() => {
         if (!cancelled) {
           setFeaturesLoaded(true);
-          onToast?.(byLanguage(language, 'تعذر تحميل الميزات', 'Unable to load features'), 'warning');
+          onToast?.(t('settings.loadFailed'), 'warning');
         }
       });
     return () => { cancelled = true; };
-  }, [open, featuresLoaded, onToast, language]);
+  }, [open, featuresLoaded, onToast, t]);
 
   const grouped = useMemo(() => ({
     student: features.filter((f) => f.category === 'student'),
@@ -226,16 +232,10 @@ export default function SettingsPanel({ open, onClose, onToast }) {
           item.code === feature.code ? { ...item, enabled: nextEnabled } : item,
         ),
       );
-      onToast?.(
-        byLanguage(
-          language,
-          `تم ${nextEnabled ? 'تفعيل' : 'إيقاف'} ${feature.name}`,
-          `${nextEnabled ? 'Enabled' : 'Disabled'} ${feature.name}`,
-        ),
-        nextEnabled ? 'success' : 'info',
-      );
+      const actionLabel = nextEnabled ? t('settings.enableAction') : t('settings.disableAction');
+      onToast?.(t('settings.toggleSuccess', { action: actionLabel, name: feature.name }), nextEnabled ? 'success' : 'info');
     } catch {
-      onToast?.(byLanguage(language, 'فشل تحديث حالة الميزة', 'Failed to update feature status'), 'warning');
+      onToast?.(t('settings.toggleFailed'), 'warning');
     } finally {
       setBusyCode(null);
     }
@@ -245,23 +245,20 @@ export default function SettingsPanel({ open, onClose, onToast }) {
     try {
       updateSetting(id, value);
       const pref = LOCAL_PREFERENCES.find((p) => p.id === id);
-      onToast?.(
-        byLanguage(language, `تم تحديث ${pref?.label || id}`, `Updated ${pref?.label || id}`),
-        'info',
-      );
+      onToast?.(t('settings.updated', { name: pref?.label || id }), 'info');
     } catch (err) {
       console.error('Preference update failed:', err);
-      onToast?.(byLanguage(language, 'تعذر تحديث الإعداد حالياً', 'Unable to update this setting right now'), 'warning');
+      onToast?.(t('settings.updateFailed'), 'warning');
     }
   };
 
   const handleReset = () => {
     try {
       resetSettings();
-      onToast?.(byLanguage(language, 'تم إعادة جميع الإعدادات للقيم الافتراضية', 'All settings were reset to defaults'), 'info');
+      onToast?.(t('settings.resetDone'), 'info');
     } catch (err) {
       console.error('Reset settings failed:', err);
-      onToast?.(byLanguage(language, 'تعذر إعادة تعيين الإعدادات حالياً', 'Unable to reset settings right now'), 'warning');
+      onToast?.(t('settings.resetFailed'), 'warning');
     }
   };
 
@@ -281,10 +278,10 @@ export default function SettingsPanel({ open, onClose, onToast }) {
           <div className="sp-header">
             <div className="sp-header-title">
               <Settings size={20} className="sp-header-icon" />
-              <span>{byLanguage(language, 'الإعدادات والتخصيص', 'Settings & Customization')}</span>
+              <span>{t('settings.title')}</span>
             </div>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button className="sp-reset-btn" onClick={handleReset} title={byLanguage(language, 'إعادة تعيين', 'Reset')}>
+              <button className="sp-reset-btn" onClick={handleReset} title={t('settings.reset')}>
                 <RotateCcw size={15} />
               </button>
               <button className="sp-close-btn" onClick={onClose}>
@@ -299,13 +296,13 @@ export default function SettingsPanel({ open, onClose, onToast }) {
               className={`sp-tab ${activeSection === 'prefs' ? 'sp-tab-active' : ''}`}
               onClick={() => setActiveSection('prefs')}
             >
-              <Palette size={15} /> {byLanguage(language, 'التخصيص', 'Customization')}
+              <Palette size={15} /> {t('settings.customizationTab')}
             </button>
             <button
               className={`sp-tab ${activeSection === 'features' ? 'sp-tab-active' : ''}`}
               onClick={() => setActiveSection('features')}
             >
-              <Rocket size={15} /> {byLanguage(language, 'الميزات', 'Features')}
+              <Rocket size={15} /> {t('settings.featuresTab')}
               {enabledCount > 0 && <span className="sp-tab-badge">{enabledCount}</span>}
             </button>
           </div>
@@ -316,7 +313,7 @@ export default function SettingsPanel({ open, onClose, onToast }) {
             {/* ── قسم التفضيلات ── */}
             {activeSection === 'prefs' && (
               <div className="sp-prefs-section">
-                <p className="sp-section-desc">{byLanguage(language, 'خصّص تجربتك في راصد بلس حسب تفضيلاتك — كل التغييرات تُحفظ تلقائياً', 'Customize your Rased Plus experience — all changes are saved automatically')}</p>
+                <p className="sp-section-desc">{t('settings.customizeDesc')}</p>
                 {LOCAL_PREFERENCES.map((pref) => (
                   <PreferenceItem
                     key={pref.id}
@@ -334,18 +331,18 @@ export default function SettingsPanel({ open, onClose, onToast }) {
                 {/* Hero */}
                 <div className="sp-features-hero">
                   <div>
-                    <p className="sp-features-overline"><Rocket size={13} /> {byLanguage(language, 'تخصيص الميزات', 'Feature Customization')}</p>
-                    <h3>{byLanguage(language, 'تخصيص الميزات', 'Customize Features')}</h3>
-                    <p className="sp-features-desc">{byLanguage(language, 'فعّل أو عطّل الميزات حسب احتياجك', 'Enable or disable features based on your needs')}</p>
+                    <p className="sp-features-overline"><Rocket size={13} /> {t('settings.featureCustomization')}</p>
+                    <h3>{t('settings.customizeFeatures')}</h3>
+                    <p className="sp-features-desc">{t('settings.featureDesc')}</p>
                   </div>
                   <div className="sp-features-kpi">
                     <span>{enabledCount}</span>
-                    <small>{byLanguage(language, 'مفعلة', 'Enabled')}</small>
+                    <small>{t('settings.enabled')}</small>
                   </div>
                 </div>
 
                 {!featuresLoaded ? (
-                  <div className="sp-loading">{byLanguage(language, 'جاري تحميل الميزات...', 'Loading features...')}</div>
+                  <div className="sp-loading">{t('settings.loadingFeatures')}</div>
                 ) : (
                   Object.entries(FEATURE_CATEGORY_META).map(([key, meta]) => {
                     const Icon = meta.icon;
@@ -358,12 +355,13 @@ export default function SettingsPanel({ open, onClose, onToast }) {
                             <Icon size={16} /> {meta.title}
                           </div>
                           <span className="sp-feature-group-badge" style={{ background: `${meta.color}22`, color: meta.color }}>
-                            {meta.subtitle} • {list.filter((f) => f.enabled).length} مفعلة
+                            {meta.subtitle} • {list.filter((f) => f.enabled).length} {t('settings.enabledSuffix')}
                           </span>
                         </div>
                         <div className="sp-feature-grid">
                           {list.map((feature) => (
                             <FeatureCard
+                              t={t}
                               key={feature.code}
                               feature={feature}
                               onToggle={handleToggle}
@@ -424,7 +422,7 @@ const SETTINGS_PANEL_CSS = `
   flex-direction: column;
   animation: spSlideIn 0.35s cubic-bezier(0.22,1,0.36,1);
   margin-inline-end: auto;
-  direction: rtl;
+  direction: inherit;
 }
 
 /* ── Header ── */

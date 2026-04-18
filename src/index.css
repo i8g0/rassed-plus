@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+/* ─── Font Family Variable — switched by LanguageProvider ─── */
+:root {
+  --font-family-primary: 'Tajawal', 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+}
 
 /* ══════════════════════════════════════════════════════════════════════════════
    ██████╗  █████╗ ███████╗███████╗███████╗██████╗     ██████╗ ██╗     ██╗   ██╗███████╗
@@ -86,10 +91,9 @@ html {
 }
 
 body {
-  font-family: 'Tajawal', sans-serif;
+  font-family: var(--font-family-primary, 'Tajawal', sans-serif);
   background: var(--bg-primary);
   color: var(--text-primary);
-  direction: rtl;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;

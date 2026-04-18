@@ -4,6 +4,7 @@
  */
 
 import { X, AlertTriangle, CheckCircle2, Info, Bell } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageProvider';
 
 const typeConfig = {
   danger:  { color: '#F43F5E', Icon: AlertTriangle, bg: 'rgba(244,63,94,0.08)' },
@@ -13,6 +14,7 @@ const typeConfig = {
 };
 
 export default function NotificationsPanel({ notifications = [], onClose }) {
+  const { t } = useLanguage();
   const unread = notifications.filter(n => !n.read).length;
 
   return (
@@ -22,10 +24,10 @@ export default function NotificationsPanel({ notifications = [], onClose }) {
         <div className="notif-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Bell size={18} />
-            <span style={{ fontWeight: '700' }}>الإشعارات</span>
+            <span style={{ fontWeight: '700' }}>{t('notifications.title')}</span>
             {unread > 0 && (
               <span className="badge" style={{ background: 'rgba(244,63,94,0.12)', color: '#F43F5E' }}>
-                {unread} جديد
+                {t('notifications.newCount', { count: unread })}
               </span>
             )}
           </div>
@@ -44,12 +46,12 @@ export default function NotificationsPanel({ notifications = [], onClose }) {
                 className="notif-item"
                 style={{
                   background: n.read ? 'transparent' : cfg.bg,
-                  borderRight: n.read ? 'none' : `3px solid ${cfg.color}`,
+                  borderInlineEnd: n.read ? 'none' : `3px solid ${cfg.color}`,
                 }}
               >
                 <div style={{ color: cfg.color, flexShrink: 0 }}><NIcon size={16} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className="notif-text">{n.text}</p>
+                  <p className="notif-text" dir="auto">{n.text}</p>
                   <span className="notif-time">{n.time}</span>
                 </div>
                 {!n.read && <div className="notif-unread-dot" />}

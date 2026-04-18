@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { GraduationCap, UserCircle2, LockKeyhole, AtSign, IdCard, LogIn } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { getDemoAccounts, login } from '../services/api';
+import { useLanguage } from '../contexts/LanguageProvider';
 
 export default function LoginScreen({ onLogin }) {
+  const { t } = useLanguage();
   const [role, setRole] = useState('student');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -49,9 +51,9 @@ export default function LoginScreen({ onLogin }) {
 
       <div className="login-container glass animate-scale-in">
         <div className="login-brand">
-          <img src={logo} alt="راصد بلس" />
-          <h1>تسجيل الدخول</h1>
-          <p>اختر الدور أولاً ثم سجّل الدخول كطالب أو مرشد</p>
+          <img src={logo} alt={t('common.appName')} />
+          <h1>{t('login.title')}</h1>
+          <p>{t('login.subtitle')}</p>
         </div>
 
         <div className="login-role-switcher">
@@ -63,7 +65,7 @@ export default function LoginScreen({ onLogin }) {
               setError('');
             }}
           >
-            <UserCircle2 size={16} /> طالب
+            <UserCircle2 size={16} /> {t('login.studentRole')}
           </button>
           <button
             type="button"
@@ -73,33 +75,33 @@ export default function LoginScreen({ onLogin }) {
               setError('');
             }}
           >
-            <GraduationCap size={16} /> مرشد
+            <GraduationCap size={16} /> {t('login.advisorRole')}
           </button>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label>
-            <span>{role === 'advisor' ? 'البريد أو رقم المرشد' : 'البريد أو الرقم الجامعي'}</span>
+            <span>{role === 'advisor' ? t('login.emailLabelAdvisor') : t('login.emailLabelStudent')}</span>
             <div className="login-input-wrap">
               {role === 'advisor' ? <AtSign size={16} /> : <IdCard size={16} />}
               <input
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder={role === 'advisor' ? 'khaled.advisor@university.edu أو AD-1001' : 'ahmad.ammar@university.edu أو 44210988'}
+                placeholder={role === 'advisor' ? t('login.emailPlaceholderAdvisor') : t('login.emailPlaceholderStudent')}
               />
             </div>
           </label>
 
           <label>
-            <span>كلمة المرور</span>
+            <span>{t('login.passwordLabel')}</span>
             <div className="login-input-wrap">
               <LockKeyhole size={16} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="ادخل كلمة المرور"
+                placeholder={t('login.passwordPlaceholder')}
               />
             </div>
           </label>
@@ -107,13 +109,13 @@ export default function LoginScreen({ onLogin }) {
           {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="btn btn-primary login-submit">
-            <LogIn size={16} /> {loading ? 'جاري الدخول...' : 'دخول إلى النظام'}
+            <LogIn size={16} /> {loading ? t('login.submitting') : t('login.submitButton')}
           </button>
         </form>
 
         <div className="demo-box">
-          <h3>بيانات دخول جاهزة</h3>
-          <p>يمكنك الضغط على أي حساب لتعبئة الحقول تلقائياً:</p>
+          <h3>{t('login.demoTitle')}</h3>
+          <p>{t('login.demoSubtitle')}</p>
           <div className="demo-list">
             {accountsByRole.map((account) => (
               <button
@@ -125,7 +127,7 @@ export default function LoginScreen({ onLogin }) {
                 <strong>{account.name}</strong>
                 <span>{account.login}</span>
                 <span>{account.altLogin}</span>
-                <span>كلمة المرور: {account.password}</span>
+                <span>{t('login.passwordPrefix')}: {account.password}</span>
               </button>
             ))}
           </div>

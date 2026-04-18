@@ -1,36 +1,38 @@
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageProvider';function asPercent(absenceCount, totalSessions) {
+import { useLanguage } from '../contexts/LanguageProvider';
+
+function asPercent(absenceCount, totalSessions) {
   if (!Number.isFinite(absenceCount) || !Number.isFinite(totalSessions) || totalSessions <= 0) return 0;
   return (absenceCount / totalSessions) * 100;
 }
 
-function getStatus(percent) {
+function getStatus(percent, t) {
   if (percent >= 25) {
     return {
-      status: 'حالة حرمان',
+      status: t('student.statusDebarred'),
       color: '#fda4af',
       border: 'rgba(253,164,175,0.35)',
       bg: 'rgba(253,164,175,0.10)',
-      note: 'تجاوزت نسبة الغياب الحد الرسمي (25%).',
+      note: t('student.noteDebarred'),
     };
   }
 
   if (percent >= 20) {
     return {
-      status: 'إنذار أول',
+      status: t('student.statusFirstWarning'),
       color: '#fbbf24',
       border: 'rgba(251,191,36,0.35)',
       bg: 'rgba(251,191,36,0.10)',
-      note: 'اقتربت من حد الحرمان، يلزم رفع الالتزام فوراً.',
+      note: t('student.noteFirstWarning'),
     };
   }
 
   return {
-    status: 'آمن',
+    status: t('student.statusSafe'),
     color: '#6ee7b7',
     border: 'rgba(110,231,183,0.35)',
     bg: 'rgba(110,231,183,0.10)',
-    note: 'وضع الحضور مطمئن حالياً.',
+    note: t('student.noteSafe'),
   };
 }
 
@@ -45,14 +47,14 @@ export default function AttendanceRadar({ courses = [] }) {
           <div className="panel-title-icon" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
             <ShieldAlert size={18} />
           </div>
-          {t('student.attendanceRadar', { defaultValue: 'رادار الغياب والحرمان' })}
+          {t('student.attendanceRadar')}
         </div>
-        <span className="badge" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>{t('student.debarLimit', { defaultValue: 'حد الحرمان: 25%' })}</span>
+        <span className="badge" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>{t('student.debarLimit')}</span>
       </div>
 
       {safeCourses.length === 0 ? (
         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.6rem 0.2rem' }}>
-          {t('student.noAttendanceData', { defaultValue: 'لا توجد بيانات حضور متاحة.' })}
+          {t('student.noAttendanceData')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
@@ -60,7 +62,7 @@ export default function AttendanceRadar({ courses = [] }) {
             const absenceCount = Number(course?.absenceCount ?? 0);
             const totalSessions = Number(course?.totalSessions ?? 0);
             const percent = asPercent(absenceCount, totalSessions);
-            const status = getStatus(percent);
+            const status = getStatus(percent, t);
             return (
               <div
                 key={course?.courseCode || course?.courseName}
@@ -73,9 +75,9 @@ export default function AttendanceRadar({ courses = [] }) {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.7rem', alignItems: 'center' }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>{course?.courseName ?? 'مقرر غير معروف'}</div>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>{course?.courseName ?? t('student.unknownCourse')}</div>
                     <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                      غياب {absenceCount} من {totalSessions} محاضرة
+                      {t('student.absenceOf', { count: absenceCount, total: totalSessions })}
                     </div>
                   </div>
                   <span
@@ -106,7 +108,7 @@ export default function AttendanceRadar({ courses = [] }) {
                     />
                   </div>
                   <div style={{ marginTop: '0.35rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.73rem', color: 'var(--text-secondary)' }}>
-                    <span>{percent.toFixed(1)}% غياب</span>
+                    <span>{t('student.absencePercent', { percent: percent.toFixed(1) })}</span>
                     <span style={{ color: status.color, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                       <AlertTriangle size={12} />
                       {status.note}

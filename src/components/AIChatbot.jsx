@@ -38,6 +38,17 @@ const ALERT_ICONS = {
 };
 
 function AlertCard({ alert }) {
+  if (typeof alert === 'string') {
+    return (
+      <div className="chat-alert info">
+        <div className="chat-alert-body" style={{ display: 'flex', gap: '0.6rem', alignItems: 'start' }}>
+          <Info size={15} style={{ marginTop: '0.15rem', flexShrink: 0 }} />
+          <span>{alert}</span>
+        </div>
+      </div>
+    );
+  }
+
   const Icon = ALERT_ICONS[alert.type] || Info;
   return (
     <div className={`chat-alert ${alert.type}`}>

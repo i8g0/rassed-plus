@@ -11,11 +11,13 @@ import {
 } from '../services/api';
 import { executeMagicAutomation, runAICoreLogic } from '../services/AI-Core-Logic';
 import { useUser } from './UserContext';
+import { useLanguage } from './LanguageProvider';
 
 const RasedContext = createContext();
 
 export function RasedProvider({ children }) {
   const { user, role } = useUser();
+  const { language } = useLanguage();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,7 +58,7 @@ export function RasedProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [user, role]);
+  }, [user, role, language]);
 
   useEffect(() => {
     fetchDashboard();

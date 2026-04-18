@@ -16,18 +16,20 @@ import {
 } from './mockEngine';
 
 import {
-  sendMessageToAI,
   buildBeaconOpeningMessage,
   generateInterventionPlan,
   generateSmartReply,
   generateSilentAnalysis,
   generateAdaptiveContent,
   checkNemotronFreeModel,
+  hasAnyRemoteAIProvider,
+  getAISetupHint,
 } from './aiService';
 import { byLanguage, getCurrentLanguage, normalizeLanguage } from '../utils/localization';
 import { translateNode } from '../utils/translator';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const REQUEST_TIMEOUT_MS = 8000;
 
 // ─── Helper: try API first, fallback to mock ─────────────────────────────────
 
@@ -35,14 +37,20 @@ async function request(path, options = {}) {
   // إذا ما في سيرفر (API_BASE فاضي) نرجع null عشان يستخدم الـ fallback
   if (!API_BASE) return null;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(`${API_BASE}${path}`, {
       headers: {
         'Content-Type': 'application/json',
         ...(options.headers || {}),
       },
+      signal: controller.signal,
       ...options,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       let message = 'حدث خطأ في الاتصال بالخادم';
@@ -58,6 +66,7 @@ async function request(path, options = {}) {
     if (response.status === 204) return null;
     return response.json();
   } catch {
+    clearTimeout(timeout);
     // السيرفر مو شغال — نرجع null عشان الـ fallback يشتغل
     return null;
   }
@@ -115,14 +124,14 @@ export async function getAdvisorOverview(advisorId = null) {
   const analyzedStudents = analyzeAllStudents();
   const students = getStudentsForAdvisor(advisorId, analyzedStudents);
   const stats = getAdvisorStats(students);
+  const lang = normalizeLanguage(getCurrentLanguage());
 
   const courses = [
-    { id: '1', code: 'CS 321', name: 'الخوارزميات', instructor: 'د. عبدالله', enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
-    { id: '2', code: 'MATH 201', name: 'التفاضل والتكامل ٢', instructor: 'د. خالد', enroll_count: 150, fail_rate: 45, avg_grade: 2.5, severity: 'yellow' },
-    { id: '3', code: 'IS 101', name: 'نظم المعلومات', instructor: 'د. سارة', enroll_count: 200, fail_rate: 10, avg_grade: 4.2, severity: 'green' }
+    { id: '1', code: 'CS 321', name: byLanguage(lang, 'الخوارزميات', 'Algorithms'), instructor: byLanguage(lang, 'د. عبدالله', 'Dr. Abdullah'), enroll_count: 120, fail_rate: 60, avg_grade: 2.1, severity: 'red' },
+    { id: '2', code: 'MATH 201', name: byLanguage(lang, 'التفاضل والتكامل ٢', 'Calculus II'), instructor: byLanguage(lang, 'د. خالد', 'Dr. Khalid'), enroll_count: 150, fail_rate: 45, avg_grade: 2.5, severity: 'yellow' },
+    { id: '3', code: 'IS 101', name: byLanguage(lang, 'نظم المعلومات', 'Information Systems'), instructor: byLanguage(lang, 'د. سارة', 'Dr. Sarah'), enroll_count: 200, fail_rate: 10, avg_grade: 4.2, severity: 'green' }
   ];
 
-  const lang = normalizeLanguage(getCurrentLanguage());
   return translateNode({ students, stats, courses }, lang);
 }
 
@@ -143,11 +152,11 @@ export async function getInterventions(advisorId = null) {
 
   const lang = normalizeLanguage(getCurrentLanguage());
   return translateNode([
-    { id: 1, student: 'محمد عمار القحطاني', type: 'رسالة دعم أكاديمي', date: '2026-04-10', status: 'sent', result: 'بانتظار رد الطالب' },
-    { id: 2, student: 'سلمان عبدالله المطيري', type: 'خطة تدخل عاجلة', date: '2026-04-12', status: 'meeting', result: 'تم جدولة لقاء مع المرشد' },
-    { id: 3, student: 'طارق سامي الغامدي', type: 'جلسة متابعة أكاديمية', date: '2026-03-28', status: 'completed', result: 'تحسن المعدل من 2.1 إلى 3.4' },
-    { id: 4, student: 'عبدالعزيز حسن العنزي', type: 'توجيه مهني', date: '2026-04-05', status: 'followup', result: 'متابعة التقدم بعد أسبوعين' },
-    { id: 5, student: 'زياد ناصر البلوي', type: 'رسالة تحفيزية', date: '2026-04-01', status: 'completed', result: 'استجابة إيجابية — رفع المعدل' },
+    { id: 1, student: byLanguage(lang, 'محمد عمار القحطاني', 'Mohammed Ammar Al-Qahtani'), type: byLanguage(lang, 'رسالة دعم أكاديمي', 'Academic Support Message'), date: '2026-04-10', status: 'sent', result: byLanguage(lang, 'بانتظار رد الطالب', 'Awaiting student response') },
+    { id: 2, student: byLanguage(lang, 'سلمان عبدالله المطيري', 'Salman Abdullah Al-Mutairi'), type: byLanguage(lang, 'خطة تدخل عاجلة', 'Urgent Intervention Plan'), date: '2026-04-12', status: 'meeting', result: byLanguage(lang, 'تم جدولة لقاء مع المرشد', 'Meeting scheduled with advisor') },
+    { id: 3, student: byLanguage(lang, 'طارق سامي الغامدي', 'Tariq Sami Al-Ghamdi'), type: byLanguage(lang, 'جلسة متابعة أكاديمية', 'Academic Follow-up Session'), date: '2026-03-28', status: 'completed', result: byLanguage(lang, 'تحسن المعدل من 2.1 إلى 3.4', 'GPA improved from 2.1 to 3.4') },
+    { id: 4, student: byLanguage(lang, 'عبدالعزيز حسن العنزي', 'Abdulaziz Hassan Al-Enezi'), type: byLanguage(lang, 'توجيه مهني', 'Career Guidance'), date: '2026-04-05', status: 'followup', result: byLanguage(lang, 'متابعة التقدم بعد أسبوعين', 'Follow-up on progress after 2 weeks') },
+    { id: 5, student: byLanguage(lang, 'زياد ناصر البلوي', 'Ziad Nasser Al-Blawi'), type: byLanguage(lang, 'رسالة تحفيزية', 'Motivational Message'), date: '2026-04-01', status: 'completed', result: byLanguage(lang, 'استجابة إيجابية — رفع المعدل', 'Positive response — GPA improved') },
   ], lang);
 }
 
@@ -158,20 +167,22 @@ export async function generateIntervention(studentId, advisorId) {
   });
   if (apiResult) return apiResult;
 
+  const lang = normalizeLanguage(getCurrentLanguage());
   const student = STUDENTS_DB.find((s) => s.id === studentId);
   if (!student) {
     return {
       id: `INV-${Date.now().toString().slice(-4)}`,
-      emailSubject: 'خطة دعم أكاديمي',
-      emailBody: 'لم يُعثر على بيانات الطالب في القاعدة. يرجى المحاولة لاحقاً.',
-      actionPlan: [{ step: '01', action: 'التحقق من بيانات الطالب', timeline: 'فوراً', owner: 'المرشد' }],
-      followUpDate: 'غير محدد',
+      emailSubject: byLanguage(lang, 'خطة دعم أكاديمي', 'Academic Support Plan'),
+      emailBody: byLanguage(lang, 'لم يُعثر على بيانات الطالب في القاعدة. يرجى المحاولة لاحقاً.', 'Student data not found in the system. Please try again later.'),
+      actionPlan: [{ step: '01', action: byLanguage(lang, 'التحقق من بيانات الطالب', 'Verify student data'), timeline: byLanguage(lang, 'فوراً', 'Immediately'), owner: byLanguage(lang, 'المرشد', 'Advisor') }],
+      followUpDate: byLanguage(lang, 'غير محدد', 'Undetermined'),
       status: 'draft'
     };
   }
-  const lang = normalizeLanguage(getCurrentLanguage());
+
   return translateNode(generateInterventionPlan(student), lang);
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Student
@@ -191,7 +202,7 @@ function formatArabicDateTime(value) {
   }).format(date);
 }
 
-function buildUnifiedAssignments(courses = []) {
+function buildUnifiedAssignments(courses = [], lang = 'ar') {
   const now = Date.now();
   return courses
     .flatMap((course) => {
@@ -208,8 +219,8 @@ function buildUnifiedAssignments(courses = []) {
           return {
             id: `${course?.course_code || 'course'}-${item?.assignment || `task-${index}`}`,
             courseCode: course?.course_code || '',
-            courseName: course?.course_name || 'مقرر غير معروف',
-            assignmentName: item?.assignment || `تكليف ${index + 1}`,
+            courseName: course?.course_name || byLanguage(lang, 'مقرر غير معروف', 'Unknown Course'),
+            assignmentName: item?.assignment || byLanguage(lang, `تكليف ${index + 1}`, `Assignment ${index + 1}`),
             dueAt,
             dueLabel: formatArabicDateTime(dueAt),
             hoursRemaining,
@@ -219,7 +230,7 @@ function buildUnifiedAssignments(courses = []) {
     .sort((a, b) => a.hoursRemaining - b.hoursRemaining);
 }
 
-function buildAttendanceRadar(courses = []) {
+function buildAttendanceRadar(courses = [], lang = 'ar') {
   return courses
     .map((course) => {
       const absenceCount = Number(course?.absence_count ?? 0);
@@ -228,7 +239,7 @@ function buildAttendanceRadar(courses = []) {
 
       return {
         courseCode: course?.course_code || '',
-        courseName: course?.course_name || 'مقرر غير معروف',
+        courseName: course?.course_name || byLanguage(lang, 'مقرر غير معروف', 'Unknown Course'),
         absenceCount,
         totalSessions,
         absencePercent,
@@ -360,8 +371,8 @@ export async function getStudentDashboard(studentId) {
   let aiAutoMessage = '';
 
   try {
-    unifiedAssignments = buildUnifiedAssignments(analyzed?.current_courses || []);
-    attendanceRadar = buildAttendanceRadar(analyzed?.current_courses || []);
+    unifiedAssignments = buildUnifiedAssignments(analyzed?.current_courses || [], lang);
+    attendanceRadar = buildAttendanceRadar(analyzed?.current_courses || [], lang);
     aiAutoMessage = buildStudentAutoMessage(analyzed, unifiedAssignments, attendanceRadar);
   } catch (error) {
     console.warn('Student dashboard enrichment failed:', error);
@@ -385,7 +396,7 @@ export async function getStudentDashboard(studentId) {
 
   const yearLabel = byLanguage(lang, 'السنة', 'Year') + ` ${analyzed.year || 2}`;
 
-  return translateNode({
+  return {
     student: {
       ...analyzed,
       status,
@@ -394,61 +405,66 @@ export async function getStudentDashboard(studentId) {
       completionRate: analyzed.taskCompletion || 72,
       streak: 5,
       year: yearLabel,
-      major: (lang === 'en' && analyzed.major === 'هندسة برمجيات') ? 'Software Engineering' : analyzed.major,
+      major: byLanguage(lang,
+        analyzed.major || 'هندسة برمجيات',
+        analyzed.major === 'هندسة برمجيات' ? 'Software Engineering'
+          : analyzed.major === 'علوم الحاسب' ? 'Computer Science'
+          : analyzed.major || 'Software Engineering',
+      ),
     },
     adaptive: [
       {
         id: 1,
         courseIcon: '📐',
-        course: 'هياكل البيانات',
-        issue: 'تم رصد صعوبة في فهم الأشجار الثنائية — إليك مسارات بديلة:',
+        course: byLanguage(lang, 'هياكل البيانات', 'Data Structures'),
+        issue: byLanguage(lang, 'تم رصد صعوبة في فهم الأشجار الثنائية — إليك مسارات بديلة:', 'Difficulty detected with binary trees — try these alternative routes:'),
         alternatives: [
-          { key: 'video', label: 'فيديو مرئي تفاعلي', color: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
-          { key: 'podcast', label: 'بودكاست صوتي مبسط', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
-          { key: 'map', label: 'خريطة ذهنية تفاعلية', color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+          { key: 'video', label: byLanguage(lang, 'فيديو مرئي تفاعلي', 'Interactive Visual Video'), color: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
+          { key: 'podcast', label: byLanguage(lang, 'بودكاست صوتي مبسط', 'Simplified Audio Podcast'), color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+          { key: 'map', label: byLanguage(lang, 'خريطة ذهنية تفاعلية', 'Interactive Mind Map'), color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
         ],
       },
       {
         id: 2,
         courseIcon: '💻',
-        course: 'الخوارزميات',
-        issue: 'صعوبة في البرمجة الديناميكية — جرب هذه الطرق:',
+        course: byLanguage(lang, 'الخوارزميات', 'Algorithms'),
+        issue: byLanguage(lang, 'صعوبة في البرمجة الديناميكية — جرب هذه الطرق:', 'Difficulty with dynamic programming — try these methods:'),
         alternatives: [
-          { key: 'video', label: 'شرح مرئي خطوة بخطوة', color: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
-          { key: 'map', label: 'أمثلة تفاعلية محلولة', color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+          { key: 'video', label: byLanguage(lang, 'شرح مرئي خطوة بخطوة', 'Step-by-Step Visual Guide'), color: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
+          { key: 'map', label: byLanguage(lang, 'أمثلة تفاعلية محلولة', 'Interactive Solved Examples'), color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
         ],
       },
     ],
     peers: [
       {
         id: 'peer-1',
-        name: 'فهد عبدالله',
-        initials: 'فع',
-        strong: 'هياكل بيانات',
-        weak: 'الرياضيات',
+        name: byLanguage(lang, 'فهد عبدالله', 'Fahd Abdullah'),
+        initials: byLanguage(lang, 'فع', 'FA'),
+        strong: byLanguage(lang, 'هياكل بيانات', 'Data Structures'),
+        weak: byLanguage(lang, 'الرياضيات', 'Mathematics'),
         compatibility: 92,
         color: '#818CF8',
-        reason: 'فهد متفوق في هياكل البيانات ويحتاج مساعدة في الرياضيات — توأمة مثالية!',
+        reason: byLanguage(lang, 'فهد متفوق في هياكل البيانات ويحتاج مساعدة في الرياضيات — توأمة مثالية!', 'Fahd excels in Data Structures and needs help in Mathematics — a perfect match!'),
       },
       {
         id: 'peer-2',
-        name: 'عمر الشمري',
-        initials: 'عش',
-        strong: 'قواعد بيانات',
-        weak: 'الرياضيات',
+        name: byLanguage(lang, 'عمر الشمري', 'Omar Al-Shammari'),
+        initials: byLanguage(lang, 'عش', 'OA'),
+        strong: byLanguage(lang, 'قواعد بيانات', 'Databases'),
+        weak: byLanguage(lang, 'الرياضيات', 'Mathematics'),
         compatibility: 85,
         color: '#10B981',
-        reason: 'عمر خبير في قواعد البيانات ويمكنه مساعدتك في المشروع.',
+        reason: byLanguage(lang, 'عمر خبير في قواعد البيانات ويمكنه مساعدتك في المشروع.', 'Omar is a database expert and can help you with your project.'),
       },
     ],
     skills: [
       {
         id: 1,
-        skill: 'تحليل البيانات',
+        skill: byLanguage(lang, 'تحليل البيانات', 'Data Analysis'),
         level: 35,
         color: '#F59E0B',
         hot: true,
-        reason: 'مطلوب بشدة في سوق العمل السعودي — الفرص زادت 40% هذا الفصل.',
+        reason: byLanguage(lang, 'مطلوب بشدة في سوق العمل السعودي — الفرص زادت 40% هذا الفصل.', 'In high demand in the Saudi job market — opportunities increased 40% this semester.'),
         boost: 40,
         course: 'Data Analysis with Python',
         platform: 'Coursera',
@@ -456,11 +472,11 @@ export async function getStudentDashboard(studentId) {
       },
       {
         id: 2,
-        skill: 'الذكاء الاصطناعي',
+        skill: byLanguage(lang, 'الذكاء الاصطناعي', 'Artificial Intelligence'),
         level: 25,
         color: '#818CF8',
         hot: true,
-        reason: 'تخصصك يفتح لك الباب — ابدأ بالأساسيات الآن.',
+        reason: byLanguage(lang, 'تخصصك يفتح لك الباب — ابدأ بالأساسيات الآن.', 'Your major opens the door — start with the fundamentals now.'),
         boost: 55,
         course: 'AI For Everyone',
         platform: 'Coursera',
@@ -468,11 +484,11 @@ export async function getStudentDashboard(studentId) {
       },
       {
         id: 3,
-        skill: 'تطوير الويب',
+        skill: byLanguage(lang, 'تطوير الويب', 'Web Development'),
         level: 50,
         color: '#10B981',
         hot: false,
-        reason: 'مهارة أساسية لأي مبرمج — طوّر مستواك.',
+        reason: byLanguage(lang, 'مهارة أساسية لأي مبرمج — طوّر مستواك.', 'A core skill for any developer — level up.'),
         boost: 30,
         course: 'The Web Developer Bootcamp',
         platform: 'Udemy',
@@ -482,44 +498,44 @@ export async function getStudentDashboard(studentId) {
     tasks: [
       {
         id: 1,
-        title: 'تقرير هياكل البيانات',
-        deadline: 'غداً — 11:59 م',
+        title: byLanguage(lang, 'تقرير هياكل البيانات', 'Data Structures Report'),
+        deadline: byLanguage(lang, 'غداً — 11:59 م', 'Tomorrow — 11:59 PM'),
         progress: 0,
         urgency: 'danger',
         canSplit: true,
-        aiNote: 'لم تبدأ بعد! قسّم المهمة لخطوات صغيرة وابدأ الآن.',
+        aiNote: byLanguage(lang, 'لم تبدأ بعد! قسّم المهمة لخطوات صغيرة وابدأ الآن.', "You haven't started yet! Split the task into small steps and begin now."),
       },
       {
         id: 2,
-        title: 'واجب الخوارزميات #5',
-        deadline: 'بعد 3 أيام',
+        title: byLanguage(lang, 'واجب الخوارزميات #5', 'Algorithms Assignment #5'),
+        deadline: byLanguage(lang, 'بعد 3 أيام', 'In 3 days'),
         progress: 60,
         urgency: 'warning',
         canSplit: false,
-        aiNote: 'أحسنت! تبقى 40% فقط — خصص ساعة اليوم.',
+        aiNote: byLanguage(lang, 'أحسنت! تبقى 40% فقط — خصص ساعة اليوم.', 'Well done! Only 40% left — allocate an hour today.'),
       },
       {
         id: 3,
-        title: 'مشروع قواعد البيانات النهائي',
-        deadline: 'بعد أسبوع',
+        title: byLanguage(lang, 'مشروع قواعد البيانات النهائي', 'Final Database Project'),
+        deadline: byLanguage(lang, 'بعد أسبوع', 'In one week'),
         progress: 10,
         urgency: 'warning',
         canSplit: true,
-        aiNote: 'ابدأ بتصميم قاعدة البيانات (ERD) أولاً.',
+        aiNote: byLanguage(lang, 'ابدأ بتصميم قاعدة البيانات (ERD) أولاً.', 'Start by designing the database schema (ERD) first.'),
       },
     ],
     splitSteps: [
-      { icon: '📖', text: 'قراءة متطلبات التقرير وفهم الأسئلة', time: '20 دقيقة' },
-      { icon: '🔍', text: 'بحث وجمع المراجع والأمثلة', time: '30 دقيقة' },
-      { icon: '✍️', text: 'كتابة المقدمة والإطار النظري', time: '40 دقيقة' },
-      { icon: '💻', text: 'كتابة الكود والتحليل التطبيقي', time: '50 دقيقة' },
-      { icon: '📊', text: 'إضافة الرسوم البيانية والنتائج', time: '25 دقيقة' },
-      { icon: '✅', text: 'المراجعة النهائية والتنسيق', time: '15 دقيقة' },
+      { icon: '📖', text: byLanguage(lang, 'قراءة متطلبات التقرير وفهم الأسئلة', 'Read report requirements and understand the questions'), time: byLanguage(lang, '20 دقيقة', '20 min') },
+      { icon: '🔍', text: byLanguage(lang, 'بحث وجمع المراجع والأمثلة', 'Research and gather references and examples'), time: byLanguage(lang, '30 دقيقة', '30 min') },
+      { icon: '✍️', text: byLanguage(lang, 'كتابة المقدمة والإطار النظري', 'Write the introduction and theoretical framework'), time: byLanguage(lang, '40 دقيقة', '40 min') },
+      { icon: '💻', text: byLanguage(lang, 'كتابة الكود والتحليل التطبيقي', 'Write the code and applied analysis'), time: byLanguage(lang, '50 دقيقة', '50 min') },
+      { icon: '📊', text: byLanguage(lang, 'إضافة الرسوم البيانية والنتائج', 'Add charts and results'), time: byLanguage(lang, '25 دقيقة', '25 min') },
+      { icon: '✅', text: byLanguage(lang, 'المراجعة النهائية والتنسيق', 'Final review and formatting'), time: byLanguage(lang, '15 دقيقة', '15 min') },
     ],
     unifiedAssignments,
     attendanceRadar,
     aiAutoMessage,
-  }, lang);
+  };
 }
 
 export async function updateStudentTaskProgress(studentId, progress) {
@@ -533,6 +549,7 @@ export async function updateStudentTaskProgress(studentId, progress) {
 }
 
 export async function requestPeerMatch(requesterId, weakSkill, preferredPeerId = null) {
+  const lang = normalizeLanguage(getCurrentLanguage());
   const apiResult = await request('/api/matchmaking/request', {
     method: 'POST',
     body: JSON.stringify({ requester_id: requesterId, weak_skill: weakSkill, preferred_peer_id: preferredPeerId }),
@@ -570,8 +587,8 @@ export async function requestPeerMatch(requesterId, weakSkill, preferredPeerId =
       ? { id: match.id, name: match.name, skill: weakSkill, gpa: match.gpa }
       : null,
     message: match
-      ? `تم العثور على ${match.name} كتوأم أكاديمي${weakSkill ? ` في ${weakSkill}` : ''}`
-      : 'لم يتم العثور على توأم مناسب حالياً',
+      ? byLanguage(lang, `تم العثور على ${match.name} كتوأم أكاديمي${weakSkill ? ` في ${weakSkill}` : ''}`, `Found ${match.name} as an academic peer${weakSkill ? ` for ${weakSkill}` : ''}`)
+      : byLanguage(lang, 'لم يتم العثور على توأم مناسب حالياً', 'No suitable peer match found at this time'),
     requester: requester ? { id: requester.id, name: requester.name } : null,
   };
 }
@@ -595,24 +612,24 @@ export async function getFeatures() {
   if (apiResult) return apiResult;
 
   const lang = normalizeLanguage(getCurrentLanguage());
-  return translateNode([
+  return [
     // ميزات الطلاب
-    { code: 'task_splitter', name: 'تقسيم المهام الذكي', description: 'يقسّم المهمة الكبيرة لخطوات صغيرة مع تقدير الوقت', enabled: true, category: 'student' },
-    { code: 'peer_matching', name: 'التوأمة الأكاديمية', description: 'يوصل الطالب بزميل متفوق في مهارة يحتاجها', enabled: true, category: 'student' },
-    { code: 'adaptive_routes', name: 'التوجيه التكيّفي', description: 'مسارات تعلم بديلة حسب أسلوب الطالب', enabled: true, category: 'student' },
-    { code: 'skill_compass', name: 'بوصلة المهارات', description: 'ربط المهارات بفرص سوق العمل مع كورسات مقترحة', enabled: true, category: 'student' },
-    { code: 'streak_tracking', name: 'تتبع الانضباط اليومي', description: 'عدّاد الأيام المتواصلة والمكافآت', enabled: true, category: 'student' },
+    { code: 'task_splitter', name: byLanguage(lang, 'تقسيم المهام الذكي', 'Smart Task Splitting'), description: byLanguage(lang, 'يقسّم المهمة الكبيرة لخطوات صغيرة مع تقدير الوقت', 'Breaks large tasks into small steps with time estimates'), enabled: true, category: 'student' },
+    { code: 'peer_matching', name: byLanguage(lang, 'التوأمة الأكاديمية', 'Academic Peer Matching'), description: byLanguage(lang, 'يوصل الطالب بزميل متفوق في مهارة يحتاجها', 'Connects student with a peer excelling in a needed skill'), enabled: true, category: 'student' },
+    { code: 'adaptive_routes', name: byLanguage(lang, 'التوجيه التكيّفي', 'Adaptive Routing'), description: byLanguage(lang, 'مسارات تعلم بديلة حسب أسلوب الطالب', 'Alternative learning paths based on student style'), enabled: true, category: 'student' },
+    { code: 'skill_compass', name: byLanguage(lang, 'بوصلة المهارات', 'Skills Compass'), description: byLanguage(lang, 'ربط المهارات بفرص سوق العمل مع كورسات مقترحة', 'Links skills to job market opportunities with suggested courses'), enabled: true, category: 'student' },
+    { code: 'streak_tracking', name: byLanguage(lang, 'تتبع الانضباط اليومي', 'Daily Streak Tracking'), description: byLanguage(lang, 'عدّاد الأيام المتواصلة والمكافآت', 'Consecutive days counter and rewards'), enabled: true, category: 'student' },
     // ميزات المرشد والجامعة
-    { code: 'risk_engine', name: 'محرك تحليل الخطورة', description: 'تحليل 6 عوامل بأوزان لتحديد مؤشر الخطورة', enabled: true, category: 'advisor' },
-    { code: 'intervention_gen', name: 'مولّد خطط التدخل', description: 'توليد رسائل دعم وخطط علاجية ذكية بالـ AI', enabled: true, category: 'advisor' },
-    { code: 'curriculum_radar', name: 'رادار المناهج', description: 'رصد المقررات ذات نسب الرسوب العالية', enabled: true, category: 'advisor' },
-    { code: 'notifications', name: 'الإشعارات الذكية', description: 'تنبيهات فورية لحالات الخطر والتغييرات', enabled: true, category: 'advisor' },
+    { code: 'risk_engine', name: byLanguage(lang, 'محرك تحليل الخطورة', 'Risk Analysis Engine'), description: byLanguage(lang, 'تحليل 6 عوامل بأوزان لتحديد مؤشر الخطورة', 'Analyzes 6 weighted factors to determine risk score'), enabled: true, category: 'advisor' },
+    { code: 'intervention_gen', name: byLanguage(lang, 'مولّد خطط التدخل', 'Intervention Plan Generator'), description: byLanguage(lang, 'توليد رسائل دعم وخطط علاجية ذكية بالـ AI', 'AI-powered support messages and remedial plans'), enabled: true, category: 'advisor' },
+    { code: 'curriculum_radar', name: byLanguage(lang, 'رادار المناهج', 'Curriculum Radar'), description: byLanguage(lang, 'رصد المقررات ذات نسب الرسوب العالية', 'Monitors courses with high failure rates'), enabled: true, category: 'advisor' },
+    { code: 'notifications', name: byLanguage(lang, 'الإشعارات الذكية', 'Smart Notifications'), description: byLanguage(lang, 'تنبيهات فورية لحالات الخطر والتغييرات', 'Real-time alerts for risk cases and changes'), enabled: true, category: 'advisor' },
     // ميزات الذكاء الاصطناعي
-    { code: 'copilot_tips', name: 'توصيات Copilot', description: 'نصائح ذكية سياقية حسب الدور والصفحة', enabled: true, category: 'ai' },
-    { code: 'ai_email_gen', name: 'مولّد الرسائل بالـ AI', description: 'كتابة رسائل دعم شخصية بنبرة إنسانية', enabled: true, category: 'ai' },
-    { code: 'root_cause_ai', name: 'تحليل السبب الجذري', description: 'استنتاج السبب الحقيقي وراء التعثر الأكاديمي', enabled: true, category: 'ai' },
-    { code: 'dark_mode', name: 'الوضع الداكن', description: 'واجهة داكنة مريحة للعين', enabled: true, category: 'ai' },
-  ], lang);
+    { code: 'copilot_tips', name: byLanguage(lang, 'توصيات Copilot', 'Copilot Recommendations'), description: byLanguage(lang, 'نصائح ذكية سياقية حسب الدور والصفحة', 'Contextual smart tips based on role and page'), enabled: true, category: 'ai' },
+    { code: 'ai_email_gen', name: byLanguage(lang, 'مولّد الرسائل بالـ AI', 'AI Message Generator'), description: byLanguage(lang, 'كتابة رسائل دعم شخصية بنبرة إنسانية', 'Writes personal support messages with human tone'), enabled: true, category: 'ai' },
+    { code: 'root_cause_ai', name: byLanguage(lang, 'تحليل السبب الجذري', 'Root Cause Analysis'), description: byLanguage(lang, 'استنتاج السبب الحقيقي وراء التعثر الأكاديمي', 'Deduces the real cause behind academic struggles'), enabled: true, category: 'ai' },
+    { code: 'dark_mode', name: byLanguage(lang, 'الوضع الداكن', 'Dark Mode'), description: byLanguage(lang, 'واجهة داكنة مريحة للعين', 'Eye-friendly dark interface'), enabled: true, category: 'ai' },
+  ];
 }
 
 export async function toggleFeature(code, enabled) {
@@ -642,32 +659,32 @@ export async function sendStudentChat(studentId, message, sessionId = null, lang
   });
   if (apiResult) return apiResult;
 
-  // Fallback to direct Zen AI call first
-  try {
-    const prefixed = byLanguage(
-      lang,
-      `سؤال من طالب جامعي عن وضعه الأكاديمي: ${String(message || '')}`,
-      `Question from a university student about academic status: ${String(message || '')}`,
-    );
-    const response = await sendMessageToAI(prefixed, { language: lang });
+  if (!hasAnyRemoteAIProvider()) {
     return {
-      response,
-      session_id: sessionId || 'zen-live-session',
+      response: getAISetupHint(lang),
+      session_id: sessionId || 'setup-required-session',
       timestamp: new Date().toISOString(),
     };
-  } catch {
-    // continue to contextual fallback
   }
 
-  // Contextual fallback when direct AI call fails
-  let fullStudentData = { id: studentId };
+  // Context-aware fallback when backend/AI provider is unavailable
+  const baseStudent = STUDENTS_DB.find((s) => s.id === studentId) || { id: studentId };
+  let contextData = { ...baseStudent };
+
   try {
-    fullStudentData = await getStudentDashboard(studentId);
+    const dashboard = await getStudentDashboard(studentId);
+    contextData = {
+      ...contextData,
+      ...(dashboard?.student || {}),
+      unifiedAssignments: dashboard?.unifiedAssignments || [],
+      attendanceRadar: dashboard?.attendanceRadar || [],
+      tasks: dashboard?.tasks || [],
+    };
   } catch {
-    fullStudentData = STUDENTS_DB.find((s) => s.id === studentId) || { id: studentId };
+    // keep base mock context
   }
 
-  const reply = await generateSmartReply(message, false, fullStudentData, lang);
+  const reply = await generateSmartReply(message, false, contextData, lang);
   return {
     response: reply,
     session_id: sessionId || 'ai-session',
@@ -688,26 +705,26 @@ export async function sendAdvisorChat(advisorId, message, studentId = null, lang
   });
   if (apiResult) return apiResult;
 
-  try {
-    const studentContext = studentId
-      ? byLanguage(lang, ` حول الطالب ${studentId}`, ` about student ${studentId}`)
-      : '';
-    const advisorPrompt = byLanguage(
-      lang,
-      `سؤال من مشرف/مرشد أكاديمي${studentContext}: ${message}`,
-      `Question from an academic advisor/supervisor${studentContext}: ${message}`,
-    );
-    const response = await sendMessageToAI(advisorPrompt, { language: lang });
+  if (!hasAnyRemoteAIProvider()) {
     return {
-      response,
+      response: getAISetupHint(lang),
       timestamp: new Date().toISOString(),
     };
-  } catch {
-    // continue to contextual fallback
   }
 
-  const studentContext = studentId ? STUDENTS_DB.find(s => s.id === studentId) : {};
-  const reply = await generateSmartReply(message, true, { advisorId, studentContext }, lang);
+  const analyzedStudents = analyzeAllStudents();
+  const studentContext = studentId
+    ? (analyzedStudents.find((s) => s.id === studentId) || STUDENTS_DB.find((s) => s.id === studentId) || null)
+    : null;
+
+  const advisorContext = {
+    advisorId,
+    studentContext,
+    totalStudents: analyzedStudents.length,
+    atRiskStudents: analyzedStudents.filter((s) => s.riskLevel === 'red').length,
+  };
+
+  const reply = await generateSmartReply(message, true, advisorContext, lang);
   return {
     response: reply,
     timestamp: new Date().toISOString(),
