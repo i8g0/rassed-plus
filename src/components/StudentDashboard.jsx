@@ -483,11 +483,10 @@ export default function StudentDashboard({ activeTab, onToast, currentUser }) {
           <HeroSection student={data.student} />
           <StudentAIAutoMessage message={data.aiAutoMessage} />
           <div className="dashboard-grid-even">
-            <AssignmentsList assignments={data.unifiedAssignments} />
             <AttendanceRadar courses={data.attendanceRadar} />
+            <AdaptiveSection items={data.adaptive} onToast={toast} studentId={currentUser?.id} />
           </div>
           <div className="dashboard-grid-even">
-            <AdaptiveSection items={data.adaptive} onToast={toast} studentId={currentUser?.id} />
             <SkillsSection skills={data.skills} onToast={toast} />
           </div>
           <div className="dashboard-grid-even">
