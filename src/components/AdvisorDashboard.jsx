@@ -3,7 +3,7 @@ import {
   Users, ShieldAlert, Zap, TrendingUp, GraduationCap,
   BrainCircuit, Mail, Sparkles, ArrowUpRight,
   AlertTriangle, CheckCircle2, Clock, Search,
-  Bot, Eye, FileText, Radar, Compass,
+  Bot, Eye, FileText, Radar, Compass, Network,
 } from 'lucide-react';
 import { getStudentBrief } from '../services/api';
 import {
@@ -179,6 +179,17 @@ function BehaviorReportModal({ reportState, onClose }) {
 
 function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch, matchingById, isSupervisor, onAnalyzeBehavior, behaviorAnalyzingId = null }) {
   const { t, formatNumber, formatPercent } = useLanguage();
+
+  const calculateAcademicIsolationRisk = (profile = {}) => {
+    const forumParticipation = Math.max(0, Math.min(100, Number(profile?.forumParticipation ?? 0)));
+    const peerAssessment = Math.max(0, Math.min(100, Number(profile?.peerAssessment ?? 0)));
+    const twinningResponsiveness = Math.max(0, Math.min(100, Number(profile?.twinningResponsiveness ?? 0)));
+
+    return Number((((100 - forumParticipation) * 0.4)
+      + ((100 - twinningResponsiveness) * 0.4)
+      + ((100 - peerAssessment) * 0.2)).toFixed(1));
+  };
+
   const handlePeerMatch = async (student) => {
     const weakSkill = student?.weakSkills?.[0] || student?.major || t('common.courseCs');
     try {
@@ -288,7 +299,7 @@ function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch, m
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <AiInsightCard
               color="var(--brand-cyan)"
-              icon={<Radar size={16} className="animate-pulse" />}
+              icon={<Network size={16} className="animate-pulse" />}
               title={t('advisor.disengagementRadar')}
               body={''}
             />
@@ -298,13 +309,21 @@ function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch, m
                 {t('advisor.noActiveCases')}
               </div>
             ) : (
-              disengagementCases.map((item) => (
+              disengagementCases.map((item) => {
+                const isolationScore = calculateAcademicIsolationRisk(item?.profile || {});
+                const isolationLabel = isolationScore > 75
+                  ? t('advisor.behavioralSeparation')
+                  : isolationScore >= 50
+                    ? t('advisor.isolationModerate')
+                    : t('advisor.passivePresence');
+
+                return (
                 <div key={item.studentId} style={{ border: '1px solid rgba(253,164,175,0.25)', borderRadius: '12px', padding: '0.72rem 0.78rem', background: 'rgba(253,164,175,0.07)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.7rem' }}>
                     <div>
                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.82rem' }}>{item.studentName}</div>
                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', marginTop: '0.12rem' }}>
-                        {item.status === 'Passive Presence' ? t('advisor.passivePresence') : t('advisor.behavioralSeparation')}
+                        {isolationLabel}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -328,15 +347,17 @@ function DashboardTab({ students, stats, onIntervention, onToast, onPeerMatch, m
 
                   <div style={{ marginTop: '0.5rem' }}>
                     <div style={{ height: '7px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                      <div style={{ width: `${Math.min(100, item.riskScore)}%`, height: '100%', background: 'linear-gradient(90deg, #fbbf24, #fda4af)' }} />
+                      <div style={{ width: `${Math.min(100, isolationScore)}%`, height: '100%', background: 'linear-gradient(90deg, #fbbf24, #fda4af)' }} />
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                      <span>{t('advisor.riskIndicator')}: {formatPercent(item.riskScore, 1)}</span>
-                      <span>{t('advisor.fileAccess')}: {formatPercent(item.profile.fileAccessRate, 1)}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem', fontSize: '0.72rem', color: 'var(--text-secondary)', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span>{t('advisor.riskIndicator')}: {formatPercent(isolationScore, 1)}</span>
+                      <span>{t('advisor.fileAccess')}: {formatPercent(item?.profile?.forumParticipation ?? 0, 1)}</span>
+                      <span>{t('advisor.twinningResponsiveness')}: {formatPercent(item?.profile?.twinningResponsiveness ?? 0, 1)}</span>
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -367,8 +388,19 @@ function AutomationPanel({ automation, onScan, onMagic, onToast, identity, disen
             {loading ? t('advisor.thinking') : t('advisor.rescanning')}
           </button>
           <button
-            className="btn btn-danger"
-            style={{ width: 'auto', fontSize: '0.78rem', background: 'linear-gradient(135deg, #10b981, #14b8a6)', borderColor: 'rgba(16,185,129,0.35)' }}
+            className="btn"
+            style={{
+              width: 'auto',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: '#ecfeff',
+              background: 'linear-gradient(135deg, #10b981, #14b8a6)',
+              border: '1px solid rgba(16,185,129,0.45)',
+              borderRadius: '12px',
+              paddingInline: '1rem',
+              boxShadow: '0 6px 18px rgba(16,185,129,0.26)',
+              whiteSpace: 'nowrap',
+            }}
             onClick={() => {
               const actions = onMagic?.() || [];
               const bulkCommand = buildCollectiveDisengagementCommand(disengagementAlerts);
