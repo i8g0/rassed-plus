@@ -7,7 +7,6 @@ import {
   LayoutDashboard, Users, ShieldAlert, TrendingUp,
   Search, Bell, LogOut, CheckCircle2, Zap, Settings,
 } from 'lucide-react';
-import logo from './assets/logo.png';
 import StudentDashboard from './components/StudentDashboard';
 import Dashboard from './components/Dashboard';
 import InterventionModal from './components/InterventionModal';
@@ -15,6 +14,7 @@ import NotificationsPanel from './components/NotificationsPanel';
 import LoginScreen from './components/LoginScreen';
 import SettingsPanel from './components/SettingsPanel';
 import AIChatbot from './components/AIChatbot';
+import Sidebar from './components/Sidebar';
 import { getNotifications } from './services/api';
 import { useUser } from './contexts/UserContext';
 import { useRased } from './contexts/RasedContext';
@@ -174,32 +174,14 @@ export default function App() {
     <div className="app-shell">
 
       {/* ═══ الشريط الجانبي ═══ */}
-      <aside className="sidebar glass animate-fade-right">
-        <div className="sidebar-brand">
-          <div className="brand-logo-wrap">
-            <img src={logo} alt={t('common.appName')} />
-          </div>
-        </div>
-
-        <div className="session-user glass" style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{user.name}</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>
-            {role === 'advisor'
-              ? t('app.academicAdvisor')
-              : t('app.studentRole')}
-          </div>
-        </div>
-
-        <nav className="nav-list">
-          {nav.map((item) => (
-            <a key={item.id}
-              className={`nav-link ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setTab(item.id)}>
-              {item.icon ? <item.icon size={19} /> : null} {item.label}
-            </a>
-          ))}
-        </nav>
-      </aside>
+      <Sidebar
+        nav={nav}
+        activeTab={activeTab}
+        onTabChange={setTab}
+        user={user}
+        role={role}
+        t={t}
+      />
 
       {/* ═══ المحتوى الرئيسي ═══ */}
       <main className="main-content">

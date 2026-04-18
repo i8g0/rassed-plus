@@ -57,9 +57,20 @@
 }
 
 .login-brand img {
-  height: 80px;
-  width: auto;
-  margin-bottom: 0.6rem;
+  width: 140px;
+  height: auto;
+  display: block;
+  margin: 0 auto 0.5rem;
+  filter: drop-shadow(0 4px 16px rgba(45, 212, 191, 0.4));
+}
+
+.login-brand-name {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.3);
+  letter-spacing: -0.5px;
 }
 
 .login-brand h1 {
@@ -211,30 +222,47 @@
 .sidebar-brand {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
+  justify-content: flex-start;
+  direction: ltr;
+  padding: 0.35rem 0.25rem;
 }
 
 .brand-logo-wrap {
-  background: rgba(255,255,255,0.95);
-  border-radius: 16px;
-  padding: 8px 16px;
-  width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(45,212,191,0.25), 0 0 0 1px rgba(255,255,255,0.1);
-  transition: box-shadow 0.3s ease;
-}
-.brand-logo-wrap:hover {
-  box-shadow: 0 6px 30px rgba(45,212,191,0.4), 0 0 0 1px rgba(255,255,255,0.2);
+  gap: 0.4rem;
+  padding: 0.5rem 0.25rem;
+  width: 100%;
 }
 
-.brand-logo-wrap img {
-  height: 72px;
-  width: auto;
+.sidebar-logo-image {
+  width: 90px;
+  height: auto;
   object-fit: contain;
   display: block;
+  filter: drop-shadow(0 2px 8px rgba(45, 212, 191, 0.3));
+}
+
+.sidebar-brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.2);
+  margin: 0;
+  padding: 0;
+}
+
+[data-theme="light"] .sidebar-logo-image,
+[data-theme="light"] .login-brand img {
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+}
+
+[data-theme="light"] .sidebar-brand-name,
+[data-theme="light"] .login-brand-name {
+  color: var(--text-primary);
+  text-shadow: none;
 }
 
 /* مبدّل الدور */
@@ -1436,6 +1464,6 @@
 }
 
 [data-theme="light"] .brand-logo-wrap {
-  background: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  background: transparent;
+  box-shadow: none;
 }

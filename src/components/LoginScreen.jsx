@@ -52,6 +52,7 @@ export default function LoginScreen({ onLogin }) {
       <div className="login-container glass animate-scale-in">
         <div className="login-brand">
           <img src={logo} alt={t('common.appName')} />
+          <h2 className="login-brand-name">{t('common.appName')}</h2>
           <h1>{t('login.title')}</h1>
           <p>{t('login.subtitle')}</p>
         </div>

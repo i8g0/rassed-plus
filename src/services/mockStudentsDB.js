@@ -194,6 +194,15 @@ function buildSubmissionHistory(pattern, studentId, courseCode) {
         : toIsoTime(11 + idx * 7, 1, seededInt(base + idx, 5, 45)),
     };
   });
+
+  const futureDeadline = new Date(Date.now() + 1000 * 60 * 60 * seededInt(base, 24, 168)).toISOString();
+  history.push({
+    assignment: `Active Assignment`,
+    due_at: futureDeadline,
+    submitted_at: null, // Pending
+  });
+
+  return history;
 }
 
 function buildEntropyProfile(identity, gpa) {
@@ -325,11 +334,17 @@ function buildCourseRecord(student, course, profile, courseIndex) {
   const cloProbability = clamp(adjusted.theory + seededInt(seed + 63, -10, 10), 10, 96);
   const cloTeamwork = clamp(adjusted.practical + seededInt(seed + 66, -12, 9), 10, 95);
 
+  const attendanceRate = deriveAttendanceRate(profile.attendanceTrend, course, student.id);
+  const totalSessions = 24;
+  const absenceCount = Math.round(totalSessions * (1 - attendanceRate / 100));
+
   return {
     course_code: course.code,
     course_name: course.name,
     grade: Math.round((midterm1 + midterm2 + finalExam + lab + project + quizzes.reduce((a, b) => a + b, 0)) / 1.7),
-    attendance_rate: deriveAttendanceRate(profile.attendanceTrend, course, student.id),
+    attendance_rate: attendanceRate,
+    absence_count: absenceCount,
+    total_sessions: totalSessions,
     midterm_score: Math.round((midterm1 + midterm2) / 2),
     lab_project_score: Math.round((lab + project) / 2),
     submission_pattern: submissionPattern,
@@ -472,6 +487,8 @@ function buildMohammedAmmarCase() {
         course_name: 'Artificial Intelligence',
         grade: 52,
         attendance_rate: 93,
+        absence_count: 2,
+        total_sessions: 24,
         midterm_score: 9,
         lab_project_score: 23,
         submission_pattern: 'على الوقت',
@@ -494,6 +511,8 @@ function buildMohammedAmmarCase() {
         course_name: 'Software Architecture',
         grade: 89,
         attendance_rate: 96,
+        absence_count: 1,
+        total_sessions: 24,
         midterm_score: 17,
         lab_project_score: 27,
         submission_pattern: 'على الوقت',
@@ -516,6 +535,8 @@ function buildMohammedAmmarCase() {
         course_name: 'Algorithms',
         grade: 91,
         attendance_rate: 95,
+        absence_count: 1,
+        total_sessions: 24,
         midterm_score: 18,
         lab_project_score: 28,
         submission_pattern: 'على الوقت',
@@ -538,6 +559,8 @@ function buildMohammedAmmarCase() {
         course_name: 'Database Systems',
         grade: 86,
         attendance_rate: 92,
+        absence_count: 2,
+        total_sessions: 24,
         midterm_score: 16,
         lab_project_score: 26,
         submission_pattern: 'على الوقت',
@@ -560,6 +583,8 @@ function buildMohammedAmmarCase() {
         course_name: 'Software Testing',
         grade: 88,
         attendance_rate: 97,
+        absence_count: 0,
+        total_sessions: 24,
         midterm_score: 17,
         lab_project_score: 27,
         submission_pattern: 'على الوقت',
